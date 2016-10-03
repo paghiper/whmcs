@@ -40,7 +40,7 @@ Se tiver qualquer duvida, visite a nossa [central de atendimento](https://www.pa
 
 
 # # Passo 2
-1) Baixe o arquivo paghiper.php, coloque o arquivo na pasta gateways dentro de modules do seu WHMCS. 
+1) Baixe o arquivo [paghiper.php](https://github.com/paghiper/whmcs/tree/master/modules/gateways), coloque o arquivo na pasta gateways dentro de modules do seu WHMCS. 
 
 ![Screenshot](imagens/cpanel-listagem-gateway.jpg)
 
