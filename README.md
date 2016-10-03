@@ -1,7 +1,8 @@
-# whmcs - módulo de boleto PagHiper
+# WHMCS - módulo de boleto PagHiper Versão 1.01 
 
 
 Módulo de gateway de pagamento  para o WHMCS
+
 
 # Descrição
 
