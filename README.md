@@ -18,7 +18,9 @@ O módulo foi rescrito a partir do módulo desenvolvido por [WHMCS.RED](https://
 
 
 
-# Configurações da sua conta PagHiper
+# Passo 1
+
+Será necessário realizar algumas configurações da sua conta PagHiper
 
 1) Caso não possua uma conta PagHiper,  [crie sua conta aqui](https://www.paghiper.com/abra-sua-conta/) 
  
@@ -37,7 +39,7 @@ Somente assim, a data do vencimento do boleto será igual a da fatura.
 Se tiver qualquer duvida, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/)
 
 
-# Instalação:
+# # Passo 2
 1) Baixe o arquivo paghiper.php, coloque o arquivo na pasta gateways dentro de modules do seu WHMCS. 
 
 ![Screenshot](imagens/cpanel-listagem-gateway.jpg)
