@@ -28,9 +28,13 @@ Baixe o arquivo paghiper.php, coloque o arquivo na pasta gateways dentro de modu
 
 Dentro da área administrativa do seu WHMCS, vá em: Setup > Payments > Payment Gateways (em inglês) ou Opções > Pagamentos > Portais para Pagamento
 
-![Screenshot]('images/menu.jpg')
+![Screenshot](images/menu.jpg)
 
 Após, va na aba “All Payment Gateways” e procure pelo modulo de nome: “PagHiper Boleto” e clique em cima.
 
+![Screenshot](images/all-payments.png)
+
 Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais, e pronto.
+
+![Screenshot](images/modulo-configuracao.png)
 
