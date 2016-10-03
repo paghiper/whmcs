@@ -57,5 +57,7 @@ Se tiver qualquer duvida, visite a nossa [central de atendimento](https://www.pa
 ![Screenshot](imagens/modulo-configuracao.png)
 
 
+# Suporte
 
+Se tiver qualquer duvida, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/)
 
