@@ -18,7 +18,7 @@ O módulo foi rescrito a partir do módulo desenvolvido por [WHMCS.RED](https://
 
 
 
-# Passo 1
+# # Passo 1
 
 Será necessário realizar algumas configurações da sua conta PagHiper
 
