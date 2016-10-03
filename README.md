@@ -39,3 +39,8 @@ Se tiver qualquer duvida, visite a nossa [central de atendimento](https://www.pa
 
 ![Screenshot](imagens/modulo-configuracao.png)
 
+O módulo foi rescrito a partir do módulo desenvolvido por [WHMCS.RED](https://github.com/whmcsred/modulo-paghiper-whmcs), foram realizadas algumas correções de bug e melhorias:
+•	A data do vencimento agora é idêntica a data de vencimento da fatura
+•	O retorno automático funciona sem nenhuma configuração extra, facilitando na automação do whmcs.
+
+
