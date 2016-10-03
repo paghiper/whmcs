@@ -3,7 +3,19 @@
 
 Módulo de gateway de pagamento  para o WHMCS
 
+# Descrição
+
+O módulo foi rescrito a partir do módulo desenvolvido por [WHMCS.RED](https://github.com/whmcsred/modulo-paghiper-whmcs). Foram realizadas algumas correções de bug e melhorias:
+
+•	A data do vencimento agora é idêntica a data de vencimento da fatura
+
+•	O retorno automático funciona sem nenhuma configuração extra, facilitando na automação do whmcs.
+
+
 #Para que o modulo funcione, siga as etapas abaixo:
+
+
+# Configurações da sua conta PagHiper
 
 1) Caso não possua uma conta PagHiper,  [crie sua conta aqui](https://www.paghiper.com/abra-sua-conta/) 
  
@@ -39,10 +51,6 @@ Se tiver qualquer duvida, visite a nossa [central de atendimento](https://www.pa
 
 ![Screenshot](imagens/modulo-configuracao.png)
 
-O módulo foi rescrito a partir do módulo desenvolvido por [WHMCS.RED](https://github.com/whmcsred/modulo-paghiper-whmcs). Foram realizadas algumas correções de bug e melhorias:
 
-•	A data do vencimento agora é idêntica a data de vencimento da fatura
-
-•	O retorno automático funciona sem nenhuma configuração extra, facilitando na automação do whmcs.
 
 
