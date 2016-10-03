@@ -1,5 +1,7 @@
-# whmcs - modulo de boleto PagHiper
-Modulo de boleto bancario PagHiper para o WHMCS
+# whmcs - módulo de boleto PagHiper
+
+
+Módulo de gateway de pagamento  para o WHMCS
 
 Para que o modulo funcione, siga as etapas abaixo:
 
@@ -20,3 +22,13 @@ https://www.paghiper.com/painel/whmcs
 
 Se tiver qualquer duvida, visite a nossa central de atendimento
 https://www.paghiper.com/atendimento/
+
+# Instalação:
+Baixe o arquivo paghiper.php, coloque o arquivo na pasta gateways dentro de modules do seu WHMCS. 
+
+Dentro da área administrativa do seu WHMCS, vá em: Setup > Payments > Payment Gateways (em inglês) ou Opções > Pagamentos > Portais para Pagamento
+
+Após, va na aba “All Payment Gateways” e procure pelo modulo de nome: “PagHiper Boleto” e clique em cima.
+
+Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais, e pronto.
+
