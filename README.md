@@ -9,7 +9,9 @@ Módulo de gateway de pagamento  para o WHMCS
 O módulo foi rescrito a partir do módulo desenvolvido por [WHMCS.RED](https://github.com/whmcsred/modulo-paghiper-whmcs). Foram realizadas algumas correções de bug e melhorias:
 
 •	A data do vencimento agora é idêntica a data de vencimento da fatura 
+
 •	Se a fatura já estiver vencida, ele sempre ira gerar um boleto com a data de vencimento atualizada.
+
 •	O retorno automático funciona sem nenhuma configuração extra, facilitando na automação do whmcs.
 
 
