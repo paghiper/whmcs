@@ -116,21 +116,23 @@ function paghiper_config($params) {
         
         'suporte' => array(
             "FriendlyName" => "<span class='label label-primary'><i class='fa fa-question-circle'></i> Suporte</span>",
-            "Description" => "Para informações ou duvidas:<br><br>
+            "Description" => '<h2>Para informações ou duvidas: </h2><br><br>
 
 <ul>
-<li>Duvidas sobre a conta  PAGHIPER:
-devem ser resolvidas diretamente na central de atendimento: 
-<a href='https://www.paghiper.com/atendimento' target='_blank'>https://www.paghiper.com/atendimento</a></li>
+<li>Duvidas sobre a conta <strong> PAGHIPER:</strong> <br><br>
+Devem ser resolvidas diretamente na central de atendimento: <br>
+<strong><a href="https://www.paghiper.com/atendimento" target="_blank">https://www.paghiper.com/atendimento</a></strong></li>
+<br><br><br>
 
-<li>Duvidas sobre o Modulo WHMCS
+<li>Duvidas sobre o <strong> Modulo WHMCS </strong> <br><br>
 Tem uma dúvida ou quer contribuir para o projeto? Acesse nosso repositório no GitHub!
-<a href='https://github.com/paghiper/whmcs' target='_blank'>https://github.com/paghiper/whmcs</a></li>
+<br>
+<strong><a href="https://github.com/paghiper/whmcs" target="_blank">https://github.com/paghiper/whmcs</a></strong></li>
 
 </ul><br>
 
-Nota de Agradecimento
-Esse modulo foi desenvolvido através da colaboração do desenvolvedor <strong><a href='https://henriquecruz.com.br' target='_blank'>Henrique Cruz</a></strong>"
+<h2>Nota de Agradecimento</h2>
+Esse modulo foi desenvolvido através da colaboração do desenvolvedor <strong><a href="https://henriquecruz.com.br" target="_blank">Henrique Cruz</a></strong> <br> <br>'
         )
        
     );
