@@ -130,7 +130,7 @@ Tem uma dúvida ou quer contribuir para o projeto? Acesse nosso repositório no 
 </ul><br>
 
 Nota de Agradecimento
-Esse modulo foi desenvolvido através da colaboração do desenvolvedor <a href='https://henriquecruz.com.br' target='_blank'>Henrique Cruz</a>"
+Esse modulo foi desenvolvido através da colaboração do desenvolvedor <strong><a href='https://henriquecruz.com.br' target='_blank'>Henrique Cruz</a></strong>"
         )
        
     );
