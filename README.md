@@ -1,65 +1,67 @@
-# WHMCS - módulo de boleto PagHiper Versão 1.01 
+# WHMCS - Módulo de boleto PagHiper 
+
+Permite a emissão de boletos e integração do gateway da Paghiper ao seu WHMCS.
+Este módulo implementa emissão de boletos com retorno automático.
+
+* Versão mais Recente:* 1.1
+* Requer WHMCS* versão mínima 5.0
+* Requisitos*: PHP >= 5.2.0, cURL ativado.
+* Compatibilidade*: WHMCS 7.1.2, PHP 7.x. Mod_rewrite opcional
 
 
-Módulo de gateway de pagamento  para o WHMCS
+# Como Instalar
 
+1. Crie sua conta na PagHiper [clique aqui para saber como](#).
 
-# Descrição
+2. Baixe o arquivo [paghiper.php](https://github.com/paghiper/whmcs/tree/master/modules/gateways), coloque o arquivo na pasta gateways dentro de modules/gateways, para que o Gateway fique disponível dentro do seu WHMCS. 
 
-O módulo foi rescrito a partir do módulo desenvolvido por [WHMCS.RED](https://github.com/whmcsred/modulo-paghiper-whmcs). Foram realizadas algumas correções de bug e melhorias:
+3. Dentro da área administrativa do seu WHMCS, vá em: Setup > Payments > Payment Gateways (em inglês) ou Opções > Pagamentos > Portais para Pagamento
 
-•	A data do vencimento agora é idêntica a data de vencimento da fatura 
+4. Após, va na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure pelo modulo de nome: “PagHiper Boleto” e clique em cima.
 
-•	Se a fatura já estiver vencida, ele sempre ira gerar um boleto com a data de vencimento atualizada.
-
-•	O retorno automático funciona sem nenhuma configuração extra, facilitando na automação do whmcs.
-
-
-#Para que o modulo funcione, siga as etapas abaixo:
-
-
-
-
-# # Passo 1
-
-Será necessário realizar algumas configurações da sua conta PagHiper
-
-1) Caso não possua uma conta PagHiper,  [crie sua conta aqui](https://www.paghiper.com/abra-sua-conta/) 
- 
-
-2 Certifique-se que a conta esteja verificada e valida na página de [Detalhes da sua conta](https://www.paghiper.com/painel/detalhes-da-conta/) do PagHiper
-
-3) Gere o seu token PagHiper na [pagina de token](https://www.paghiper.com/painel/token/)
-
-4) Ative o prazo máximo de vencimento do boleto para 180 dias, no Painel do PagHiper > Ferramentas > Vencimento do Boleto ( [Confira Aqui](https://www.paghiper.com/painel/prazo-vencimento-boleto/) ) 
-
-Somente assim, a data do vencimento do boleto será igual a da fatura.
-
-5) Ative a integração entre o PagHiper e o WHMCS, [Acesse aqui e ative](https://www.paghiper.com/painel/whmcs).
-
-
-Se tiver qualquer duvida, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/)
-
-
-# # Passo 2
-1) Baixe o arquivo [paghiper.php](https://github.com/paghiper/whmcs/tree/master/modules/gateways), coloque o arquivo na pasta gateways dentro de modules do seu WHMCS. 
-
-![Screenshot](imagens/cpanel-listagem-gateway.jpg)
-
-2) Dentro da área administrativa do seu WHMCS, vá em: Setup > Payments > Payment Gateways (em inglês) ou Opções > Pagamentos > Portais para Pagamento
-
-![Screenshot](imagens/menu.jpg)
-
-3) Após, va na aba “All Payment Gateways” e procure pelo modulo de nome: “PagHiper Boleto” e clique em cima.
-
-![Screenshot](imagens/all-payments.png)
-
-4) Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais, e pronto.
-
-![Screenshot](imagens/modulo-configuracao.png)
+5. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais, e pronto.
 
 
 # Suporte
 
-Se tiver qualquer duvida, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/)
+Para questões relacionadas a integração e plugin, acesse o [forum de suporte no Github](https://github.com/paghiper/whmcs/issues);
+Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/).
 
+# Changelog
+
+## Planejado para a próxima versão
+
+* Reutilização de boletos ao invés de emitir um novo a cada acesso
+* Emissão antecipada de boletos (automaticamente, no momento da criação da fatura via Cron)
+* Disponibilização de linha digitável no painel e e-mails de cobrança/fatura
+
+## 1.1 - 2017/04/13
+
+`Melhorias e novidades`
+
+* Otimização geral e limpeza de código
+* Suporte a Checkout transparente
+* Integração avançada (campos recebidos podem ser salvos em uma tabela)
+* Opção para abrir boleto por link direto
+* Envia o nome do cliente em caso de CPF, razão social em caso de CNPJ
+
+`Bugs e correções`
+
+* Loga eventuais problemas com o checkout transparente para debug
+* Trata o campo de CPF/CNPJ para se adequar ao formato exigido pela PagHiper
+* Usa o nome de usuário admin por padrão, caso não seja informado
+
+
+## 1.0 - 
+
+* Lançamento inicial
+
+# Licença
+
+Copyright 2016 Serviços Online BR.
+
+Licensed under the 3-Clause BSD License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+
+(https://opensource.org/licenses/BSD-3-Clause)[https://opensource.org/licenses/BSD-3-Clause]
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
