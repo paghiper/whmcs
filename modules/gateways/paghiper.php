@@ -1,98 +1,522 @@
 <?php
-    function paghiper_config()
-    {
-        return array(
-            'FriendlyName' => array(
-                "Type" => "System",
-                "Value" => "PagHiper Boleto"
-            ),
-            "nota" => array(
-                "FriendlyName" => "Nota",
-                "Description" => "
-                <p><H2>Para que o modulo funcione, siga as etapas abaixo:</H2></p>
-                <strong>1)</strong> Caso não possua uma conta PagHiper, <a href='https://www.paghiper.com/abra-sua-conta/' target='_blank'><strong> crie a sua aqui</strong></a> <br><br>
-                <strong>2</strong> Certifique-se que a conta esteja verificada e valida na página de <a href='https://www.paghiper.com/painel/detalhes-da-conta/' target='_blank'><strong>Detalhes da sua conta</strong></a> do PagHiper<br><br>
-                <strong>3)</strong> Gere o seu token PagHiper na <a href='https://www.paghiper.com/painel/token/' target='_blank'><strong> pagina de token</strong></a>    <br><br>           
-                <strong>4)</strong> Ative o prazo máximo de vencimento do boleto para 180 dias, no Painel do PagHiper  > Ferramentas  > Vencimento do Boleto ( <a href='https://www.paghiper.com/painel/prazo-vencimento-boleto/' target='_blank'><strong>Confira Aqui</strong></a> ). Somente assim, a data do vencimento do boleto será igual a da fatura.<br><br> 
-                <strong>5</strong> Ative a integração entre o PagHiper e o <a href='https://www.paghiper.com/painel/whmcs' target='_blank'><strong>WHMCS</strong></a>, <a href='https://www.paghiper.com/painel/whmcs' target='_blank'><strong>Acesse aqui</strong></a> e ative.<br><br>
-                <p>Se tiver qualquer duvida, visite a nossa <a href='https://www.paghiper.com/atendimento/' target='_blank'><strong>central de atendimento</strong></a></p>
-                ",
-                ),
-            
-            'email' => array(
-                "FriendlyName" => "Email",
-                "Type" => "text",
-                "Size" => "100",
-                "Description" => "Email da conta PagHiper que irá receber"
-            ),
-            'key' => array(
-                "FriendlyName" => "Token",
-                "Type" => "text",
-                "Size" => "66",
-                "Description" => "Extremamente importante, você pode gerar seu token em nossa pagina: Painel > Ferramentas > Token ( <a href='https://www.paghiper.com/painel/token/' target='_blank'><strong>Confira Aqui</strong></a> )."
-            ),
-            "porcento" => array(
-                "FriendlyName" => "Taxa Percentual (%)",
-                "Type" => "text",
-                "Size" => "3",
-                "Description" => "Porcentagem da fatura a se pagar a mais por usar o PagHiper. Ex.: (2.5). Obs.: não precisa colocar o % no final. Obs²: Use o ponto (.) como delimitador de casas decimais. <br> Recomendamos não cobrar nenhuma taxa."
-            ),
-            "taxa" => array(
-                "FriendlyName" => "Taxa fixa",
-                "Type" => "text",
-                "Size" => "7",
-                "Description" => "Taxa cobrada a mais do cliente por utilizar esse meio de pagamento, exemplo: 1.0 (dois reias). Obs: Use o ponto (.) como delimitador de casas decimais.<br> Recomendamos não cobrar nenhuma taxa."
-            ),
-            
-            "abrirauto" => array(
-                "FriendlyName" => "Abrir boleto ao abrir fatura?",
-                "Type" => "yesno",
-            ),
-            
-            "admin" => array(
-                "FriendlyName" => "Administrador atribuído",
-                "Type" => "text",
-                "Size" => "10",
-                "Default" => "",
-                "Description" => "Insira o nome de usuário ou ID do administrador do WHMCS que será atribuído as transações. Necessário para usar a API interna do WHMCS.",
-		),
-            
-            'doacao' => array(
-                "FriendlyName" => "<span class='label label-primary'><i class='fa fa-credit-card'></i> Doação</span>",
-                "Description" => "A primeira versão do modulo foi desenvolvida pelo prejeto <a href='http://whmcs.red/doacao/victor.php' target='_blank'> WHMCS.RED </a>, você pode <a href='http://whmcs.red/doacao/victor.php' target='_blank'><strong><i class='fa fa-dollar'></i> doar qualquer valor</strong></a> para esse projeto se desejar.</a>."
-            )
-           
-        );
+
+/**
+ * PagHiper - Módulo oficial para integração com WHMCS
+ * 
+ * @package    PagHiper para WHMCS
+ * @version    1.1
+ * @author     Equipe PagHiper https://github.com/paghiper/whmcs
+ * @author     Colaboração de Henrique Cruz - Intelihost
+ * @license    BSD License (3-clause)
+ * @copyright  (c) 2017, Henrique Cruz
+ * @link       https://www.paghiper.com/
+ */
+
+
+/**
+ * O arquivo foi acessado diretamente. 
+ * Se trata de um post da PagHiper, de um boleto emitido com checkout transparente 
+ * ou um link direto enviado por e-mail.
+ */
+
+// Opções padrão do Gateway
+function paghiper_config($params) {
+    $config = array(
+
+        'FriendlyName' => array(
+            "Type" => "System",
+            "Value" => "PagHiper Boleto"
+        ),
+
+        "nota" => array(
+            "FriendlyName" => "Nota",
+            "Description" => "
+   <h2>Para que o modulo funcione, siga as etapas abaixo:</h2>
+   <ul>
+   <li>Caso não possua uma conta PagHiper, <a href='https://www.paghiper.com/abra-sua-conta/' target='_blank'><strong> crie a sua aqui</strong></a> <br>
+       Precisa de ajuda para criar sua conta? <a href='https://www.paghiper.com/duvidas/como-se-cadastrar-no-paghiper/' target='_blank'><strong> clique aqui e veja como criar de maneira rápida e facil.</strong></a><br></li>
+   <li>Certifique-se que a conta esteja verificada e valida na página de <a href='https://www.paghiper.com/painel/detalhes-da-conta/' target='_blank'><strong>Detalhes da sua conta</strong></a> PagHiper</li>
+   <li>Gere o seu token PagHiper na <a href='https://www.paghiper.com/painel/token/' target='_blank'><strong> pagina de token</strong></a></li>
+   <li>Ative o prazo máximo de vencimento do boleto para 180 dias, no Painel do PagHiper  &gt; Ferramentas  &gt; Vencimento do Boleto ( <a href='https://www.paghiper.com/painel/prazo-vencimento-boleto/' target='_blank'><strong>Confira Aqui</strong></a> ). Somente assim, a data do vencimento do boleto será igual a da fatura.</li>
+   <li>Ative a integração entre o PagHiper e o <a href='https://www.paghiper.com/painel/whmcs' target='_blank'><strong>WHMCS</strong></a>, <a href='https://www.paghiper.com/painel/whmcs' target='_blank'><strong>Acesse aqui</strong></a> e ative.</li>
+   <li><h5>Suporte</h5><p>Se tiver qualquer duvida, visite a nossa <a href='https://www.paghiper.com/atendimento/' target='_blank'><strong>central de atendimento</strong></a></p></li>
+   </ul>"
+        ),
+        
+        'email' => array(
+            "FriendlyName" => "Email",
+            "Type" => "text",
+            "Size" => "100",
+            "Description" => "Email da conta PagHiper que irá receber"
+        ),
+
+        'token' => array(
+            "FriendlyName" => "Token",
+            "Type" => "text",
+            "Size" => "66",
+            "Description" => "Extremamente importante, você pode gerar seu token em nossa pagina: Painel > Ferramentas > Token ( <a href='https://www.paghiper.com/painel/token/' target='_blank'><strong>Confira Aqui</strong></a> )."
+        ),
+
+        "cpf_cnpj" => array(
+            "FriendlyName" => "ID do custom field contendo CPF/CNPJ",
+            "Type" => "text",
+            "Size" => "3",
+            "Description" => "Defina aqui o ID do campo usado para coletar CPF/CNPJ do seu cliente. Isso é necessário para usar o checkout transparente." . get_customfield_id()
+        ),
+
+        "porcento" => array(
+            "FriendlyName" => "Taxa Percentual (%)",
+            "Type" => "text",
+            "Size" => "3",
+            "Description" => "Porcentagem da fatura a se pagar a mais por usar o PagHiper. Ex.: (2.5). Obs.: não precisa colocar o % no final. Obs²: Use o ponto (.) como delimitador de casas decimais. <br> Recomendamos não cobrar nenhuma taxa."
+        ),
+
+        "taxa" => array(
+            "FriendlyName" => "Taxa fixa",
+            "Type" => "text",
+            "Size" => "7",
+            "Description" => "Taxa cobrada a mais do cliente por utilizar esse meio de pagamento, exemplo: 1.0 (dois reias). Obs: Use o ponto (.) como delimitador de casas decimais.<br> Recomendamos não cobrar nenhuma taxa."
+        ),
+
+        "abrirauto" => array(
+            "FriendlyName" => "Abrir boleto ao abrir fatura?",
+            "Type" => "yesno"
+        ),
+
+        "frasefixa" => array(
+            "FriendlyName" => "Exibe ou não a frase do boleto",
+            "Type" => "yesno"
+        ),
+
+        "porcento" => array(
+            "FriendlyName" => "Taxa Percentual (%)",
+            "Type" => "text",
+            "Size" => "3",
+            "Description" => "Porcentagem da fatura a se pagar a mais por usar o PagHiper. Ex.: (2.5). Obs.: não precisa colocar o % no final. Obs²: Use o ponto (.) como delimitador de casas decimais. <br> Recomendamos não cobrar nenhuma taxa."
+        ),
+
+        "integracao_avancada" => array(
+            "FriendlyName" => "Integração Avançada",
+            "Type" => "yesno",
+            "Description" => "Ao ativar essa opção, as informações de retorno são armazenadas no banco de dados para uso posterior. Com isso, podemos fazer coisas como mandar o código de barras direto no corpo do e-mail de fatura, integrar o boleto ao PDF da fatura e reutilizar boletos ja emitidos. Para mais informações, acesse nossa <a href='https://github.com/paghiper/whmcs' target='_blank'>Página do GitHub</a>"
+        ),
+
+        "transparentcheckout" => array(
+            "FriendlyName" => "Mostrar boleto usando Checkout Transparente?",
+            "Type" => "yesno"
+        ),
+        
+        "admin" => array(
+            "FriendlyName" => "Administrador atribuído",
+            "Type" => "text",
+            "Size" => "10",
+            "Default" => "admin",
+            "Description" => "Insira o nome de usuário ou ID do administrador do WHMCS que será atribuído as transações. Necessário para usar a API interna do WHMCS."
+        ),
+        
+        'suporte' => array(
+            "FriendlyName" => "<span class='label label-primary'><i class='fa fa-question-circle'></i> Suporte</span>",
+            "Description" => "Para informações ou duvidas:<br><br>
+
+<ul>
+<li>Duvidas sobre a conta  PAGHIPER:
+devem ser resolvidas diretamente na central de atendimento: 
+<a href='https://www.paghiper.com/atendimento' target='_blank'>https://www.paghiper.com/atendimento</a></li>
+
+<li>Duvidas sobre o Modulo WHMCS
+Tem uma dúvida ou quer contribuir para o projeto? Acesse nosso repositório no GitHub!
+<a href='https://github.com/paghiper/whmcs' target='_blank'>https://github.com/paghiper/whmcs</a></li>
+
+</ul><br>
+
+Nota de Agradecimento
+Esse modulo foi desenvolvido através da colaboração do desenvolvedor <a href='https://henriquecruz.com.br' target='_blank'>Henrique Cruz</a>"
+        )
+       
+    );
+
+    return $config;
+}
+
+function get_customfield_id() {
+    $fields = mysql_query("SELECT id, fieldname FROM tblcustomfields WHERE type = 'client';");
+    if (!$fields) {
+        return '<br><br>Erro geral no banco de dados';
+    } elseif (mysql_num_rows($fields) >= 1) {
+
+        $tutorial = '<br><br>Para sua comodidade, listamos abaixo os campos que podem ser usados e seus IDs. Basta pegar o ID e preencher acima. <ul>';
+        while ($field = mysql_fetch_assoc($fields)) {
+
+            $tutorial .= '<li><strong>ID do Campo: ';
+            $tutorial .= $field['id'];
+            $tutorial .= '</strong> | Nome: ';
+            $tutorial .= $field['fieldname'];
+            $tutorial .= '</li>';
+
+        }
+        $tutorial .= '</ul>';
+        $tutorial .= '<br>Caso o campo de CPF não esteja disponível, <strong><a href="https://github.com/paghiper/whmcs/wiki/Criando-o-campo-de-CPF-CNPJ" target="_blank">acesse o tutorial clicando aqui</a></strong> e veja como pode criar o campo.';
+       return $tutorial;
+    } else {
+        return '<br><br>Nenhum campo possível foi encontrado! Por favor <strong><a href="https://github.com/paghiper/whmcs/wiki/Criando-o-campo-de-CPF-CNPJ" target="_blank">acesse o tutorial clicando aqui</a></strong> e veja como pode criar o campo.';
     }
-    if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
+    
+}
+
+function paghiper_link($params) {   
+
+    $function = 'getinvoice';
+    $getinvoiceid['invoiceid'] = $params['invoiceid'];
+    $whmcsAdmin = $params['admin'];
+    $getinvoiceResults = localAPI($function,$getinvoiceid,$whmcsAdmin);
+  
+    $invoiceDuedate = $getinvoiceResults['duedate']; // Data de vencimento da fatura
+    $dataHoje = date('Y-m-d'); // Data de Hoje
+    
+    // Se a data de vencimento estiver no futuro ou presente
+    if ( $invoiceDuedate >= date('Y-m-d') ) {
+
+            // Usar a data de vencimento original
+            $billetDuedate  = $invoiceDuedate; 
+
+    // Caso contrario...
+    } elseif ( $invoiceDuedate < date('Y-m-d') ) {
+
+            // usar a data de hoje, acrescida de um dia extra como vencimento.
+            $billetDuedate  = date('Y-m-d', strtotime('+1 day'));
+            
+    } 
+    
+    // instancia as datas para a comparacao de internvalos de dias
+    $data1 = new DateTime($billetDuedate); 
+    $data2 = new DateTime($dataHoje);
+
+    // Calcula a diferença de dias entre o dia de hoje e a data de vencimento. Vamos usar esse número para enviar ao PagHiper.
+    $intervalo = $data1->diff($data2); 
+    $vencimentoBoleto = $intervalo->days;  
+
+    // Definimos &&
+    $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
+    
+    // faz os calculos (caso tenha definido um percentual ou taxa a mais, será incluida no calculo agora)
+    $valorInvoice = number_format(($params['amount']+((($params['amount'] / 100) * $params['porcento']) + $params['taxa'])), 2, '.', ''); # Formato: ##.##
+    
+    ### abrir o boleto automaticamente ao abrir a fatura 
+    if($params['abrirauto']==true):
+        $target = '';
+        $abrirAuto = "<script type='text/javascript'> document.paghiper.submit()</script>";
+    else:
+        $target =  "target='_blank'";
+        $abrirAuto = ''; 
+    endif;
+// ALLOW CHECKOUT TRANSPARENTE
+if($params['transparentcheckout'] == true) {
+$code = "
+<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
+    <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}\" method=\"post\">
+    <input type='image' src='https://www.paghiper.com/img/checkout/boleto/boleto-120px-69px.jpg' 
+    title='Pagar com Boleto' alt='Pagar com Boleto' border='0'
+     align='absbottom' /><br>
+    <input type=\"submit\" value=\"Gerar boleto\">
+    <!-- FIM DO BOLETO PAGHIPER -->
+    </form>
+    {$abrirAuto}";
+} else {
+$code = "
+<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
+    <form name=\"paghiper\" {$target} action=\"https://www.paghiper.com/checkout/\" method=\"post\">
+    <input name='email_loja' type='hidden' value='{$params['email']}'>
+    <!-- Informações opcionais -->
+    <input name='urlRetorno' type='hidden' value='{$urlRetorno}'>
+    <input name='vencimentoBoleto' type='hidden' value='{$vencimentoBoleto}'>
+    <!-- Dados do produto -->
+    <input name='id_plataforma' type='hidden' value='{$params['invoiceid']}' />
+    <input name='produto_codigo_1' type='hidden' value='{$params['invoiceid']}' />
+    <input name='produto_valor_1' type='hidden' value='{$valorInvoice}'>
+    <input name='produto_descricao_1' type='hidden' value='Fatura #{$params['invoiceid']}'>
+    <input name='produto_qtde_1' type='hidden' value='1'>
+
+    <!-- Dados do cliente -->
+    <input name='email' type='hidden' value='{$params['clientdetails']['email']}' />
+    <input name='nome' type='hidden' value='{$params['clientdetails']['firstname']} {$params['clientdetails']['lastname']}'>
+
+    <input name='telefone' type='hidden' value='{$params['clientdetails']['phonenumber']}' />
+
+    <input name='endereco' type='hidden' value='{$params['clientdetails']['address1']}' />
+    <input name='bairro' type='hidden' value='{$params['clientdetails']['address2']}' />
+    <input name='cidade' type='hidden' value='{$params['clientdetails']['city']}' />
+    <input name='estado' type='hidden' value='{$params['clientdetails']['state']}' />
+    <input name='cep' type='hidden' value='{$params['clientdetails']['postcode']}' />
+    <input name='numero_casa' type='hidden' value='S/N' />
+    <input name='complemento' type='hidden' value='{$params['clientdetails']['address2']}' />
+    <input name='idPartners' type='hidden' value='D1J0M5GD' />    
+    <input name='pagamento' type='hidden' id='pagamento'  />
+    <input type='image' src='https://www.paghiper.com/img/checkout/boleto/boleto-120px-69px.jpg' 
+    title='Pagar com Boleto' alt='Pagar com Boleto' border='0'
+     align='absbottom' /><br>
+    <input type=\"submit\" value=\"Gerar boleto\">
+    <!-- FIM DO BOLETO PAGHIPER -->
+    </form>
+    {$abrirAuto}";
+}
+    
+
+
+   return $code;                  
+}
+
+function httpPost($url,$params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto)
+{
+    $postData    = '';
+    $query       = "SELECT tblinvoices.*,tblclients.id as myid, tblclients.firstname,tblclients.lastname,tblclients.companyname,tblclients.address1,tblclients.address2,tblclients.city,tblclients.state,tblclients.postcode,tblclients.email,tblclients.phonenumber FROM tblinvoices INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.id='$invoiceid'";
+    $result      = mysql_query($query);
+    $data        = mysql_fetch_array($result);
+    $id          = $data["id"];
+    $myid        = $data["myid"];
+    $firstname   = $data["firstname"];
+    $lastname    = $data["lastname"];
+    $companyname = $data["companyname"];
+    $address1    = $data["address1"];
+    $address2    = $data["address2"];
+    $city        = $data["city"];
+    $state       = $data["state"];
+    $postcode    = $data["postcode"];
+    $date        = $data["email"];
+    $subtotal    = $data["subtotal"];
+    $credit      = $data["credit"];
+    $tax         = $data["tax"];
+    $taxrate     = $data["taxrate"];
+    $phone       = $data["phonenumber"];
+    $email       = $data["email"];
+    $total       = $data["total"];
+    $cpfcnpj     = $GATEWAY['cpf_cnpj'];
+    $query2      = "SELECT * FROM tblcustomfieldsvalues WHERE relid = $myid and fieldid = $cpfcnpj";
+    $result2     = mysql_query($query2);
+    $data2       = mysql_fetch_array($result2);
+    $cpf         = $data2["value"];
+    
+    // Preparate data to send
+    $paghiper_data = array(
+       "email_loja" => $GATEWAY['email'],
+       "idPartners" => "D1J0M5GD",
+
+       // Informações opcionais
+       "urlRetorno" => $urlRetorno,
+       "vencimentoBoleto" => $vencimentoBoleto,
+
+       // Dados do produto
+       "id_plataforma" => $invoiceid,
+       "produto_codigo_1" => $invoiceid,
+       "produto_valor_1" => $subtotal,
+       "produto_descricao_1" => 'Fatura #'.$invoiceid.' emitida pelo site Intelihost',
+       "produto_qtde_1" => 1,
+
+       // Dados do cliente
+       "email"      => $email,
+       "nome"       => $firstname . ' ' . $lastname,
+       "telefone"   => $phone,
+       "endereco"   => $address1,
+       "bairro"     => $address2,
+       "cidade"     => $city,
+       "estado"     => $$state,
+       "cep"        => $postcode,
+    );
+
+
+    // Checa se incluimos dados CPF ou CNPJ no post
+    if ($cpf != " " or $cpf != "on file") {
+        if(strpos($cpf, '/') !== false) {
+            $paghiper_data["razao_social"] = $companyname;
+            $paghiper_data["cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cpf, FILTER_SANITIZE_NUMBER_INT))), -14);
+        } else {
+            $paghiper_data["cpf"] = substr(trim(str_replace(array('+','-'), '', filter_var($cpf, FILTER_SANITIZE_NUMBER_INT))), -15);
+        }
+    } elseif(!isset($cpfcnpj) || $cpfcnpj == '') {
+        logTransaction($GATEWAY["name"],$_POST,"Boleto não exibido. Você não definiu o campo CPF/CNPJ");
+    } elseif(!isset($cpf_cnpj) || $cpf_cnpj == '') {
+        logTransaction($GATEWAY["name"],$_POST,"Boleto não exibido. CPF/CNPJ do cliente não foi informado");
+    } else {
+        logTransaction($GATEWAY["name"],$_POST,"Boleto não exibido. Erro indefinido");
+    }
+
+    if($GATEWAY['frasefixa'] == true) {
+        $paghiper_data["frase_fixa_boleto"] = true;
+    }
+
+    $paghiper_data["pagamento"]  = "pagamento";
+
+   // Pegar todos os dados que setamos e preparamos para enviar. Os dados vão todos na URL.
+   foreach($paghiper_data as $k => $v) 
+   { 
+      $postData .= $k . '='.$v.'&'; 
+   }
+   $postData = rtrim($postData, '&');
+ 
+    $ch = curl_init();  
+ 
+    curl_setopt($ch, CURLOPT_URL,$url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
+    curl_setopt($ch, CURLOPT_HEADER, false); 
+    curl_setopt($ch, CURLOPT_POST, count($postData));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+ 
+    $output=curl_exec($ch);
+ 
+    curl_close($ch);
+    return $output;
+ 
+}
+
+function check_table() {
+    $table_create = full_query("CREATE TABLE IF NOT EXISTS `mod_paghiper` (
+      `id` int(11) NOT NULL AUTO_INCREMENT,
+      `idTransacao` varchar(16) NOT NULL,
+      `status` varchar(45) NOT NULL,
+      `urlPagamento` varchar(255) DEFAULT NULL,
+      `linhaDigitavel` varchar(54) DEFAULT NULL,
+      `codRetorno` varchar(64) NOT NULL,
+      `type` varchar(10) NOT NULL,
+      PRIMARY KEY (`id`),
+      KEY `idTransacao` (`idTransacao`)
+    ) ENGINE=MyISAM DEFAULT CHARSET=latin1 PAGE_CHECKSUM=1 AUTO_INCREMENT=1 ;");
+    if(!$table_create) {
+        return false;
+        logTransaction($GATEWAY["name"],$_POST,"Não foi possível gravar os dados no banco.");
+    } else {
+        return true;
+    }
+
+}
+
+// Nenhuma das funções foi executada, então o script foi acessado diretamente.
+if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
+    
+    header("access-control-allow-origin: *");
+
+    // Inicializar WHMCS, carregar o gateway e a fatura.
+    require "../../init.php";
+    $whmcs->load_function("gateway");
+    $whmcs->load_function("invoice");
+
+    // Initialize module settings
+    $GATEWAY = getGatewayVariables("paghiper");
+
+    // Define variáveis para configurações do gateway
+    $gateway_name = $GATEWAY["name"];
+    $account_email = trim($GATEWAY["email"]);
+    $account_token = trim($GATEWAY['token']);
+    $transparent_checkout = $GATEWAY['transparentcheckout'];
+
+    // Se o usuário admin estiver vazio nas configurações, usamos o padrão
+    $whmcsAdmin = (empty(trim($GATEWAY['admin'])) ? 'admin' : trim($GATEWAY['admin']));
+
+
+
+    // Se as condições baterem, estamos lidando com um post do checkout transparente.
+    if($GATEWAY['transparentcheckout'] == true && isset($_GET["invoiceid"])) {
+
+        // Vamos precisar pegar a URL do sistema direto do banco de dados. A variável $params não está disponível nesse momento.
+        $query = "SELECT value FROM tblconfiguration WHERE setting = 'SystemSSLURL' OR setting = 'SystemURL' LIMIT 1"; 
+        $result = mysql_query($query);
+        $data = mysql_fetch_array($result);
+        $systemurl = $data[0];
+
+        $user_id = intval($_GET["uuid"]);
+        $user_email = $_GET["mail"];
+
+        // Pegamos a fatura no banco de dados
+        $getinvoice = 'getinvoice';
+        $getinvoiceid['invoiceid'] = intval($_GET["invoiceid"]);
+        $getinvoiceResults = localAPI($getinvoice,$getinvoiceid,$whmcsAdmin);
+
+        if($getinvoiceResults['userid'] !== $user_id) {
+            exit;
+        } else {
+            $query = "SELECT email FROM tblclients WHERE id = '".$user_id."' LIMIT 1"; 
+            $result = mysql_query($query);
+            $data = mysql_fetch_array($result);
+            $email = $data[0];
+
+            if($email !== $user_email) {
+                exit;
+            }
+        }
         
-        header("access-control-allow-origin: *");
-        require "../../init.php"; // esse arquivo deve ser impostado de acordo com o seu diretorio, geralmente ele fica na pasta principal do WHMCS
-        
-        $whmcs->load_function("gateway");
-        $whmcs->load_function("invoice");
-        $GATEWAY = getGatewayVariables("paghiper");
+
 
         
-        $whmcsAdmin = $GATEWAY['admin']; // id ou nome de usuario admin do whmcs
-        $token = $GATEWAY['key'];  // token do paghiper
-        $valorOriginal = $_POST['valorOriginal'];  // consulte a documentacao https://www.paghiper.com/documentacao/
-        $valorLoja = $_POST['valorLoja']; // consulte a documentacao https://www.paghiper.com/documentacao/
-        $amountGateway = $_POST['valorTotal']; // consulte a documentacao https://www.paghiper.com/documentacao/
-        $fee = $_POST['valorTotal']-$_POST['valorLoja']; // Tarifa da Transacao
-        $status = $_POST['status']; // consulte a documentacao https://www.paghiper.com/documentacao/
-        $idTransacao = $_POST['idTransacao']; // consulte a documentacao https://www.paghiper.com/documentacao/
-        $idPlataforma = $_POST['idPlataforma']; // consulte a documentacao https://www.paghiper.com/documentacao/
+  
+        // Pegamos a data de vencimento e a data de hoje
+        $invoiceDuedate = $getinvoiceResults['duedate']; // Data de vencimento da fatura
+        $dataHoje = date('Y-m-d'); // Data de Hoje
         
-        // PREPARA O POST PARA CONFIRMAR O RETORNO DIRETO NO PAGHIPER
+        // Se a data do vencimento da fatura for maior que o dia de hoje
+        if ( $invoiceDuedate >= date('Y-m-d') ) {
+
+            // Usamos a data de vencimento normalmente
+            $billetDuedate  = $invoiceDuedate; 
+
+        // Se a data de vencimento da fatura for menor que o dia de hoje
+        } elseif( $invoiceDuedate < date('Y-m-d')) {
+
+            // Pegamos a data de hoje, adicionamos um dia e usamos como nova data de vencimento
+            $billetDuedate  = date('Y-m-d', strtotime('+1 day')); 
+                
+        } 
+        
+        // Pegamos as datas que definimos anteriormente e transformamos em objeto Date do PHP
+        $data1 = new DateTime($billetDuedate); 
+        $data2 = new DateTime($dataHoje);
+
+        // Comparamos as datas para enviar o resultado a PagHiper. Isso é necessário pois o gateway pede o vencimento em número de dias no futuro, não como data.
+        $intervalo = $data1->diff($data2); 
+        $vencimentoBoleto = $intervalo->days;  
+
+        // Checamos uma ultima vez se o ID da fatura não veio vazio
+        if($_GET["invoiceid"] == '') {
+            exit("Fatura inexistente");
+        } else {
+            $invoiceid = $_GET["invoiceid"];
+            $urlRetorno = $systemurl.'modules/gateways/'.basename(__FILE__);
+
+            // Executamos o checkout transparente e printamos o resultado
+            echo httpPost("https://www.paghiper.com/checkout/",$params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto);
+            exit;
+        }
+        
+    // Caso contrário, é um post do PagHiper.
+    } else {
+
+        // Pegamos os campos enviados por POST. Vamos checar esses dados.
+        $idTransacao    = $_POST['idTransacao'];
+        $status         = $_POST['status'];
+        $urlPagamento   = $_POST['urlPagamento'];
+        $linhaDigitavel = $_POST['linhaDigitavel'];
+        $codRetorno     = $_POST['codRetorno'];
+        $valorOriginal  = $_POST['valorOriginal']; 
+        $valorLoja      = $_POST['valorLoja'];
+        $amountGateway  = $_POST['valorTotal'];
+        $idPlataforma   = $_POST['idPlataforma'];
+
+        // Calcula a taxa cobrada pela PagHiper de maneira dinâmica e registra para uso no painel.
+        $fee = $_POST['valorTotal']-$_POST['valorLoja'];
+
+        // Antes de mais nada, checamos se o ID da fatura existe no banco. 
+        $invoiceid = checkCbInvoiceID($idPlataforma,$GATEWAY["name"]);
+
+        // Vamos enviar esses dados a PagHiper pra termos certeza de que são autênticos
         $post = "idTransacao=$idTransacao" .
         "&status=$status" .
         "&codRetorno=$codRetorno" .
         "&valorOriginal=$valorOriginal" .
         "&valorLoja=$valorLoja" .
-        "&token=$token";
+        "&token=$account_token";
         $enderecoPost = "https://www.paghiper.com/checkout/confirm/"; 
 
+        // Prepara a chamada Curl que vamos usar.
         ob_start();
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $enderecoPost);
@@ -104,136 +528,73 @@
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         $resposta = curl_exec($ch); // Importante, verifica se o retorno automatico é verdadeiro
         curl_close($ch);
-  
-        $invoiceid = checkCbInvoiceID($idPlataforma,$GATEWAY["name"]); # Confere se a ID do pedido é válida, se não, termina o programa.
 
+        // O valor que procuramos na confirmação da PagHiper é esse. Se der true, podemos prosseguir.
         $confirmado = (strcmp ($resposta, "VERIFICADO") == 0);
         
-         // Rotina para descobrir o userid da fatura
-        $command = "getinvoice";
-        $values["invoiceid"] = $invoiceid;
-        $results = localAPI($command,$values,$adminuser);
-        
-        ###### IMPORTANTE
-        # - se estiver ativado a opcao de cobrar taxas extras pelo uso do boleto, a condicacao abaixo ira evitar que a taxa extra entre como credito para o cliente
-        if($results['total'] <  $amountGateway):
-           $amountGateway = $results['total'];
-        endif;
-        ###### FIM IMPORTANTE
-        
-        
-        
-        
-        if ($confirmado) // se o retorno automatico for confirmado
-        {
-                if ($status == "Aguardando")
-                {
+        // Só executamos o bloco condicional abaixo se o post da PagHiper for confirmado.
+        if ($confirmado) {
 
-                        # Transação em Andamento
-                        $addtransaction = "addtransaction";
- 			$addtransvalues['userid'] = $results['userid'];
- 			$addtransvalues['invoiceid'] = $invoiceid;
- 			$addtransvalues['description'] = "Boleto gerado aguardando pagamento.";
- 			$addtransvalues['amountin'] = '0.00';
- 			$addtransvalues['fees'] = '0.00';
- 			$addtransvalues['paymentmethod'] = 'paghiper';
- 			$addtransvalues['transid'] = $idTransacao.'-Boleto-Gerado';
- 			$addtransvalues['date'] = date('d/m/Y');
-			$addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
+            if($GATEWAY["integracao_avancada"] == TRUE) {
+                $custom_table = check_table();
+                if($custom_table) {
+                    $log_transaction = full_query("INSERT INTO 'mod_paghiper' (idTransacao,status,urlPagamento,linhaDigitavel,codRetorno,type) VALUES ($idTransacao,$status,$urlPagamento,$linhaDigitavel,$codRetorno,'retorno'");
+                    if(!$log_transaction) {
+                        logTransaction($GATEWAY["name"],$_POST,"Não foi possível gravar os dados no banco.");
+                    }
+                }
+            }
+
+            // Pegamos a fatura como array e armazenamos na variável para uso posterior
+            $command = "getinvoice";
+            $values["invoiceid"] = $invoiceid;
+            $results = localAPI($command,$values,$whmcsAdmin);
+            
+            // Abaixo evitamos que eventuais taxas extrar sejam adicionadas como crédito na conta do cliente.
+            if($results['total'] <  $amountGateway):
+               $amountGateway = $results['total'];
+            endif;
+
+            // Função que vamos usar na localAPI
+            $addtransaction = "addtransaction";
+
+                // Cliente fez emissão do boleto, logamos apenas como memorando
+                if ($status == "Aguardando") {
+
+                        $addtransvalues['userid'] = $results['userid'];
+                        $addtransvalues['invoiceid'] = $invoiceid;
+                        $addtransvalues['description'] = "Boleto gerado aguardando pagamento.";
+                        $addtransvalues['amountin'] = '0.00';
+                        $addtransvalues['fees'] = '0.00';
+                        $addtransvalues['paymentmethod'] = 'paghiper';
+                        $addtransvalues['transid'] = $idTransacao.'-Boleto-Gerado';
+                        $addtransvalues['date'] = date('d/m/Y');
+                        $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
                         logTransaction($GATEWAY["name"],$_POST,"Aguardando o Pagamento"); # Salva informações da transação no log do WHMCS.
+
+                // Transação foi aprovada
+                } else if ($status == "Aprovado") {
+
+                    // Essa função checa se a transação ja foi registrada no banco de dados. 
+                    checkCbTransID($idTransacao);
+
+                    // Registramos o pagamento e damos baixa na fatura
+                    addInvoicePayment($invoiceid,$idTransacao,$amountGateway,$fee,'paghiper');
+
+                    // Logamos a transação no log de Gateways do WHMCS.
+                    logTransaction($GATEWAY["name"],$_POST,"Transação Concluída");
+
+                // Transação Cancelada. 
+                } else if ($status == "Cancelado") {
+
+                    // Boleto não foi pago, logamos apenas como memorando
+                    logTransaction($GATEWAY["name"],$_POST,"Transação Cancelada");
                 }
-                else if ($status == "Aprovado")
-                {
-                        # Transação Aprovada
-                        checkCbTransID($idTransacao); # Confere se a ID dessa transação não está na base de dados e termina o programa se já estiver.
-                        addInvoicePayment($invoiceid,$idTransacao,$amountGateway,$fee,'paghiper'); # Adiciona o pagamento à transação no WHMCS.
-                        logTransaction($GATEWAY["name"],$_POST,"Transação Concluída"); # Salva informações da transação no log do WHMCS.
-                }
-                else if ($status == "Cancelado")
-                {
-                        # Transação Cancelada
-                        logTransaction($GATEWAY["name"],$_POST,"Transação Cancelada"); # Salva informações da transação no log do WHMCS.
-                }
+
+                //TODO
+                // Prever todos os tipos de retorno.
         }
+    
+    
     }
-
-    function paghiper_link($params)
-    {
-        $getinvoice = 'getinvoice';
-        $getinvoiceid['invoiceid'] = $params['invoiceid'];
-        $whmcsAdmin = $params['admin'];
-        $getinvoiceResults = localAPI($getinvoice,$getinvoiceid,$whmcsAdmin);
-      
-        $invoiceDuedate	= $getinvoiceResults['duedate']; // Data de vencimento da fatura
-        $dataHoje = date('Y-m-d'); // Data de Hoje
-        
-        if ( $invoiceDuedate >= date('Y-m-d') ) { // Se a data do vencimento da fatura for maior que o dia de hoje
-                $billetDuedate	= $invoiceDuedate; 
-
-        } elseif( $invoiceDuedate < date('Y-m-d')) { // Se a data de vencimento da fatura for menor que o dia de hoje
-                $billetDuedate	= date('Y-m-d', strtotime('+1 day')); // Se fatura já venceu, data de vencimento do boleto		= Hoje + 1 dia
-                
-        } 
-        
-        // instancia as datas para a comparacao de internvalos de dias
-        $data1 = new DateTime($billetDuedate); 
-        $data2 = new DateTime($dataHoje);
-
-        $intervalo = $data1->diff($data2); 
-        $vencimentoBoleto = $intervalo->days;  
-        // fim intervalo de datas
-        $urlRetorno = $params['systemurl'].'/modules/gateways/'.basename(__FILE__);
-        
-        // faz os calculos (caso tenha definido um percentual ou taxa a mais, será incluida no calculo agora)
-        $valorInvoice = number_format(($params['amount']+((($params['amount'] / 100) * $params['porcento']) + $params['taxa'])), 2, '.', ''); # Formato: ##.##
-        
-        ### abrir o boleto automaticamente ao abrir a fatura 
-        if($params['abrirauto']==true):
-            $target = '';
-            $abrirAuto = "<script type='text/javascript'> document.paghiper.submit()</script>";
-        else:
-            $target =  "target='_blank'";
-            $abrirAuto = ''; 
-        endif;
-        
-        
-	$code = "
-	<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
-        <form name=\"paghiper\" {$target} action=\"https://www.paghiper.com/checkout/\" method=\"post\">
-        <input name='email_loja' type='hidden' value='{$params['email']}'>
-        <!-- Informações opcionais -->
-        <input name='urlRetorno' type='hidden' value='{$urlRetorno}'>
-        <input name='vencimentoBoleto' type='hidden' value='{$vencimentoBoleto}'>
-        <!-- Dados do produto -->
-        <input name='id_plataforma' type='hidden' value='{$params['invoiceid']}' />
-        <input name='produto_codigo_1' type='hidden' value='{$params['invoiceid']}' />
-        <input name='produto_valor_1' type='hidden' value='{$valorInvoice}'>
-        <input name='produto_descricao_1' type='hidden' value='Fatura #{$params['invoiceid']}'>
-        <input name='produto_qtde_1' type='hidden' value='1'>
-
-        <!-- Dados do cliente -->
-        <input name='email' type='hidden' value='{$params['clientdetails']['email']}' />
-        <input name='nome' type='hidden' value='{$params['clientdetails']['firstname']} {$params['clientdetails']['lastname']}'>
-
-        <input name='telefone' type='hidden' value='{$params['clientdetails']['phonenumber']}' />
-
-        <input name='endereco' type='hidden' value='{$params['clientdetails']['address1']}' />
-        <input name='bairro' type='hidden' value='{$params['clientdetails']['address2']}' />
-        <input name='cidade' type='hidden' value='{$params['clientdetails']['city']}' />
-        <input name='estado' type='hidden' value='{$params['clientdetails']['state']}' />
-        <input name='cep' type='hidden' value='{$params['clientdetails']['postcode']}' />
-        <input name='numero_casa' type='hidden' value='S/N' />
-        <input name='complemento' type='hidden' value='{$params['clientdetails']['address2']}' />
-        <input name='idPartners' type='hidden' value='3N78MPCR' />    
-        <input name='pagamento' type='hidden' id='pagamento'  />
-        <input type='image' src='https://www.paghiper.com/img/checkout/boleto/boleto-120px-69px.jpg' 
-        title='Pagar com Boleto' alt='Pagar com Boleto' border='0'
-         align='absbottom' /><br>
-        <input type=\"submit\" value=\"Gerar boleto\">
-        <!-- FIM DO BOLETO PAGHIPER -->
-        </form>
-        {$abrirAuto}";
- 
-       return $code;                  
-    }
-?>
+} ?>
