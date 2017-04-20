@@ -4,7 +4,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    1.1
+ * @version    1.11
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Colaboração de Henrique Cruz - Intelihost
  * @license    BSD License (3-clause)
@@ -199,6 +199,20 @@ function paghiper_link($params) {
 
     // Definimos &&
     $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
+
+    // Pegamos os dados de CPF/CNPJ
+    $cpf_field = 'customfields'.$params["cpf_cnpj"];
+    $cpf_cnpj = $params['clientdetails'][$cpf_field];
+    if(strpos($cpf_cnpj, '/') !== false) {
+        $razao_social = $params['clientdetails']['companyname'];
+        $cnpj = substr(trim(str_replace(array('+','-'), '', filter_var($cpf_cnpj, FILTER_SANITIZE_NUMBER_INT))), -14);
+
+        $code_insert = '<input name="razao_social" type="hidden" value="'.$razao_social.'" />';
+        $code_insert .= '<input name="cnpj" type="hidden" value="'.$cnpj.'" />';
+    } else {
+        $cpf = substr(trim(str_replace(array('+','-'), '', filter_var($cpf_cnpj, FILTER_SANITIZE_NUMBER_INT))), -15);
+        $code_insert = '<input name="cpf" type="hidden" value="'.$cpf.'" />';
+    }
     
     // faz os calculos (caso tenha definido um percentual ou taxa a mais, será incluida no calculo agora)
     $valorInvoice = number_format(($params['amount']+((($params['amount'] / 100) * $params['porcento']) + $params['taxa'])), 2, '.', ''); # Formato: ##.##
@@ -236,7 +250,10 @@ $code = "
     <input name='produto_codigo_1' type='hidden' value='{$params['invoiceid']}' />
     <input name='produto_valor_1' type='hidden' value='{$valorInvoice}'>
     <input name='produto_descricao_1' type='hidden' value='Fatura #{$params['invoiceid']}'>
-    <input name='produto_qtde_1' type='hidden' value='1'>
+    <input name='produto_qtde_1' type='hidden' value='1'>";
+
+$code .= $code_insert;
+$code .= "
 
     <!-- Dados do cliente -->
     <input name='email' type='hidden' value='{$params['clientdetails']['email']}' />
@@ -428,13 +445,17 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
 
         $user_id = intval($_GET["uuid"]);
         $user_email = $_GET["mail"];
+        //echo 'a';
 
         // Pegamos a fatura no banco de dados
         $getinvoice = 'getinvoice';
         $getinvoiceid['invoiceid'] = intval($_GET["invoiceid"]);
         $getinvoiceResults = localAPI($getinvoice,$getinvoiceid,$whmcsAdmin);
+        //print_r($getinvoiceResults);
+        //echo $user_id . ' / '. $getinvoiceResults['userid'];
 
-        if($getinvoiceResults['userid'] !== $user_id) {
+        if(intval($getinvoiceResults['userid']) !== $user_id) {
+                //echo 'ops!';
             exit;
         } else {
             $query = "SELECT email FROM tblclients WHERE id = '".$user_id."' LIMIT 1"; 
