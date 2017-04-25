@@ -327,7 +327,7 @@ function httpPost($url,$params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto
        "id_plataforma" => $invoiceid,
        "produto_codigo_1" => $invoiceid,
        "produto_valor_1" => $subtotal,
-       "produto_descricao_1" => 'Fatura #'.$invoiceid.' emitida pelo site Intelihost',
+       "produto_descricao_1" => 'Fatura #'.$invoiceid,
        "produto_qtde_1" => 1,
 
        // Dados do cliente
