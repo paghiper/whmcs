@@ -4,7 +4,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    1.11
+ * @version    1.12
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Colaboração de Henrique Cruz - Intelihost
  * @license    BSD License (3-clause)
@@ -31,6 +31,16 @@ function paghiper_config($params) {
         "nota" => array(
             "FriendlyName" => "Nota",
             "Description" => "
+            <table><tbody><tr><td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='
+    max-width: 100%;
+  '></td><td>
+Versão
+  <h2 style='
+    font-weight: bold;
+    margin-top: 0px;
+    font-size: 300%;
+'>1.12</h2>
+</td></tr></tbody></table>
    <h2>Para que o modulo funcione, siga as etapas abaixo:</h2>
    <ul>
    <li>Caso não possua uma conta PagHiper, <a href='https://www.paghiper.com/abra-sua-conta/' target='_blank'><strong> crie a sua aqui</strong></a> <br>
@@ -152,7 +162,7 @@ function get_customfield_id() {
             $tutorial .= '<li><strong>ID do Campo: ';
             $tutorial .= $field['id'];
             $tutorial .= '</strong> | Nome: ';
-            $tutorial .= $field['fieldname'];
+            $tutorial .= htmlentities($field['fieldname']);
             $tutorial .= '</li>';
 
         }
@@ -198,6 +208,7 @@ function paghiper_link($params) {
     $vencimentoBoleto = $intervalo->days;  
 
     // Definimos &&
+    $systemurl = get_system_url($params);
     $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
 
     // Pegamos os dados de CPF/CNPJ
@@ -215,7 +226,7 @@ function paghiper_link($params) {
     }
     
     // faz os calculos (caso tenha definido um percentual ou taxa a mais, será incluida no calculo agora)
-    $valorInvoice = number_format(($params['amount']+((($params['amount'] / 100) * $params['porcento']) + $params['taxa'])), 2, '.', ''); # Formato: ##.##
+    $valorInvoice = apply_custom_taxes($params['amount'], $params); # Formato: ##.##
     
     ### abrir o boleto automaticamente ao abrir a fatura 
     if($params['abrirauto']==true):
@@ -313,6 +324,9 @@ function httpPost($url,$params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto
     $result2     = mysql_query($query2);
     $data2       = mysql_fetch_array($result2);
     $cpf         = $data2["value"];
+
+    //TODO
+    $subtotal = apply_custom_taxes($subtotal, $GATEWAY, $params);
     
     // Preparate data to send
     $paghiper_data = array(
@@ -438,10 +452,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
     if($GATEWAY['transparentcheckout'] == true && isset($_GET["invoiceid"])) {
 
         // Vamos precisar pegar a URL do sistema direto do banco de dados. A variável $params não está disponível nesse momento.
-        $query = "SELECT value FROM tblconfiguration WHERE setting = 'SystemSSLURL' OR setting = 'SystemURL' LIMIT 1"; 
-        $result = mysql_query($query);
-        $data = mysql_fetch_array($result);
-        $systemurl = $data[0];
+        $systemurl = get_system_url();
 
         $user_id = intval($_GET["uuid"]);
         $user_email = $_GET["mail"];
@@ -620,4 +631,35 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
     
     
     }
-} ?>
+} 
+
+// Helper Functions
+
+function get_system_url($params = NULL){
+    if(array_key_exists('systemurl', $params)) {
+        $systemurl = $params['systemurl'];
+    } else {
+        $query = "SELECT value FROM tblconfiguration WHERE setting = 'SystemSSLURL' OR setting = 'SystemURL' LIMIT 1"; 
+        $result = mysql_query($query);
+        $data = mysql_fetch_array($result);
+        $systemurl = $data[0];
+    }
+
+
+    return $systemurl;
+}
+
+function apply_custom_taxes($amount, $GATEWAY, $params = NULL){
+
+    if(array_key_exists('amount', $params)) {
+        $amount     = $params['amount'];
+        $porcento   = $params['porcento'];
+        $taxa       = $params['taxa'];
+    } else {
+        $porcento   = $GATEWAY['porcento'];
+        $taxa       = $GATEWAY['taxa'];
+    }
+    return number_format(($amount+((($amount / 100) * $porcento) + $taxa)), 2, '.', ''); # Formato: ##.##
+}
+
+?>
