@@ -208,7 +208,7 @@ function paghiper_link($params) {
     $vencimentoBoleto = $intervalo->days;  
 
     // Definimos &&
-    $systemurl = ($CONFIG['SystemSSLURL'] ? $CONFIG['SystemSSLURL'] : $CONFIG['SystemURL']);
+    $systemurl = $params['systemurl'];
     $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
 
     // Pegamos os dados de CPF/CNPJ
