@@ -208,7 +208,7 @@ function paghiper_link($params) {
     $vencimentoBoleto = $intervalo->days;  
 
     // Definimos &&
-    $systemurl = get_system_url($params);
+    $systemurl = get_system_url($CONFIG, $params);
     $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
 
     // Pegamos os dados de CPF/CNPJ
@@ -452,7 +452,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
     if($GATEWAY['transparentcheckout'] == true && isset($_GET["invoiceid"])) {
 
         // Vamos precisar pegar a URL do sistema direto do banco de dados. A variável $params não está disponível nesse momento.
-        $systemurl = get_system_url();
+        $systemurl = ($CONFIG['SystemSSLURL'] ? $CONFIG['SystemSSLURL'] : $CONFIG['SystemURL']);
 
         $user_id = intval($_GET["uuid"]);
         $user_email = $_GET["mail"];
@@ -631,22 +631,6 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
     
     
     }
-} 
-
-// Helper Functions
-
-function get_system_url($params = NULL){
-    if(array_key_exists('systemurl', $params)) {
-        $systemurl = $params['systemurl'];
-    } else {
-        $query = "SELECT value FROM tblconfiguration WHERE setting = 'SystemSSLURL' OR setting = 'SystemURL' LIMIT 1"; 
-        $result = mysql_query($query);
-        $data = mysql_fetch_array($result);
-        $systemurl = $data[0];
-    }
-
-
-    return $systemurl;
 }
 
 function apply_custom_taxes($amount, $GATEWAY, $params = NULL){
