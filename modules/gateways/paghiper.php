@@ -4,7 +4,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    1.12
+ * @version    1.121
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Colaboração de Henrique Cruz - Intelihost
  * @license    BSD License (3-clause)
@@ -39,7 +39,7 @@ Versão
     font-weight: bold;
     margin-top: 0px;
     font-size: 300%;
-'>1.12</h2>
+'>1.121</h2>
 </td></tr></tbody></table>
    <h2>Para que o modulo funcione, siga as etapas abaixo:</h2>
    <ul>
@@ -208,7 +208,7 @@ function paghiper_link($params) {
     $vencimentoBoleto = $intervalo->days;  
 
     // Definimos &&
-    $systemurl = $params['systemurl'];
+    $systemurl = rtrim($params['systemurl'],"/");
     $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
 
     // Pegamos os dados de CPF/CNPJ
@@ -452,7 +452,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
     if($GATEWAY['transparentcheckout'] == true && isset($_GET["invoiceid"])) {
 
         // Vamos precisar pegar a URL do sistema direto do banco de dados. A variável $params não está disponível nesse momento.
-        $systemurl = ($CONFIG['SystemSSLURL'] ? $CONFIG['SystemSSLURL'] : $CONFIG['SystemURL']);
+        $systemurl = rtrim(($CONFIG['SystemSSLURL'] ? $CONFIG['SystemSSLURL'] : $CONFIG['SystemURL']),"/");
 
         $user_id = intval($_GET["uuid"]);
         $user_email = $_GET["mail"];
@@ -514,7 +514,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
             exit("Fatura inexistente");
         } else {
             $invoiceid = $_GET["invoiceid"];
-            $urlRetorno = $systemurl.'modules/gateways/'.basename(__FILE__);
+            $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
 
             // Executamos o checkout transparente e printamos o resultado
             echo httpPost("https://www.paghiper.com/checkout/",$params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto);
