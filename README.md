@@ -3,17 +3,24 @@
 Permite a emissão de boletos e integração do gateway da Paghiper ao seu WHMCS.
 Este módulo implementa emissão de boletos com retorno automático.
 
-* **Versão mais Recente:** 1.121
+* **Versão mais Recente:** 1.13
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.2.0, cURL ativado.
-* **Compatibilidade:** WHMCS 7.1.2, PHP 7.x. Mod_rewrite opcional
+* **Compatibilidade:** WHMCS 7.1.2 ou Superior, PHP 7.x. Mod_rewrite opcional
+
+## Informações do projeto
+
+[![GitHub issues](https://img.shields.io/github/issues/paghiper/whmcs.svg)](https://github.com/paghiper/whmcs/issues)
+[![GitHub forks](https://img.shields.io/github/forks/paghiper/whmcs.svg)](https://github.com/paghiper/whmcs/network)
+[![GitHub stars](https://img.shields.io/github/stars/paghiper/whmcs.svg)](https://github.com/paghiper/whmcs/stargazers)
+[![GitHub license](https://img.shields.io/github/license/paghiper/whmcs.svg)](https://github.com/paghiper/whmcs/blob/master/LICENSE)
 
 
 # Como Instalar
 
-1. Crie sua conta na PagHiper [clique aqui para saber como](https://github.com/paghiper/whmcs/wiki/Como-criar-seu-cadastro-na-PagHiper).
+1. [Crie sua conta](https://www.paghiper.com/abra-sua-conta/) na PagHiper.
 
-2. Baixe o arquivo [paghiper.php](https://github.com/paghiper/whmcs/tree/master/modules/gateways), coloque o arquivo na pasta gateways dentro de modules/gateways, para que o Gateway fique disponível dentro do seu WHMCS. 
+2. Baixe o [módulo](https://github.com/paghiper/whmcs/archive/master.zip), extraia a pasta para raiz do seu WHMCS (seudominio.com.br/whmcs), fazendo com que o arquivo `paghiper.php` fique dentro da pasta `/whmcs/modules/gateways` 
 
 3. Dentro da área administrativa do seu WHMCS, vá em: Setup > Payments > Payment Gateways (em inglês) ou Opções > Pagamentos > Portais para Pagamento
 
@@ -21,13 +28,14 @@ Este módulo implementa emissão de boletos com retorno automático.
 
 5. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais, e pronto.
 
-Se tiver dúvidas sobre esse processo, acesse nosso [guia de configuração de plugin](https://github.com/paghiper/whmcs/wiki/Configurando-o-plugin-no-seu-WHMCS)
+Se tiver dúvidas sobre esse processo, acesse nosso [guia de configuração de plugin](https://atendimento.paghiper.com/hc/pt-br/articles/360001296173-M%C3%B3dulo-PAGHIPER-para-WHMCS)
 
 
 # Suporte
 
 Para questões relacionadas a integração e plugin, acesse o [forum de suporte no Github](https://github.com/paghiper/whmcs/issues);
-Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/).
+Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa [central de atendimento](https://atendimento.paghiper.com/hc/pt-br).
+
 
 # Changelog
 
