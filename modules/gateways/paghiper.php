@@ -326,7 +326,7 @@ function httpPost($url,$params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto
     $cpf         = $data2["value"];
 
     //TODO
-    $subtotal = apply_custom_taxes($subtotal, $GATEWAY, $params);
+    $total = apply_custom_taxes($total, $GATEWAY, $params);
     
     // Preparate data to send
     $paghiper_data = array(
@@ -340,7 +340,7 @@ function httpPost($url,$params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto
        // Dados do produto
        "id_plataforma" => $invoiceid,
        "produto_codigo_1" => $invoiceid,
-       "produto_valor_1" => $subtotal,
+       "produto_valor_1" => $total,
        "produto_descricao_1" => 'Fatura #'.$invoiceid,
        "produto_qtde_1" => 1,
 
