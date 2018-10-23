@@ -241,9 +241,6 @@ if($params['transparentcheckout'] == true) {
 $code = "
 <!-- INICIO DO FORM DO BOLETO PAGHIPER -->
     <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}\" method=\"post\">
-    <input type='image' src='https://www.paghiper.com/img/checkout/boleto/boleto-120px-69px.jpg' 
-    title='Pagar com Boleto' alt='Pagar com Boleto' border='0'
-     align='absbottom' /><br>
     <input type=\"submit\" value=\"Gerar boleto\">
     <!-- FIM DO BOLETO PAGHIPER -->
     </form>
@@ -281,9 +278,6 @@ $code .= "
     <input name='complemento' type='hidden' value='{$params['clientdetails']['address2']}' />
     <input name='idPartners' type='hidden' value='D1J0M5GD' />    
     <input name='pagamento' type='hidden' id='pagamento'  />
-    <input type='image' src='https://www.paghiper.com/img/checkout/boleto/boleto-120px-69px.jpg' 
-    title='Pagar com Boleto' alt='Pagar com Boleto' border='0'
-     align='absbottom' /><br>
     <input type=\"submit\" value=\"Gerar boleto\">
     <!-- FIM DO BOLETO PAGHIPER -->
     </form>
