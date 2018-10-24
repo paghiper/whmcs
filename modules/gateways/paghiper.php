@@ -207,7 +207,7 @@ $code = "
     <input type='image' src='https://www.paghiper.com/img/checkout/boleto/boleto-120px-69px.jpg' 
     title='Pagar com Boleto' alt='Pagar com Boleto' border='0'
      align='absbottom' /><br>
-    <input class='btn btn-success' style='margin-top: 5px;' type=\"submit\" value=\"Gerar Boleto\">
+    <button class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fas fa-barcode'></i> Gerar Boleto</button>
     <!-- FIM DO BOLETO PAGHIPER -->
     </form>
     {$abrirAuto}";
@@ -243,7 +243,7 @@ $code .= "
     <input type='image' src='https://www.paghiper.com/img/checkout/boleto/boleto-120px-69px.jpg' 
     title='Pagar com Boleto' alt='Pagar com Boleto' border='0'
      align='absbottom' /><br>
-    <input class='btn btn-success' style='margin-top: 5px;' type=\"submit\" value=\"Gerar Boleto\">
+    <button class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fas fa-barcode'></i> Gerar Boleto</button>
     <!-- FIM DO BOLETO PAGHIPER -->
     </form>
     {$abrirAuto}";
