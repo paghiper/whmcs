@@ -3,11 +3,11 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    1.2
+ * @version    1.2.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
- * @copyright  (c) 2017-2018, PagHiper
+ * @copyright  (c) 2017-2019, PagHiper
  * @link       https://www.paghiper.com/
  */
 
@@ -25,7 +25,7 @@ function paghiper_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>1.2</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>1.2.1</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -35,8 +35,7 @@ function paghiper_config($params = NULL) {
                <li>Caso não possua uma conta PagHiper, <a href='https://www.paghiper.com/abra-sua-conta/' target='_blank'><strong> crie a sua aqui</strong></a> <br>
                    Precisa de ajuda para criar sua conta? <a href='https://www.paghiper.com/duvidas/como-se-cadastrar-no-paghiper/' target='_blank'><strong> clique aqui e veja como criar de maneira rápida e facil.</strong></a><br></li>
                <li>Certifique-se que a conta esteja verificada e valida na página de <a href='https://www.paghiper.com/painel/detalhes-da-conta/' target='_blank'><strong>Detalhes da sua conta</strong></a> PagHiper</li>
-               <li>Gere o seu token PagHiper na <a href='https://www.paghiper.com/painel/token/' target='_blank'><strong> pagina de token</strong></a></li>
-               <li>Ative o prazo máximo de vencimento do boleto para 180 dias, no Painel do PagHiper  &gt; Ferramentas  &gt; Vencimento do Boleto ( <a href='https://www.paghiper.com/painel/prazo-vencimento-boleto/' target='_blank'><strong>Confira Aqui</strong></a> ). Somente assim, a data do vencimento do boleto será igual a da fatura.</li>
+               <li>Gere o seu token PagHiper na página <a href='https://www.paghiper.com/painel/token/' target='_blank'><strong> Ferramentas > Token</strong></a> e pegue sua ApiKey na página <a href='https://www.paghiper.com/painel/token/' target='_blank'><strong>Minha Conta > Dados da Conta</strong></a></li>
                <li>Ative a integração entre o PagHiper e o <a href='https://www.paghiper.com/painel/whmcs' target='_blank'><strong>WHMCS</strong></a>, <a href='https://www.paghiper.com/painel/whmcs' target='_blank'><strong>Acesse aqui</strong></a> e ative.</li>
                <li><h5>Suporte</h5><p>Se tiver qualquer duvida, visite a nossa <a href='https://www.paghiper.com/atendimento/' target='_blank'><strong>central de atendimento</strong></a></p></li>
            </ul>"
@@ -233,7 +232,7 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto) {
     // Preparate data to send
     $paghiper_data = array(
        "apiKey"                         => $GATEWAY['api_key'],
-       "partners_id"                    => "D1J0M5GD",
+       "partners_id"                    => "12WIT2XD",
        "order_id"                       => $invoiceid,
 
        // Informações para a criação e liquidação da fatura
