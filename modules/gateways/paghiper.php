@@ -610,12 +610,6 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
 
         $json = json_decode($result, true);
 
-        $transaction_id     = $json['transaction_id'];
-        $notification_id    = $json['notification_id'];
-
-        $request['result'] = 'success';
-        $request['status'] = 'paid';
-
         if($request['result'] == 'reject') {
 
             // Logamos um erro pra controle
