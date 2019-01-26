@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    1.2.1
+ * @version    1.2.1b
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -25,7 +25,7 @@ function paghiper_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>1.2.1</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>1.2.1b</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -157,6 +157,7 @@ function get_customfield_id() {
             $tutorial .= '</li>';
         }
         $tutorial .= '</ul>';
+        $tutorial .= '<br>Caso use campos separados para CPF e CNPJ, coloque o campo CPF seguido pelo de CNPJ separado por uma barra vertical.<br>(ex.: 15|42)';
         $tutorial .= '<br>Caso o campo de CPF não esteja disponível, <strong><a href="https://github.com/paghiper/whmcs/wiki/Criando-o-campo-de-CPF-CNPJ" target="_blank">acesse o tutorial clicando aqui</a></strong> e veja como pode criar o campo.';
        return $tutorial;
     } else {
@@ -221,10 +222,28 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto) {
     $email       = $data["email"];
     $total       = $data["total"];
     $cpfcnpj     = $GATEWAY['cpf_cnpj'];
-    $query2      = "SELECT * FROM tblcustomfieldsvalues WHERE relid = $myid and fieldid = $cpfcnpj";
-    $result2     = mysql_query($query2);
-    $data2       = mysql_fetch_array($result2);
-    $cpf         = $data2["value"];
+
+    // Checamos se o campo é composto ou simples
+    if(strpos($cpfcnpj, '|')) {
+        // Se composto, pegamos ambos os campos
+        $fields = explode('|', $cpfcnpj);
+
+        $i = 0;
+
+        foreach($fields as $field) {
+            $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = $myid and fieldid = '".trim($field)."'"));
+            ($i == 0) ? $cpf = trim($result["value"]) : $cnpj = trim($result["value"]) ;
+            $i++;
+        }
+
+    } else {
+        // Se simples, pegamos somente o que temos
+        $query2      = "SELECT * FROM tblcustomfieldsvalues WHERE relid = $myid and fieldid = $cpfcnpj";
+        $result2     = mysql_query($query2);
+        $data2       = mysql_fetch_array($result2);
+        $cpf         = trim($data2["value"]);
+    }
+
 
     // Aplicamos as taxas do gateway sobre o total
     $total = apply_custom_taxes($total, $GATEWAY, $params);
@@ -262,16 +281,16 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto) {
     );
 
     // Checa se incluimos dados CPF ou CNPJ no post
-    if ($cpf != " " or $cpf != "on file") {
-        if(strpos($cpf, '/') !== false) {
+    if((isset($cpf) && !empty($cpf) && $cpf != "on file") || (isset($cpf) && !empty($cnpj) && $cnpj != "on file")) {
+        if(isset($cnpj) && !empty($cnpj)) {
             $paghiper_data["payer_name"] = $companyname;
-            $paghiper_data["payer_cpf_cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cpf, FILTER_SANITIZE_NUMBER_INT))), -14);
+            $paghiper_data["payer_cpf_cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cnpj, FILTER_SANITIZE_NUMBER_INT))), -14);
         } else {
             $paghiper_data["payer_cpf_cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cpf, FILTER_SANITIZE_NUMBER_INT))), -15);
         }
     } elseif(!isset($cpfcnpj) || $cpfcnpj == '') {
-        logTransaction($GATEWAY["name"],$_POST,"Boleto não exibido. Você não definiu o campo CPF/CNPJ");
-    } elseif(!isset($cpf_cnpj) || $cpf_cnpj == '') {
+        logTransaction($GATEWAY["name"],$_POST,"Boleto não exibido. Você não definiu os campos de CPF/CNPJ");
+    } elseif(!isset($cpf_cnpj) || $cpf_cnpj == '' || (empty($cpf) && empty($cnpj))) {
         logTransaction($GATEWAY["name"],$_POST,"Boleto não exibido. CPF/CNPJ do cliente não foi informado");
     } else {
         logTransaction($GATEWAY["name"],$_POST,"Boleto não exibido. Erro indefinido");
@@ -378,6 +397,14 @@ function check_table() {
                 create_table();
             }
         }
+
+        $slip_value = full_query("SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'slip_value' AND `type` = 'decimal(11,2)'");
+        if(mysql_num_rows($slip_value) == 0) {
+            $alter_table = full_query("ALTER TABLE `mod_paghiper` CHANGE `slip_value` `slip_value` DECIMAL(11,2) NULL DEFAULT NULL;");
+            if(!$delete_table) {
+                logTransaction($GATEWAY["name"],$_POST,"Não foi possível alterar o formato de dados da coluna slip_value. Por favor altere manualmente para decimal(11,2).");
+            }
+        }
     } else {
         create_table();
     }
@@ -404,7 +431,7 @@ function create_table() {
           `url_slip_pdf` varchar(255) DEFAULT NULL,
           `digitable_line` varchar(54) DEFAULT NULL,
           `open_after_day_due` int(2) DEFAULT NULL,
-          `slip_value` float(11) DEFAULT NULL,
+          `slip_value` decimal(11,2) DEFAULT NULL,
           PRIMARY KEY (`id`),
           KEY `transaction_id` (`transaction_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
@@ -424,7 +451,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
     header("access-control-allow-origin: *");
 
     // Inicializar WHMCS, carregar o gateway e a fatura.
-    require "../../init.php";
+    require_once ("../../init.php");
     $whmcs->load_function("gateway");
     $whmcs->load_function("invoice");
 
@@ -489,11 +516,14 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
 
         // Lógica: Checar se um boleto ja foi emitido pra essa fatura
         $order_id = $getinvoiceResults['invoiceid'];
-        $invoice_total = (int) $getinvoiceResults['total'];
+        $invoice_total = (float) $getinvoiceResults['total'];
 
         $sql = "SELECT * FROM mod_paghiper WHERE order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' AND due_date = '$invoiceDuedate' LIMIT 1;";
 
         $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
+        /*print_r($sql);
+        print_r($billet);
+        exit();*/
         $due_date = $billet['due_date'];
         $grace_days = $billet['open_after_day_due'];
         $billet_url = $billet['url_slip'];
@@ -775,4 +805,3 @@ function check_if_subaccount($user_id, $email, $invoice_userid) {
     }
     return false;
 }
-?>
