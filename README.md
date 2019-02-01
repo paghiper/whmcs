@@ -36,7 +36,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Emissão antecipada de boletos (automaticamente, no momento da criação da fatura via Cron)
 * Disponibilização de linha digitável no painel e e-mails de cobrança/fatura
 
-## 1.2.2 - 2019/02/01
+## 2.0 - 2019/02/01
 
 `Melhorias e novidades`
 
