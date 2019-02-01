@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    1.2.1b
+ * @version    1.2.2
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -25,7 +25,7 @@ function paghiper_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>1.2.1b</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>1.2.2</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -197,7 +197,7 @@ function paghiper_link($params) {
 
 }                 
 
-function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto) {
+function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$return_json = FALSE) {
     $postData    = '';
     $query       = "SELECT tblinvoices.*,tblclients.id as myid, tblclients.firstname,tblclients.lastname,tblclients.companyname,tblclients.address1,tblclients.address2,tblclients.city,tblclients.state,tblclients.postcode,tblclients.email,tblclients.phonenumber FROM tblinvoices INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.id='$invoiceid'";
     $result      = mysql_query($query);
@@ -371,6 +371,11 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto) {
 
         $query = full_query($sql);
 
+        if($return_json) {
+            header('Content-Type: application/json');
+            return json_encode($json['create_request']);
+        }
+
         $output = fetch_remote_url($url_slip);
 
         return $output;
@@ -478,6 +483,8 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         $user_id = intval($_GET["uuid"]);
         $user_email = $_GET["mail"];
 
+        $return_json = (isset($_GET['json']) && $_GET['json'] == 1) ? TRUE : FALSE;
+
         // Pegamos a fatura no banco de dados
         $getinvoice = 'getinvoice';
         $getinvoiceid['invoiceid'] = intval($_GET["invoiceid"]);
@@ -529,6 +536,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         $billet_url = $billet['url_slip'];
         $billet_value = $billet['slip_value'];
         $limit_date = date('Y-m-d', strtotime($due_date . " +$grace_days days"));
+        
 
         // Só re-emitimos a fatura se o limite para pagamento ja tiver expirado (somando os dias de tolerência) e se o status for não-pago.
         if( 
@@ -573,7 +581,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                 // Executamos o checkout transparente e printamos o resultado
 
                 try {
-                    echo httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto);
+                    echo httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto, $return_json);
                 } catch (Exception $e) {
                     echo 'Erro ao solicitar boleto: ',  $e->getMessage(), "\n";
                 }
@@ -583,7 +591,13 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
 
         } else {
             //url_slip;
-            echo fetch_remote_url($billet_url);
+            if($return_json) {
+                header('Content-Type: application/json');
+                echo json_encode($billet);
+            } else {
+                echo fetch_remote_url($billet_url);
+            }
+            
 
         }
         
@@ -642,7 +656,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         if($request['result'] == 'reject') {
 
             // Logamos um erro pra controle
-            logTransaction($GATEWAY["name"],$json,"Notificação Inválida."); 
+            logTransaction($GATEWAY["name"],array('post' => $_POST, 'json' => $json),"Notificação Inválida."); 
 
         } elseif($request['result'] == 'success') {
 
@@ -660,6 +674,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
             
                 // Função que vamos usar na localAPI
                 $addtransaction = "addtransaction";
+                
                 // Cliente fez emissão do boleto, logamos apenas como memorando
                 if ($status == "pending" || $status == "Aguardando") {
                     $addtransvalues['userid'] = $results['userid'];
@@ -671,10 +686,25 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                     $addtransvalues['transid'] = $transaction_id.'-Boleto-Gerado';
                     $addtransvalues['date'] = date('d/m/Y');
                     $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
-                    logTransaction($GATEWAY["name"],$_POST,"Aguardando o Pagamento"); # Salva informações da transação no log do WHMCS.
+
+                    // Salvamos as informações no log de transações do WHMCS
+                    logTransaction($GATEWAY["name"],$_POST,"Aguardando o Pagamento");
 
                     // Logamos status no banco
                     log_status_to_db($status, $transaction_id);
+
+                // Transação foi reservada
+                } elseif($status == "reserved") {
+
+                    $addtransvalues['userid'] = $results['userid'];
+                    $addtransvalues['invoiceid'] = $order_id;
+                    $addtransvalues['description'] = "Pagto. pré-confirmado. Aguarde compensação.";
+                    $addtransvalues['amountin'] = '0.00';
+                    $addtransvalues['fees'] = '0.00';
+                    $addtransvalues['paymentmethod'] = 'paghiper';
+                    $addtransvalues['transid'] = $transaction_id.'-Pagto-Reservado';
+                    $addtransvalues['date'] = date('d/m/Y');
+                    $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
                     
                 // Transação foi aprovada
                 } elseif ($status == "paid" || $status == "Aprovado") {
