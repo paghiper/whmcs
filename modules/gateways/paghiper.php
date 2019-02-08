@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.0
+ * @version    2.0.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -25,7 +25,7 @@ function paghiper_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.0</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.0.1</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -92,6 +92,20 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "Size" => "2",
             "Description" => "Número máximo de dias em que o boleto poderá ser pago após o vencimento. (Prática comum para quem opta por cobrar juros e multas)."
         ),
+        "reissue_unpaid" => array(
+            "FriendlyName" => "Vencimento padrão para boletos emitidos",
+            'Type' => 'dropdown',
+            'Options' => array(
+                '-1'    => 'Não permitir reemissão',
+                '0'     => 'Vcto. no mesmo dia',
+                '1'     => '+1 dia',
+                '2'     => '+2 dias',
+                '3'     => '+3 dias',
+                '4'     => '+4 dias',
+                '5'     => '+5 dias',
+            ),
+            'Description' => 'Escolha a quantidade de dias para o vencimento de boletos reemitidos (para faturas ja vencidas). Caso decida não permitir reemissão, você precisará mudar a data de vencimento manualmente.',
+        ),
         "late_payment_fine" => array(
             "FriendlyName" => "Percentual da multa por atraso (%)",
             "Type" => "text",
@@ -114,6 +128,15 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "Type" => "text",
             "Size" => "6",
             "Description" => "Valor do desconto que será aplicado caso o pagamento ocorra de forma antecipada. Em percentual (Ex.: 10%)"
+        ),
+        "issue_all" => array(
+            "FriendlyName" => "Gerar boletos para todos os pedidos?",
+            'Type' => 'dropdown',
+            'Options' => array(
+                '1'    => 'Sim',
+                '0'     => 'Não',
+            ),
+            'Description' => 'Caso selecione não, boletos bancários e lihnas digitáveis serão selecionadas somente caso o cliente selecione "Boleto Bancário" (ou o nome que você configurar no primeiro campo de configuração) como método de pagamento padrão.',
         ),
         
         "admin" => array(
@@ -231,17 +254,15 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
         $i = 0;
 
         foreach($fields as $field) {
-            $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = $myid and fieldid = '".trim($field)."'"));
-            ($i == 0) ? $cpf = trim($result["value"]) : $cnpj = trim($result["value"]) ;
+            $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = '$myid' and fieldid = '".trim($field)."'"));
+            ($i == 0) ? $cpf = trim($result["value"]) : $cnpj = trim($result["value"]);
+            if($i == 1) { break; }
             $i++;
         }
 
     } else {
         // Se simples, pegamos somente o que temos
-        $query2      = "SELECT * FROM tblcustomfieldsvalues WHERE relid = $myid and fieldid = $cpfcnpj";
-        $result2     = mysql_query($query2);
-        $data2       = mysql_fetch_array($result2);
-        $cpf         = trim($data2["value"]);
+        $cpf     = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$myid' and fieldid = '$cpfcnpj'"))));
     }
 
 
@@ -281,9 +302,11 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
     );
 
     // Checa se incluimos dados CPF ou CNPJ no post
-    if((isset($cpf) && !empty($cpf) && $cpf != "on file") || (isset($cpf) && !empty($cnpj) && $cnpj != "on file")) {
+    if((isset($cpf) && !empty($cpf) && $cpf != "on file") || (isset($cnpj) && !empty($cnpj) && $cnpj != "on file")) {
         if(isset($cnpj) && !empty($cnpj)) {
-            $paghiper_data["payer_name"] = $companyname;
+            if(isset($companyname) && !empty($companyname)) {
+                $paghiper_data["payer_name"] = $companyname;
+            }
             $paghiper_data["payer_cpf_cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cnpj, FILTER_SANITIZE_NUMBER_INT))), -14);
         } else {
             $paghiper_data["payer_cpf_cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cpf, FILTER_SANITIZE_NUMBER_INT))), -15);
@@ -367,9 +390,15 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
 
         $slip_value = $total;
 
-        $sql = "INSERT INTO mod_paghiper (transaction_id,order_id,due_date,status,url_slip,url_slip_pdf,digitable_line,open_after_day_due, slip_value) VALUES ('$transaction_id','$order_id','$due_date','$status','$url_slip','$url_slip_pdf','$digitable_line','$open_after_day_due','$slip_value');";
+        try {
 
-        $query = full_query($sql);
+            $sql = "INSERT INTO mod_paghiper (transaction_id,order_id,due_date,status,url_slip,url_slip_pdf,digitable_line,open_after_day_due, slip_value) VALUES ('$transaction_id','$order_id','$due_date','$status','$url_slip','$url_slip_pdf','$digitable_line','$open_after_day_due','$slip_value');";
+
+            $query = full_query($sql);
+        } catch (Exception $e) {
+            logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir o boleto no banco de dados. Por favor entre em contato com o suporte.");
+        }
+
 
         if($return_json) {
             header('Content-Type: application/json');
@@ -383,8 +412,23 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
     } else {
 
         // Não foi possível solicitar o boleto.
-        $return_log = var_dump($json);
-        logTransaction($GATEWAY["name"],$_POST,"Não foi possível solicitar o boleto. Log: ".$return_log);
+
+        if(!$return_json) { 
+
+            $ico = 'boleto-cancelled.png';
+            $title = 'Ops! Não foi possível emitir o boleto bancário.';
+            if(isset($json['create_request']['response_message']) && $json['create_request']['response_message'] == 'payer_cpf_cnpj invalido') {
+                $message = 'CPF/CNPJ inválido no cadastro. Por favor verifique os dados e tente novamente.';
+            } else {
+                $message = 'Por favor entre em contato com o suporte.';
+            }
+            
+            echo print_screen($ico, $title, $message);
+        } else {
+            die('Não foi possível emitir o boleto.');
+        }
+
+        logTransaction($GATEWAY["name"],array('json' => $json, 'post' => $_POST),"Não foi possível solicitar o boleto.");
         return false;
     }
  
@@ -469,17 +513,27 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
     $account_token = trim($GATEWAY['token']);
     $account_api_key = trim($GATEWAY['api_key']);
 
+    // Vamos precisar pegar a URL do sistema usando métodos alternativos. A variável $params não está disponível nesse momento.
+    $systemurl = rtrim(\App::getSystemUrl(),"/");
+
+    $gateway_admin = $GATEWAY['admin'];
+    $backup_admin = array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins LIMIT 1")));
+
     // Se o usuário admin estiver vazio nas configurações, usamos o padrão
-    $whmcsAdmin = (empty(trim($GATEWAY['admin'])) ? 'admin' : trim($GATEWAY['admin']));
+    $whmcsAdmin = (empty(trim($gateway_admin)) ? 
+                    // Caso não tenha um valor para usarmos, pegamos o primeiro admin disponível na tabela
+                    $backup_admin : 
+                    // Caso tenha, usamos o preenchido
+                    (empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$gateway_admin' LIMIT 1"))))) ?
+                    $backup_admin :
+                    trim($GATEWAY['admin']));
 
     // Checamos se a tabela da PagHiper está pronta pra uso
     $custom_table = check_table();
 
     // Se as condições baterem, estamos lidando com um post do checkout transparente.
     if(isset($_GET["invoiceid"])) {
-
-        // Vamos precisar pegar a URL do sistema direto do banco de dados. A variável $params não está disponível nesse momento.
-        $systemurl = rtrim(($CONFIG['SystemSSLURL'] ? $CONFIG['SystemSSLURL'] : $CONFIG['SystemURL']),"/");
+        
         $user_id = intval($_GET["uuid"]);
         $user_email = $_GET["mail"];
 
@@ -490,6 +544,19 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         $getinvoiceid['invoiceid'] = intval($_GET["invoiceid"]);
         $getinvoiceResults = localAPI($getinvoice,$getinvoiceid,$whmcsAdmin);
 
+        $issue_all = (isset($GATEWAY['issue_all']) && !empty($GATEWAY['issue_all'])) ? $GATEWAY['issue_all'] : 1;
+
+        if($getinvoiceResults['paymentmethod'] !== 'paghiper' && $issue_all == 0) {
+
+                // Mostrar tela de boleto indisponível
+                $ico = 'boleto-cancelled.png';
+                $title = 'Boleto não disponível para essa fatura!';
+                $message = 'O método de pagamento escolhido para esta fatura não é boleto bancário. Caso ache que isso é um erro, contate o suporte.';
+                echo print_screen($ico, $title, $message);
+                exit();
+
+        }
+
         // Checamos se a fatura está sendo exibida por um usuário de sub-conta
         if( check_if_subaccount($user_id, $user_email, $getinvoiceResults['userid'] ) == FALSE ) {
             if(intval($getinvoiceResults['userid']) !== $user_id) {
@@ -497,7 +564,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                 die("Desculpe, você não está autorizado a visualizar esta fatura.");
                 exit;
             } else {
-                $query = "SELECT email FROM tblclients WHERE id = '".$user_id."' LIMIT 1"; 
+                $query = "SELECT email FROM tblclients WHERE id = '$user_id' LIMIT 1"; 
                 $result = mysql_query($query);
                 $data = mysql_fetch_array($result);
                 $email = $data[0]; 
@@ -506,49 +573,131 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                 }
             }
         }
+
+        // Process status screens accordingly to invoice status
+        switch($getinvoiceResults['status']) {
+            case "Paid":
+
+                // Mostrar tela de boleto pago
+                $ico = 'boleto-ok.png';
+                $title = 'Fatura paga!';
+                $message = 'Este boleto ja foi compensado no sistema e consta como pago.';
+                echo print_screen($ico, $title, $message);
+                exit();
+
+                break;
+            case "Draft":
+
+                // Mostrar tela de boleto indisponível
+                $ico = 'boleto-cancelled.png';
+                $title = 'Esta fatura ainda não está disponível!';
+                $message = 'Este boleto ainda não está disponível. Caso acredite que seja um erro, por favor acione o suporte.';
+                echo print_screen($ico, $title, $message);
+                exit();
+
+                break;
+            case "Unpaid":
+                //
+
+                break;
+            case "Overdue":
+                //
+
+                break;
+            case "Cancelled":
+
+                // Mostrar tela de boleto indisponível
+                $ico = 'boleto-cancelled.png';
+                $title = 'Esta fatura foi cancelada!';
+                $message = 'Este boleto foi cancelado. Caso acredite que seja um erro, por favor acione o suporte.';
+                echo print_screen($ico, $title, $message);
+                exit();
+
+                break;
+            case "Refunded":
+
+                // Mostrar tela de boleto indisponível
+                $ico = 'boleto-cancelled.png';
+                $title = 'Este boleto venceu!';
+                $message = 'Este boleto foi estornado. Caso acredite que seja um erro, por favor acione o suporte.';
+                echo print_screen($ico, $title, $message);
+                exit();
+
+                break;
+            case "Collections":
+                break;
+        }
   
         // Pegamos a data de vencimento e a data de hoje
         $invoiceDuedate = $getinvoiceResults['duedate']; // Data de vencimento da fatura
         $dataHoje = date('Y-m-d'); // Data de Hoje
         
         // Se a data do vencimento da fatura for maior que o dia de hoje
-        if ( $invoiceDuedate >= date('Y-m-d') ) {
+        if ( strtotime($invoiceDuedate) >= strtotime(date('Y-m-d')) ) {
+
             // Usamos a data de vencimento normalmente
-            $billetDuedate  = $invoiceDuedate; 
+            $billetDuedate  = $invoiceDuedate;
+
         // Se a data de vencimento da fatura for menor que o dia de hoje
-        } elseif( $invoiceDuedate < date('Y-m-d')) {
+        } elseif( strtotime($invoiceDuedate) < strtotime(date('Y-m-d')) ) {
+
             // Pegamos a data de hoje, adicionamos um dia e usamos como nova data de vencimento
-            $billetDuedate  = date('Y-m-d', strtotime('+1 day'));  
+            $reissue_unpaid = (isset($GATEWAY['reissue_unpaid']) && !empty($GATEWAY['reissue_unpaid'])) ? (int) $GATEWAY['reissue_unpaid'] : 1 ;
+            if($reissue_unpaid == -1) {
+
+                // Mostrar tela de boleto cancelado
+                $ico = 'boleto-cancelled.png';
+                $title = 'Este boleto venceu!';
+                $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
+                echo print_screen($ico, $title, $message);
+                exit();
+
+            } elseif($reissue_unpaid == 0) {
+                $billetDuedate  = date('Y-m-d');  
+            } else {
+                $billetDuedate  = date('Y-m-d', ($reissue_unpaid == 1) ? strtotime("+$reissue_unpaid day") : strtotime("+$reissue_unpaid days"));  
+            }
+            
         } 
 
         // Lógica: Checar se um boleto ja foi emitido pra essa fatura
         $order_id = $getinvoiceResults['invoiceid'];
         $invoice_total = (float) $getinvoiceResults['total'];
 
-        $sql = "SELECT * FROM mod_paghiper WHERE order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' AND due_date = '$invoiceDuedate' LIMIT 1;";
+        $sql = "SELECT * FROM mod_paghiper WHERE order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' ORDER BY due_date DESC LIMIT 1;";
 
         $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
-        /*print_r($sql);
-        print_r($billet);
-        exit();*/
-        $due_date = $billet['due_date'];
-        $grace_days = $billet['open_after_day_due'];
-        $billet_url = $billet['url_slip'];
-        $billet_value = $billet['slip_value'];
-        $limit_date = date('Y-m-d', strtotime($due_date . " +$grace_days days"));
-        
+        if(!empty($billet)) {
+            $due_date = $billet['due_date'];
+            $grace_days = $billet['open_after_day_due'];
+            $billet_url = $billet['url_slip'];
+            $billet_value = $billet['slip_value'];
+            $limit_date = date('Y-m-d', strtotime($due_date . " +$grace_days days"));
+        }
 
         // Só re-emitimos a fatura se o limite para pagamento ja tiver expirado (somando os dias de tolerência) e se o status for não-pago.
         if( 
             (
                 (int) $getinvoiceResults['total'] !== (int) $billet_value || 
-                $limit_date < date('Y-m-d') || 
+                strtotime($limit_date) < strtotime(date('Y-m-d')) || 
                 empty($billet)  || 
-                $billetDuedate !== $due_date
+                strtotime($limit_date) < strtotime($dataHoje)
             ) 
             && $getinvoiceResults['status'] == 'Unpaid') {
+
+            $sql = "SELECT * FROM mod_paghiper WHERE order_id = '$order_id' AND status = 'reserved' AND slip_value = '$invoice_total' ORDER BY due_date DESC LIMIT 1;";
+            $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
+            if(empty($billet)) {
                 $reissue = TRUE;
+            } else {
+
+                $ico = 'boleto-waiting.png';
+                $title = 'Pagamento pré-confirmado.';
+                $message = 'Este boleto teve o pagamento pré-confirmado e está aguardando compensação bancária. Por favor, aguarde.';
+                echo print_screen($ico, $title, $message);
+
             }
+        }
 
         // Lógica: Checar se a data de vencimento + dias de tolerancia > data de hoje.
         if(isset($reissue) && $reissue) {
@@ -581,7 +730,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                 // Executamos o checkout transparente e printamos o resultado
 
                 try {
-                    echo httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto, $return_json);
+                    echo httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$return_json);
                 } catch (Exception $e) {
                     echo 'Erro ao solicitar boleto: ',  $e->getMessage(), "\n";
                 }
@@ -705,6 +854,12 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                     $addtransvalues['transid'] = $transaction_id.'-Pagto-Reservado';
                     $addtransvalues['date'] = date('d/m/Y');
                     $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
+
+                    // Salvamos as informações no log de transações do WHMCS
+                    logTransaction($GATEWAY["name"],$_POST,"Pagamento pré-confirmado");
+
+                    // Logamos status no banco
+                    log_status_to_db($status, $transaction_id);
                     
                 // Transação foi aprovada
                 } elseif ($status == "paid" || $status == "Aprovado") {
@@ -789,7 +944,7 @@ function to_monetary($int) {
 }
 
 function log_status_to_db($status, $transaction_id) {
-    //TODO: Implementar log de status na transação armazenada no banco
+
     $update = mysql_query("UPDATE mod_paghiper SET status = '$status' WHERE transaction_id = '$transaction_id';");
     if(!$update) {
         return false;
@@ -825,7 +980,7 @@ function apply_custom_taxes($amount, $GATEWAY, $params = NULL){
 }
 
 function check_if_subaccount($user_id, $email, $invoice_userid) {
-    $query = "SELECT userid, id, email, permissions, invoiceemails FROM tblcontacts WHERE userid = '".$user_id."' AND email = '".$email."' LIMIT 1"; 
+    $query = "SELECT userid, id, email, permissions, invoiceemails FROM tblcontacts WHERE userid = '$user_id' AND email = '$email' LIMIT 1"; 
     $result = mysql_query($query);
     $user = mysql_fetch_array($result);
 
@@ -834,4 +989,60 @@ function check_if_subaccount($user_id, $email, $invoice_userid) {
         return $user['userid'];
     }
     return false;
+}
+
+function print_screen($ico, $title, $message) {
+    global $systemurl;
+    $code = '
+        <!DOCTYPE html>
+        <html>
+
+        <head>
+          <meta charset="utf-8">
+          <title>'.$title.'</title>
+          <meta name="author" content="">
+          <meta name="description" content="">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+        </head>
+
+        <body>
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,600" rel="stylesheet"> 
+
+        <div class="container">
+          <div>
+            <img style="max-width: 200px;" src="'.$systemurl.'/modules/gateways/paghiper/assets/img/'.$ico.'">
+            <h3>'.$title.'</h3>
+            <p>'.$message.'</p>
+          </div>
+        </div>
+
+        <style type="text/css">
+            html, body {
+              width: 100%;
+              height: 100%;
+              overflow: hidden;
+            }
+            * {
+              font-family: Open Sans;
+            }
+            .container {
+              display: table;
+              width: 100%;
+              height: 100%;
+            }
+            .container div {
+              display: table-cell;
+              vertical-align: middle;
+              text-align: center;
+            }
+            .container div * {
+              max-width: 90%;
+              margin: 0px auto;
+            }
+        </style>
+        </body>
+
+        </html>';
+return $code;
+
 }
