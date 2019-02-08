@@ -3,7 +3,7 @@
 Permite a emissão de boletos e integração do gateway da Paghiper ao seu WHMCS.
 Este módulo implementa emissão de boletos com retorno automático.
 
-* **Versão mais Recente:** 2.0
+* **Versão mais Recente:** 2.0.1
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.2.0, cURL ativado.
 * **Compatibilidade:** WHMCS 7.1.2, PHP 7.x. Mod_rewrite opcional

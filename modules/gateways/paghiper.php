@@ -136,7 +136,7 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
                 '1'    => 'Sim',
                 '0'     => 'Não',
             ),
-            'Description' => 'Caso selecione não, boletos bancários e lihnas digitáveis serão selecionadas somente caso o cliente selecione "Boleto Bancário" (ou o nome que você configurar no primeiro campo de configuração) como método de pagamento padrão.',
+            'Description' => 'Caso selecione não, boletos bancários e linhas digitáveis serão selecionadas somente caso o cliente selecione "Boleto Bancário" (ou o nome que você configurar no primeiro campo de configuração) como método de pagamento padrão.',
         ),
         
         "admin" => array(
