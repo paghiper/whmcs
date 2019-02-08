@@ -211,7 +211,11 @@ function paghiper_link($params) {
     <input type='image' src='https://www.paghiper.com/img/checkout/boleto/boleto-240px-148px.jpg' 
     title='Pagar com Boleto' alt='Pagar com Boleto' border='0'
      align='absbottom' width='120' height='74' /><br>
-    <button class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
+    <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
+    <br> <br>
+    <div class='alert alert-warning' role='alert'>
+    <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
+    </div>
     <!-- FIM DO BOLETO PAGHIPER -->
     </form>
     {$abrirAuto}";
