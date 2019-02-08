@@ -36,17 +36,49 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Emissão antecipada de boletos (automaticamente, no momento da criação da fatura via Cron)
 * Disponibilização de linha digitável no painel e e-mails de cobrança/fatura
 
+## 2.0.1 - 2019/02/08
+
+`Melhorias`
+
+* Agora é possível configurar a nova data de vencimento para reemissão de boletos vencidos
+* Possibilidade de restrição na emissão de novos boletos ou emitir para todas as faturas por padrão
+* Novas telas de status
+* Novo hook para criação do boleto junto com a criação da fatura
+* Boleto anexo no e-mail da fatura (veja como ativar aqui)
+* Seleção automática de usuário para uso na API Local do WHMCS (necessário para algumas operações internas)
+* Novos pontos de log
+* Seleção automática de usuário admin para uso na localAPI
+
+`Bugs`
+
+* Melhorada a lógica de busca de boletos emitidos (para faturas vencidas)
+* Novo método de formação de URL de retorno
+
 ## 2.0 - 2019/02/01
 
-`Melhorias e novidades`
+`Novas funcionalidades`
+
+* Uso da nova API 2.0
+* Re-utilização de boletos
+* Juros/multas automáticos na emissão
+* Desconto por pagto. antecipadotbladmin
+* Conciliação (acréscimo ou decréscimo de valores) na compensação dos boletos
+* Acesso direto ao boleto bancário (por link no e-mail, sem a necessidade de log-in)
+
+`Melhorias`
 
 * Adicionados endpoints para emissão do boleto bancário na emissão da fatura
 * Possibilidade de integração do boleto nos e-mails de notificação (boleto PDF na fatura e linha digitável no corpo do e-mail)
 * Adicionado novo status "Reservado", para pré-confirmação de pagto.
+* Atualização do ícone usado no checkout
+* Uso de classes bootstrap para melhor visual no checkout
 
 `Bugs e correções`
 
 * Log de notificação inválida estava armazenando array vazio, impossibilitando debug
+* Uso do total da fatura (ao invés do sub-total) - Isso corrige problemas relacionadas a aplicação de taxas, créditos e descontos
+* Compatibilidade com WHMCS 7.5
+* Erro ao emitir/visualizar boletos através de uma sub-conta
 
 ## 1.2.1b - 2019/01/26
 
