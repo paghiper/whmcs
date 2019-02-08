@@ -18,7 +18,7 @@ $result = json_decode($json);
 $transaction_id = (isset($result->transaction_id)) ? $result->transaction_id : '';
 $pdf_url = (isset($result->bank_slip)) ? $result->bank_slip->url_slip_pdf : $result->url_slip_pdf;
 
-if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($pdf_url) && !empty($pdf_url)) && (isset($transaction_id) && !empty($transaction_id))){
+if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($pdf_url) && !empty($pdf_url)) && (isset($transaction_id) && !empty($transaction_id)) && (in_array($paymentmethod, array('Boleto Bancário')))){
 
     $basedir = dirname(__FILE__).'/../../modules/gateways/paghiper/';
 
@@ -56,3 +56,4 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($pdf_url) 
     $pdf->AddPage();
 
 }
+?>
