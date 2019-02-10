@@ -55,4 +55,4 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($pdf_url) 
     $pdf->SetPrintFooter(false);
     $pdf->AddPage();
 
-}
+} ?>
