@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.0.1
+ * @version    2.0.2
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -25,7 +25,7 @@ function paghiper_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.0.1</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.0.2</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -544,7 +544,9 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         $getinvoiceid['invoiceid'] = intval($_GET["invoiceid"]);
         $getinvoiceResults = localAPI($getinvoice,$getinvoiceid,$whmcsAdmin);
 
-        $issue_all = (isset($GATEWAY['issue_all']) && !empty($GATEWAY['issue_all'])) ? $GATEWAY['issue_all'] : 1;
+        $issue_all_config = (int) $GATEWAY['issue_all'];
+
+        $issue_all = ( $issue_all_config === 1 || $issue_all_config === 0 ) ? $issue_all_config : 0;
 
         if($getinvoiceResults['paymentmethod'] !== 'paghiper' && $issue_all == 0) {
 
