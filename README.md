@@ -3,10 +3,10 @@
 Permite a emissão de boletos e integração do gateway da Paghiper ao seu WHMCS.
 Este módulo implementa emissão de boletos com retorno automático.
 
-* **Versão mais Recente:** 2.0
+* **Versão mais Recente:** 2.0.1.1
 * **Requer WHMCS** versão mínima 5.0
-* **Requisitos:** PHP >= 5.2.0, cURL ativado.
-* **Compatibilidade:** WHMCS 7.1.2, PHP 7.x. Mod_rewrite opcional
+* **Requisitos:** PHP >= 5.2.0, cURL e JSON ativado.
+* **Compatibilidade:** WHMCS 7.7.0, PHP 7.x. Mod_rewrite opcional
 
 
 # Como Instalar
@@ -35,6 +35,13 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Emissão antecipada de boletos (automaticamente, no momento da criação da fatura via Cron)
 * Disponibilização de linha digitável no painel e e-mails de cobrança/fatura
+
+## 2.0.1.1 - 2019/02/09
+
+`Bugs resolvidos`
+
+* Boletos sendo emitidos para todas as faturas, independente do método de pagamento
+* Erro 500 causado pelo invoicepdf.tpl (Adicionada tag de fechamento do php)
 
 ## 2.0.1 - 2019/02/08
 
