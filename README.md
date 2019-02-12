@@ -41,7 +41,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 `Bugs resolvidos`
 
 * Boletos sendo emitidos para todas as faturas, independente do método de pagamento
-* Erro 500 causado pelo invoicepdf.tpl (Adicionada tag de fechamento do php)
+* Possível erro 500 causado pelo invoicepdf.tpl (Adicionada tag de fechamento do php)
 
 ## 2.0.1 - 2019/02/08
 
