@@ -20,11 +20,7 @@ function display_digitable_line($vars) {
         $whmcs_url = rtrim(\App::getSystemUrl(),"/");
         $json = file_get_contents($whmcs_url."/modules/gateways/paghiper.php?invoiceid=".$invoice_id."&uuid=".$invoice['client_id']."&mail=".$invoice['email']."&json=1");
         $result = json_decode($json);
-        if(isset($result->digitable_line) && !empty($result->digitable_line)) {
-            $digitable_line = $result->digitable_line;
-        } elseif(isset($result->bank_slip) && !empty($result->bank_slip->digitable_line)) {
-            $digitable_line = $result->bank_slip->digitable_line;
-        }
+        $digitable_line = (isset($result->bank_slip)) ? $result->bank_slip->digitable_line : $result->digitable_line;
 
         if($digitable_line) {
             $merge_fields['linha_digitavel'] = '<span>Linha digitável: <br><span style="font-size: 16px; color: #000000"><strong>';
