@@ -22,11 +22,16 @@ function display_digitable_line($vars) {
         $result = json_decode($json);
         if(isset($result->digitable_line) && !empty($result->digitable_line)) {
             $digitable_line = $result->digitable_line;
+        } elseif(isset($result->bank_slip) && !empty($result->bank_slip->digitable_line)) {
+            $digitable_line = $result->bank_slip->digitable_line;
+        }
 
+        if($digitable_line) {
             $merge_fields['linha_digitavel'] = '<span>Linha digitável: <br><span style="font-size: 16px; color: #000000"><strong>';
             $merge_fields['linha_digitavel'] .= $digitable_line;
             $merge_fields['linha_digitavel'] .= '</strong></span></span>';
         }
+
 
     }
     return $merge_fields;
