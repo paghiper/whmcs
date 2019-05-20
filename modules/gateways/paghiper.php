@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.0.1.1
+ * @version    2.0.1.2
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -25,7 +25,7 @@ function paghiper_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.0.1.1</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.0.1.2</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -76,7 +76,7 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "FriendlyName" => "Taxa fixa",
             "Type" => "text",
             "Size" => "7",
-            "Description" => "Taxa cobrada a mais do cliente por utilizar esse meio de pagamento, exemplo: 1.0 (dois reias). Obs: Use o ponto (.) como delimitador de casas decimais.<br> Recomendamos não cobrar nenhuma taxa."
+            "Description" => "Taxa cobrada a mais do cliente por utilizar esse meio de pagamento, exemplo: 2.0 (dois reais). Obs: Use o ponto (.) como delimitador de casas decimais.<br> Recomendamos não cobrar nenhuma taxa."
         ),
         "abrirauto" => array(
             "FriendlyName" => "Abrir boleto ao abrir fatura?",
@@ -211,7 +211,11 @@ function paghiper_link($params) {
     <input type='image' src='https://www.paghiper.com/img/checkout/boleto/boleto-240px-148px.jpg' 
     title='Pagar com Boleto' alt='Pagar com Boleto' border='0'
      align='absbottom' width='120' height='74' /><br>
-    <button class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
+    <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
+    <br> <br>
+    <div class='alert alert-warning' role='alert'>
+    <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
+    </div>
     <!-- FIM DO BOLETO PAGHIPER -->
     </form>
     {$abrirAuto}";
@@ -328,7 +332,11 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
 
     foreach($additional_config_boolean as $k => $v) {
         if($v === TRUE || $v === FALSE) {
-            $paghiper_data[$k] = convert_to_numeric($v);
+            $paghiper_data[$k] = $v;
+        } elseif($v == 'on') {
+            $paghiper_data[$k] = TRUE;
+        } else {
+            $paghiper_data[$k] = FALSE;
         }
     }
 
@@ -345,7 +353,7 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
 
     foreach($additional_config_text as $k => $v) {
         if(!empty($v)) {
-            $paghiper_data[$k] = $v;
+            $paghiper_data[$k] = convert_to_numeric($v);
         }
     }
 
@@ -564,7 +572,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
             if(intval($getinvoiceResults['userid']) !== $user_id) {
                 // ID não bate
                 die("Desculpe, você não está autorizado a visualizar esta fatura.");
-                exit;
+                exit();
             } else {
                 $query = "SELECT email FROM tblclients WHERE id = '$user_id' LIMIT 1"; 
                 $result = mysql_query($query);
@@ -662,11 +670,20 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
             
         } 
 
+        // Definimos a data limite de vencimento, caso haja tolerância para pagto. após a data estipulada no WHMCS
+        if($reissue_unpaid !== 0 && $reissue_unpaid !== '') {
+            $grace_days = $GATEWAY['open_after_day_due'];
+            $current_limit_date = ($reissue_unpaid > 1 ) ? date('Y-m-d', strtotime($due_date . " -$grace_days days")) : date('Y-m-d', strtotime($due_date . " -$grace_days day"));
+        } else {
+            // Caso contrário, a data limite é a de hoje
+            $current_limit_date = $dataHoje;
+        }
+
         // Lógica: Checar se um boleto ja foi emitido pra essa fatura
         $order_id = $getinvoiceResults['invoiceid'];
-        $invoice_total = (float) $getinvoiceResults['total'];
+        $invoice_total = apply_custom_taxes((float) $getinvoiceResults['total'], $GATEWAY);
 
-        $sql = "SELECT * FROM mod_paghiper WHERE order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' ORDER BY due_date DESC LIMIT 1;";
+        $sql = "SELECT * FROM mod_paghiper WHERE due_date >= '$current_limit_date' AND order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' ORDER BY ABS( DATEDIFF( due_date, '$billetDuedate' ) ) ASC LIMIT 1;";
 
         $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
         if(!empty($billet)) {
@@ -677,27 +694,37 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
             $limit_date = date('Y-m-d', strtotime($due_date . " +$grace_days days"));
         }
 
-        // Só re-emitimos a fatura se o limite para pagamento ja tiver expirado (somando os dias de tolerência) e se o status for não-pago.
+        // TODO: Resolver incompatibilidade na query para boletos ja vencidos porém com margem de pagto. ainda
+
+        // Só re-emitimos a fatura se os valores forem diferentes, se limite para pagamento ja tiver expirado (somando os dias de tolerência) e se o status for não-pago.
         if( 
             (
-                (int) $getinvoiceResults['total'] !== (int) $billet_value || 
+                // Caso nenhum boleto tenha sido emitido
+                empty($billet) || 
+                // Caso não haja URL de boleto disponível no banco
+                empty($billet_url) ||
+                // Caso a data presente não esteja dentro da data limite para pagamento
                 strtotime($limit_date) < strtotime(date('Y-m-d')) || 
-                empty($billet)  || 
-                strtotime($limit_date) < strtotime($dataHoje)
+                // Caso o vencimento esteja no futuro mas for diferente do definido na fatura
+                (strtotime($invoiceDuedate) > strtotime(date('Y-m-d')) && $due_date !== $invoiceDuedate)
             ) 
-            && $getinvoiceResults['status'] == 'Unpaid') {
+            && $getinvoiceResults['status'] == 'Unpaid'
+        ) {
 
             $sql = "SELECT * FROM mod_paghiper WHERE order_id = '$order_id' AND status = 'reserved' AND slip_value = '$invoice_total' ORDER BY due_date DESC LIMIT 1;";
-            $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
-            if(empty($billet)) {
-                $reissue = TRUE;
-            } else {
+            $reserved_billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
+            if(!empty($reserved_billet)) {
 
                 $ico = 'boleto-waiting.png';
                 $title = 'Pagamento pré-confirmado.';
                 $message = 'Este boleto teve o pagamento pré-confirmado e está aguardando compensação bancária. Por favor, aguarde.';
                 echo print_screen($ico, $title, $message);
+                exit();
 
+            }
+
+            if(empty($billet) && empty($reserved_billet)) {
+                $reissue = TRUE;
             }
         }
 
@@ -741,6 +768,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
             }
 
         } else {
+
             //url_slip;
             if($return_json) {
                 header('Content-Type: application/json');
@@ -807,7 +835,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         if($request['result'] == 'reject') {
 
             // Logamos um erro pra controle
-            logTransaction($GATEWAY["name"],array('post' => $_POST, 'json' => $json),"Notificação Inválida."); 
+            logTransaction($GATEWAY["name"],array('post' => $_POST, 'json' => $json), "Notificação Inválida."); 
 
         } elseif($request['result'] == 'success') {
 
