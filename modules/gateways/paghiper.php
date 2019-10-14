@@ -959,8 +959,7 @@ function add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin) {
     $postData = array(
         'invoiceid'             => (int) $invoice_id,
         'newitemdescription'    => array('PAGHIPER: '. $desc),
-        'newitemamount'         => array($value),
-        'newitemtaxed'          => 0
+        'newitemamount'         => array($value)
     );
 
     // Atualizamos a invoice com os valores novos
