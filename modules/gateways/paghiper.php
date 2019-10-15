@@ -451,7 +451,7 @@ function check_table() {
         if(mysql_num_rows($table_columns) == 0) {
             $delete_table = full_query("DROP TABLE mod_paghiper;");
             if($delete_table) {
-                create_table();
+                create_paghiper_table();
             }
         }
 
@@ -463,7 +463,7 @@ function check_table() {
             }
         }
     } else {
-        create_table();
+        create_paghiper_table();
     }
 
 
@@ -477,7 +477,7 @@ function check_table() {
     }
 }
 
-function create_table() {
+function create_paghiper_table() {
     $table_create = full_query("CREATE TABLE IF NOT EXISTS `mod_paghiper` (
           `id` int(11) NOT NULL AUTO_INCREMENT,
           `transaction_id` varchar(16) NOT NULL,
