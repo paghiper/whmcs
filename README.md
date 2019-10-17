@@ -39,7 +39,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 `Bugs resolvidos`
 
-* Conciliação de multa/desconto impedia baixa das faturas como esperado
+* Conciliação de multa/desconto impedia baixa das faturas como esperado no WHMCS v7.8
 
 ## 2.0.1.2 - 2019/05/20
 
