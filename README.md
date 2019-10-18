@@ -6,14 +6,14 @@ Este módulo implementa emissão de boletos com retorno automático.
 * **Versão mais Recente:** 2.0.1.3
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.2.0, cURL e JSON ativado.
-* **Compatibilidade:** WHMCS 7.7.0, PHP 7.x. Mod_rewrite opcional
+* **Compatibilidade:** WHMCS 7.8.3, PHP 7.x. Mod_rewrite opcional
 
 
 # Como Instalar
 
 1. Crie sua conta na PagHiper [clique aqui para saber como](https://github.com/paghiper/whmcs/wiki/Como-criar-seu-cadastro-na-PagHiper).
 
-2. Baixe o gateway da [PagHiper](https://github.com/paghiper/whmcs/archive/2.0.1.1.zip), extraia o conteúdo e faça upload das pastas includes e modules para a raíz da sua instalação do WHMCS
+2. Baixe o gateway da [PagHiper](https://github.com/paghiper/whmcs/archive/v2.0.1.3.zip), extraia o conteúdo e faça upload das pastas includes e modules para a raíz da sua instalação do WHMCS
 
 3. Dentro da área administrativa do seu WHMCS, vá em: Setup > Payments > Payment Gateways (em inglês) ou Opções > Pagamentos > Portais para Pagamento
 
