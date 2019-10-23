@@ -1,7 +1,8 @@
 # WHMCS - Módulo de boleto PagHiper 
 
-Permite a emissão de boletos e integração do gateway da Paghiper ao seu WHMCS.
-Este módulo implementa emissão de boletos com retorno automático.
+Emita boletos bancários direto do seu WHMCS.
+Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos automática.
+Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
 * **Versão mais Recente:** 2.0.1.3
 * **Requer WHMCS** versão mínima 5.0
