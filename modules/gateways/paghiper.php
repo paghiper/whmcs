@@ -224,31 +224,35 @@ function paghiper_link($params) {
 
 }                 
 
-function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$return_json = FALSE) {
-    $postData    = '';
-    $query       = "SELECT tblinvoices.*,tblclients.id as myid, tblclients.firstname,tblclients.lastname,tblclients.companyname,tblclients.address1,tblclients.address2,tblclients.city,tblclients.state,tblclients.postcode,tblclients.email,tblclients.phonenumber FROM tblinvoices INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.id='$invoiceid'";
-    $result      = mysql_query($query);
-    $data        = mysql_fetch_array($result);
-    $id          = $data["id"];
-    $myid        = $data["myid"];
-    $firstname   = $data["firstname"];
-    $lastname    = $data["lastname"];
-    $companyname = $data["companyname"];
-    $address1    = $data["address1"];
-    $address2    = $data["address2"];
-    $city        = $data["city"];
-    $state       = $data["state"];
-    $postcode    = $data["postcode"];
-    $date        = $data["email"];
-    $subtotal    = $data["subtotal"];
-    $total       = $data["total"];
-    $credit      = $data["credit"];
-    $tax         = $data["tax"];
-    $taxrate     = $data["taxrate"];
-    $phone       = $data["phonenumber"];
-    $email       = $data["email"];
-    $total       = $data["total"];
-    $cpfcnpj     = $GATEWAY['cpf_cnpj'];
+function generate_paghiper_billet($invoice, $params) {
+	
+	// Prepare variables that we'll be using during the process
+	$postData    = array();
+	
+	// Data received from the invoice
+	$total 				= $invoice['balance'];
+	$due_date 			= $params['due_date'];
+
+	// Data from the client
+	$firstname			= $params['client_data']['firstname'];
+	$lastname			= $params['client_data']['lastname'];
+	$companyname		= $params['client_data']['companyname'];
+	$email				= $params['client_data']['email'];
+	$phone				= $params['client_data']['phonenumber'];
+	$address1			= $params['client_data']['address1'];
+	$address2			= $params['client_data']['address2'];
+	$city   			= $params['client_data']['city'];
+	$state   			= $params['client_data']['state'];
+	$postcode			= $params['client_data']['postcode'];
+
+	// Data
+	$gateway_settings 	= $params['gateway_settings'];
+	$notification_url 	= $params['notification_url'];
+	$cpfcnpj 			= $gateway_settings['cpf_cnpj'];
+
+	// Data received through function params
+	$invoice_id			= $invoice['invoiceid'];
+	$client_id 			= $invoice['userid'];
 
     // Checamos se o campo é composto ou simples
     if(strpos($cpfcnpj, '|')) {
@@ -258,7 +262,7 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
         $i = 0;
 
         foreach($fields as $field) {
-            $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = '$myid' and fieldid = '".trim($field)."'"));
+            $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'"));
             ($i == 0) ? $cpf = trim($result["value"]) : $cnpj = trim($result["value"]);
             if($i == 1) { break; }
             $i++;
@@ -266,29 +270,29 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
 
     } else {
         // Se simples, pegamos somente o que temos
-        $cpf     = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$myid' and fieldid = '$cpfcnpj'"))));
+        $cpf     = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'"))));
     }
 
 
     // Aplicamos as taxas do gateway sobre o total
-    $total = apply_custom_taxes($total, $GATEWAY, $params);
+    $total = apply_custom_taxes($total, $gateway_settings, $params);
     
     // Preparate data to send
     $paghiper_data = array(
-       "apiKey"                         => $GATEWAY['api_key'],
+       "apiKey"                         => $gateway_settings['api_key'],
        "partners_id"                    => "12WIT2XD",
-       "order_id"                       => $invoiceid,
+       "order_id"                       => $invoice_id,
 
        // Informações para a criação e liquidação da fatura
-       "notification_url"               => $urlRetorno,
-       "days_due_date"                  => $vencimentoBoleto,
+       "notification_url"               => $notification_url,
+       "days_due_date"                  => $due_date,
        'type_bank_slip'                 => 'boletoA4',
 
        // Dados da fatura
        'items'                          =>  array(
                                                 array(
-                                                    'item_id'       => $invoiceid,
-                                                    'description'   => 'Fatura #'.$invoiceid,
+                                                    'item_id'       => $invoice_id,
+                                                    'description'   => 'Fatura #'.$invoice_id,
                                                     'price_cents'   => convert_to_numeric($total),
                                                     'quantity'      => 1
                                                 ),
@@ -303,7 +307,7 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
        "payer_city"                     => $city,
        "payer_state"                    => $state,
        "payer_zip_code"                 => $postcode,
-    );
+	);
 
     // Checa se incluimos dados CPF ou CNPJ no post
     if((isset($cpf) && !empty($cpf) && $cpf != "on file") || (isset($cnpj) && !empty($cnpj) && $cnpj != "on file")) {
@@ -316,18 +320,18 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
             $paghiper_data["payer_cpf_cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cpf, FILTER_SANITIZE_NUMBER_INT))), -15);
         }
     } elseif(!isset($cpfcnpj) || $cpfcnpj == '') {
-        logTransaction($GATEWAY["name"],$_POST,"Boleto não exibido. Você não definiu os campos de CPF/CNPJ");
+        logTransaction($gateway_settings["name"],$_POST,"Boleto não exibido. Você não definiu os campos de CPF/CNPJ");
     } elseif(!isset($cpf_cnpj) || $cpf_cnpj == '' || (empty($cpf) && empty($cnpj))) {
-        logTransaction($GATEWAY["name"],$_POST,"Boleto não exibido. CPF/CNPJ do cliente não foi informado");
+        logTransaction($gateway_settings["name"],$_POST,"Boleto não exibido. CPF/CNPJ do cliente não foi informado");
     } else {
-        logTransaction($GATEWAY["name"],$_POST,"Boleto não exibido. Erro indefinido");
+        logTransaction($gateway_settings["name"],$_POST,"Boleto não exibido. Erro indefinido");
     }
 
     // Checamos os valores booleanos, 1 por 1
     // Dados do boleto
     $additional_config_boolean = array(
-        'fixed_description'             => $GATEWAY['fixed_description'],
-        'per_day_interest'              => $GATEWAY['per_day_interest'],
+        'fixed_description'             => $gateway_settings['fixed_description'],
+        'per_day_interest'              => $gateway_settings['per_day_interest'],
     );
 
     foreach($additional_config_boolean as $k => $v) {
@@ -340,15 +344,15 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
         }
     }
 
-    $discount_config = (!empty($GATEWAY['early_payment_discounts_cents'])) ? ltrim(preg_replace('/\D/', '', $GATEWAY['early_payment_discounts_cents']), 0) : '';
+    $discount_config = (!empty($gateway_settings['early_payment_discounts_cents'])) ? ltrim(preg_replace('/\D/', '', $gateway_settings['early_payment_discounts_cents']), 0) : '';
     $discount_value = (!empty($discount_config)) ? convert_to_numeric( number_format($total * (($discount_config > 99) ? 99 / 100 : $discount_config / 100), 2, '.', '' ), 2, '.', '' ) : '';
 
     $additional_config_text = array(
-        'early_payment_discounts_days'  => $GATEWAY['early_payment_discounts_days'],
+        'early_payment_discounts_days'  => $gateway_settings['early_payment_discounts_days'],
         'early_payment_discounts_cents' => $discount_value,
-        'open_after_day_due'            => $GATEWAY['open_after_day_due'],
-        'late_payment_fine'             => $GATEWAY['late_payment_fine'],
-        'open_after_day_due'            => $GATEWAY['open_after_day_due'],
+        'open_after_day_due'            => $gateway_settings['open_after_day_due'],
+        'late_payment_fine'             => $gateway_settings['late_payment_fine'],
+        'open_after_day_due'            => $gateway_settings['open_after_day_due'],
     );
 
     foreach($additional_config_text as $k => $v) {
@@ -380,8 +384,7 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
 
     // captura o http code
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
+	curl_close($ch);
 
     // CÓDIGO 201 SIGNIFICA QUE O BOLETO FOI GERADO COM SUCESSO
     if($httpCode == 201) {
@@ -394,7 +397,7 @@ function httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$ret
         $url_slip = $json['create_request']['bank_slip']['url_slip'];
         $url_slip_pdf = $json['create_request']['bank_slip']['url_slip_pdf'];
         $digitable_line = $json['create_request']['bank_slip']['digitable_line'];
-        $open_after_day_due = $GATEWAY['open_after_day_due'];
+        $open_after_day_due = $gateway_settings['open_after_day_due'];
 
         $slip_value = $total;
 
@@ -543,20 +546,20 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
     if(isset($_GET["invoiceid"])) {
         
         $user_id = intval($_GET["uuid"]);
-        $user_email = $_GET["mail"];
+		$user_email = query_scape_string($_GET["mail"]);
 
         $return_json = (isset($_GET['json']) && $_GET['json'] == 1) ? TRUE : FALSE;
 
         // Pegamos a fatura no banco de dados
         $getinvoice = 'getinvoice';
         $getinvoiceid['invoiceid'] = intval($_GET["invoiceid"]);
-        $getinvoiceResults = localAPI($getinvoice,$getinvoiceid,$whmcsAdmin);
+        $invoice = localAPI($getinvoice,$getinvoiceid,$whmcsAdmin);
 
         $issue_all_config = (int) $GATEWAY['issue_all'];
 
-        $issue_all = ( $issue_all_config === 1 || $issue_all_config === 0 ) ? $issue_all_config : 0;
+		$issue_all = ( $issue_all_config === 1 || $issue_all_config === 0 ) ? $issue_all_config : 0;
 
-        if($getinvoiceResults['paymentmethod'] !== 'paghiper' && $issue_all == 0) {
+        if($invoice['paymentmethod'] !== 'paghiper' && $issue_all == 0) {
 
                 // Mostrar tela de boleto indisponível
                 $ico = 'boleto-cancelled.png';
@@ -568,8 +571,8 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         }
 
         // Checamos se a fatura está sendo exibida por um usuário de sub-conta
-        if( check_if_subaccount($user_id, $user_email, $getinvoiceResults['userid'] ) == FALSE ) {
-            if(intval($getinvoiceResults['userid']) !== $user_id) {
+        if( check_if_subaccount($user_id, $user_email, $invoice['userid'] ) == FALSE ) {
+            if(intval($invoice['userid']) !== $user_id) {
                 // ID não bate
                 die("Desculpe, você não está autorizado a visualizar esta fatura.");
                 exit();
@@ -585,7 +588,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         }
 
         // Process status screens accordingly to invoice status
-        switch($getinvoiceResults['status']) {
+        switch($invoice['status']) {
             case "Paid":
 
                 // Mostrar tela de boleto pago
@@ -639,7 +642,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         }
   
         // Pegamos a data de vencimento e a data de hoje
-        $invoiceDuedate = $getinvoiceResults['duedate']; // Data de vencimento da fatura
+        $invoiceDuedate = $invoice['duedate']; // Data de vencimento da fatura
         $dataHoje = date('Y-m-d'); // Data de Hoje
         
         // Se a data do vencimento da fatura for maior que o dia de hoje
@@ -677,11 +680,11 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         } else {
             // Caso contrário, a data limite é a de hoje
             $current_limit_date = $dataHoje;
-        }
+		}
 
         // Lógica: Checar se um boleto ja foi emitido pra essa fatura
-        $order_id = $getinvoiceResults['invoiceid'];
-        $invoice_total = apply_custom_taxes((float) $getinvoiceResults['total'], $GATEWAY);
+        $order_id = $invoice['invoiceid'];
+        $invoice_total = apply_custom_taxes((float) $invoice['balance'], $GATEWAY);
 
         $sql = "SELECT * FROM mod_paghiper WHERE due_date >= '$current_limit_date' AND order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' ORDER BY ABS( DATEDIFF( due_date, '$billetDuedate' ) ) ASC LIMIT 1;";
 
@@ -708,7 +711,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                 // Caso o vencimento esteja no futuro mas for diferente do definido na fatura
                 (strtotime($invoiceDuedate) > strtotime(date('Y-m-d')) && $due_date !== $invoiceDuedate)
             ) 
-            && $getinvoiceResults['status'] == 'Unpaid'
+            && $invoice['status'] == 'Unpaid'
         ) {
 
             $sql = "SELECT * FROM mod_paghiper WHERE order_id = '$order_id' AND status = 'reserved' AND slip_value = '$invoice_total' ORDER BY due_date DESC LIMIT 1;";
@@ -759,7 +762,23 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                 // Executamos o checkout transparente e printamos o resultado
 
                 try {
-                    echo httpPost($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$return_json);
+
+					$query_params = array(
+						'clientid' 	=> $invoice['userid'],
+						'stats'		=> false
+					);
+					$client_details = localAPI('getClientsDetails', $query_params, $whmcsAdmin);
+
+                    $params = array(
+						'client_data'		=> $client_details['client'],
+						'gateway_settings'	=> $GATEWAY,
+                        'notification_url'	=> $urlRetorno,
+                    	'due_date'			=> $vencimentoBoleto,
+                        'format'			=> (($return_json) ? 'json' : 'html')
+					);
+                    
+                    //echo generate_paghiper_billet($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$return_json);
+                    echo generate_paghiper_billet($invoice, $params);
                 } catch (Exception $e) {
                     echo 'Erro ao solicitar boleto: ',  $e->getMessage(), "\n";
                 }
@@ -901,16 +920,16 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                     $fee = $transaction_fee;
 
                     // Se estiver tudo certo, checamos se o valor pago é diferente do configurado na fatura
-                    if($results['total'] !== $ammount_paid) {
+                    if($results['balance'] !== $ammount_paid) {
 
-                            // Subtraimos o total do valor pago. Funciona tanto para desconto como acréscimo.
-                            // Ex. 1: Valor pago | R$ 18 - R$ 20 (Total) = -R$ 2 [Desconto]
-                            // Ex. 2: Valor pago | R$ 21 - R$ 20 (Total) = +R$ 1 [Multa]
-                            $value = $ammount_paid - $results['total'];
+                            // Subtraimos valor de balanço do valor pago. Funciona tanto para desconto como acréscimo.
+                            // Ex. 1: Valor pago | R$ 18 - R$ 20 (Balanço) = -R$ 2 [Desconto]
+                            // Ex. 2: Valor pago | R$ 21 - R$ 20 (Balanço) = +R$ 1 [Multa]
+                            $value = $ammount_paid - $results['balance'];
 
-                        if($results['total'] > $ammount_paid) {
+                        if($results['balance'] > $ammount_paid) {
 
-                            // Conciliação: Desconto por antecipação (Valor total da Invoice - Valor total pago)
+                            // Conciliação: Desconto por antecipação (Valor de balanço da Invoice - Valor total pago)
                             $desc = 'Desconto por pagamento antecipado';
                             add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
 
@@ -994,6 +1013,15 @@ function fetch_remote_url($url) {
 
 function convert_to_numeric($str) {
     return preg_replace('/\D/', '', $str);
+}
+
+function query_scape_string($string) {
+	if(function_exists('mysql_real_escape_string')) {
+		return mysql_real_escape_string($string);
+	}
+
+	return mysql_escape_string($string);
+
 }
 
 function apply_custom_taxes($amount, $GATEWAY, $params = NULL){
