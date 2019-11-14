@@ -113,9 +113,9 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "Description" => "O percentual máximo autorizado é de 2%, de acordo artigo 52, parágrafo primeiro do Código de Defesa do Consumidor, Lei 8.078/90"
         ),
         "per_day_interest" => array(
-            "FriendlyName" => "Aplicar multa fatorada?",
+            "FriendlyName" => "Juros proporcional",
             "Type" => "yesno",
-            "Description" => "Se selecionado, a multa será dividida pela quantidade de dias em atraso."
+            "Description" => "Ao aplicar 1% de juros máximo ao mês, esse percentual será cobrado proporcionalmente aos dias de atraso.<br><br>Dividindo 1% por 30 dias = 0,033% por dia de atraso."
         ),
         "early_payment_discounts_days" => array(
             "FriendlyName" => "Qtde. de dias para aplicação de desconto",
@@ -655,7 +655,8 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         } elseif( strtotime($invoiceDuedate) < strtotime(date('Y-m-d')) ) {
 
             // Pegamos a data de hoje, adicionamos um dia e usamos como nova data de vencimento
-            $reissue_unpaid = (isset($GATEWAY['reissue_unpaid']) && !empty($GATEWAY['reissue_unpaid'])) ? (int) $GATEWAY['reissue_unpaid'] : 1 ;
+            $reissue_unpaid_cont = (int) $GATEWAY['reissue_unpaid'];
+            $reissue_unpaid = (isset($reissue_unpaid_cont) && ($reissue_unpaid_cont === 0 || !empty($reissue_unpaid_cont))) ? $reissue_unpaid_cont : 1 ;
             if($reissue_unpaid == -1) {
 
                 // Mostrar tela de boleto cancelado
