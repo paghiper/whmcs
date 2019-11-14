@@ -36,6 +36,16 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Disponibilização de linha digitável no painel
 
+## 2.0.2 - 2019/11/14
+
+`Melhorias implementadas`
+
+* BUGFIX: Faturas parcialmente pagas agora são interpretadas corretamente
+* Segurança: Maior proteção contra XSS e SQL injection
+* Melhor precisão na determinação de nova data de vencimento, ao reemitir uma fatura vencida
+* Novo texto descritivo para a multa proporcional no back-end
+* Refatoração geral, redução do número de queries e mais
+
 ## 2.0.1.3 - 2019/10/14
 
 `Bugs resolvidos`
