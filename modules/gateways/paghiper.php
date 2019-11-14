@@ -557,7 +557,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
 
         $issue_all_config = (int) $GATEWAY['issue_all'];
 
-		$issue_all = ( $issue_all_config === 1 || $issue_all_config === 0 ) ? $issue_all_config : 0;
+		$issue_all = ( $issue_all_config === 1 || $issue_all_config === 0 ) ? $issue_all_config : 1;
 
         if($invoice['paymentmethod'] !== 'paghiper' && $issue_all == 0) {
 
