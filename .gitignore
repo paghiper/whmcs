@@ -11,4 +11,8 @@
 
 !modules/gateways/paghiper
 
+!modules/gateways/paghiper/assets/img
+
+!modules/gateways/paghiper/inc/fpdi/**/*
+
 !modules/gateways/paghiper.\php
