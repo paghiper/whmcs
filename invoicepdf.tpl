@@ -5,6 +5,8 @@
  * @copyright  Copyright (c) 2019 https://henriquecruz.com.br
  */
 
+use setasign\Fpdi;
+
 $whmcs_url = rtrim(\App::getSystemUrl(),"/");
 $json_url = $whmcs_url."/modules/gateways/paghiper.php?invoiceid=".$invoiceid."&uuid=".$clientsdetails['userid']."&mail=".$clientsdetails['email']."&json=1";
 
@@ -23,8 +25,9 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($pdf_url) 
     $basedir = dirname(__FILE__).'/../../modules/gateways/paghiper/';
 
     /* Bloco inicializador do boleto */
-    require_once($basedir.'inc/fpdi/fpdi.php');
-    $pdf = new FPDI();
+    require_once($basedir.'inc/fpdi/autoload.php');
+    require_once($basedir.'inc/fpdi/TcpdfFpdi.php');
+    $pdf = new Fpdi\TcpdfFpdi();
 
     // TODO: Implementar header e footer aqui
     $pdf->SetPrintHeader(false);

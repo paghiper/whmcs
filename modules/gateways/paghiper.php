@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.0.2
+ * @version    2.0.3
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -25,7 +25,7 @@ function paghiper_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.0.2</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.0.3</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -225,6 +225,8 @@ function paghiper_link($params) {
 }                 
 
 function generate_paghiper_billet($invoice, $params) {
+
+    global $return_json;
 	
 	// Prepare variables that we'll be using during the process
 	$postData    = array();
@@ -727,7 +729,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
 
             }
 
-            if(empty($billet) && empty($reserved_billet)) {
+            if(empty($billet) && empty($reserved_billet)) { 
                 $reissue = TRUE;
             }
         }
@@ -776,7 +778,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                         'notification_url'	=> $urlRetorno,
                     	'due_date'			=> $vencimentoBoleto,
                         'format'			=> (($return_json) ? 'json' : 'html')
-					);
+                    );
                     
                     //echo generate_paghiper_billet($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$return_json);
                     echo generate_paghiper_billet($invoice, $params);
@@ -915,25 +917,39 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                 } elseif ($status == "paid" || $status == "Aprovado") {
 
                     // Essa função checa se a transação ja foi registrada no banco de dados. 
-                    checkCbTransID($transaction_id);
+                    $checkTransId = checkCbTransID($transaction_id);
+
+                    /**
+                     * Infelizmente a função checkCbTransID não é totalmente confiável na versão 7 do WHMCS.
+                     * Por conta disso, precisamos checar se a transação ja sofreu baixa no banco
+                     */ 
+                    $unpaid_transactions = mysql_query("SELECT transaction_id, status FROM mod_paghiper WHERE transaction_id = '{$transaction_id}' AND status = 'paid'");
+                    if(mysql_num_rows($unpaid_transactions) >= 1) {
+                        die('Notificação ja foi processada');
+                    }
 
                     // Calcula a taxa cobrada pela PagHiper de maneira dinâmica e registra para uso no painel.
                     $fee = $transaction_fee;
 
+                    // Logamos a transação no log de Gateways do WHMCS.
+                    logTransaction($GATEWAY["name"],$request,"Transação Concluída");
+
+                    // Logamos status no banco
+                    log_status_to_db($status, $transaction_id);
+
                     // Se estiver tudo certo, checamos se o valor pago é diferente do configurado na fatura
                     if($results['balance'] !== $ammount_paid) {
 
-                            // Subtraimos valor de balanço do valor pago. Funciona tanto para desconto como acréscimo.
-                            // Ex. 1: Valor pago | R$ 18 - R$ 20 (Balanço) = -R$ 2 [Desconto]
-                            // Ex. 2: Valor pago | R$ 21 - R$ 20 (Balanço) = +R$ 1 [Multa]
-                            $value = $ammount_paid - $results['balance'];
+                        // Subtraimos valor de balanço do valor pago. Funciona tanto para desconto como acréscimo.
+                        // Ex. 1: Valor pago | R$ 18 - R$ 20 (Balanço) = -R$ 2 [Desconto]
+                        // Ex. 2: Valor pago | R$ 21 - R$ 20 (Balanço) = +R$ 1 [Multa]
+                        $value = $ammount_paid - $results['balance'];
 
                         if($results['balance'] > $ammount_paid) {
 
                             // Conciliação: Desconto por antecipação (Valor de balanço da Invoice - Valor total pago)
                             $desc = 'Desconto por pagamento antecipado';
                             add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
-
 
                         } else {
 
@@ -947,11 +963,6 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                     // Registramos o pagamento e damos baixa na fatura
                     addInvoicePayment($invoice_id,$transaction_id,$ammount_paid,$fee,'paghiper');
 
-                    // Logamos a transação no log de Gateways do WHMCS.
-                    logTransaction($GATEWAY["name"],$request,"Transação Concluída");
-
-                    // Logamos status no banco
-                    log_status_to_db($status, $transaction_id);
                 // Transação Cancelada. 
                 } else if ($status == "canceled" || $status == "Cancelado") {
                     // Boleto não foi pago, logamos apenas como memorando
@@ -969,6 +980,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
             logTransaction($GATEWAY["name"],$json,"Falha ao buscar ID da transação no banco."); 
 
         }
+
     exit();
 
     }

@@ -7,8 +7,9 @@
  * @license   http://opensource.org/licenses/mit-license The MIT License
  */
 
-namespace setasign\Fpdi;
+namespace setasign\Fpdi\Tfpdf;
 
+use setasign\Fpdi\FpdiTrait;
 use setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException;
 use setasign\Fpdi\PdfParser\PdfParserException;
 use setasign\Fpdi\PdfParser\Type\PdfIndirectObject;
@@ -17,7 +18,7 @@ use setasign\Fpdi\PdfParser\Type\PdfNull;
 /**
  * Class Fpdi
  *
- * This class let you import pages of existing PDF documents into a reusable structure for FPDF.
+ * This class let you import pages of existing PDF documents into a reusable structure for tFPDF.
  *
  * @package setasign\Fpdi
  */
@@ -32,7 +33,7 @@ class Fpdi extends FpdfTpl
      */
     const VERSION = '2.2.0';
 
-    protected function _enddoc()
+    public function _enddoc()
     {
         parent::_enddoc();
         $this->cleanUp();
@@ -93,7 +94,7 @@ class Fpdi extends FpdfTpl
      * @throws CrossReferenceException
      * @throws PdfParserException
      */
-    protected function _putimages()
+    public function _putimages()
     {
         $this->currentReaderId = null;
         parent::_putimages();
@@ -132,7 +133,7 @@ class Fpdi extends FpdfTpl
     /**
      * @inheritdoc
      */
-    protected function _putxobjectdict()
+    public function _putxobjectdict()
     {
         foreach ($this->importedPages as $key => $pageData) {
             $this->_put('/' . $pageData['id'] . ' ' . $pageData['objectNumber'] . ' 0 R');
@@ -144,12 +145,20 @@ class Fpdi extends FpdfTpl
     /**
      * @inheritdoc
      */
-    protected function _put($s, $newLine = true)
+    public function _newobj($n = null)
     {
-        if ($newLine) {
-            $this->buffer .= $s . "\n";
-        } else {
-            $this->buffer .= $s;
-        }
+        // Begin a new object
+        if($n === null)
+            $n = ++$this->n;
+        $this->offsets[$n] = $this->_getoffset();
+        $this->_put($n.' 0 obj');
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function _getoffset()
+    {
+        return strlen($this->buffer);
     }
 }

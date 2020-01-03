@@ -4,7 +4,7 @@ Emita boletos bancários direto do seu WHMCS.
 Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos automática.
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 2.0.1.3
+* **Versão mais Recente:** 2.0.3
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.2.0, cURL e JSON ativado.
 * **Compatibilidade:** WHMCS 7.8.3, PHP 7.x. Mod_rewrite opcional
@@ -14,7 +14,7 @@ Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
 1. Crie sua conta na PagHiper [clique aqui para saber como](https://github.com/paghiper/whmcs/wiki/Como-criar-seu-cadastro-na-PagHiper).
 
-2. Baixe o gateway da [PagHiper](https://github.com/paghiper/whmcs/archive/v2.0.1.3.zip), extraia o conteúdo e faça upload das pastas includes e modules para a raíz da sua instalação do WHMCS
+2. Baixe o gateway da [PagHiper](https://github.com/paghiper/whmcs/archive/v2.0.3.zip), extraia o conteúdo e faça upload das pastas includes e modules para a raíz da sua instalação do WHMCS
 
 3. Dentro da área administrativa do seu WHMCS, vá em: Setup > Payments > Payment Gateways (em inglês) ou Opções > Pagamentos > Portais para Pagamento
 
@@ -35,6 +35,17 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 ## Disponíveis em alguns dias:
 
 * Disponibilização de linha digitável no painel
+
+## 2.0.3 - 2020/01/03
+
+`Melhorias implementadas`
+
+* Cancelamento automático de boletos (na baixa e pagto. parcial de faturas)
+
+`Bugs resolvidos`
+
+* PDF de fatura mostrava boleto em branco de maneira intermitente
+* Pagamentos duplicados em alguns ambientes
 
 ## 2.0.2 - 2019/11/14
 
