@@ -9,6 +9,8 @@
 
 !includes/hooks/create_paghiper_slip.\php
 
+!includes/hooks/cancel_paghiper_slips.\php
+
 !modules/gateways/paghiper
 
 !modules/gateways/paghiper/assets/img
