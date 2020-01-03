@@ -1,19 +1,20 @@
 # WHMCS - Módulo de boleto PagHiper 
 
-Permite a emissão de boletos e integração do gateway da Paghiper ao seu WHMCS.
-Este módulo implementa emissão de boletos com retorno automático.
+Emita boletos bancários direto do seu WHMCS.
+Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos automática.
+Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 2.0.1.1
+* **Versão mais Recente:** 2.0.1.3
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.2.0, cURL e JSON ativado.
-* **Compatibilidade:** WHMCS 7.7.0, PHP 7.x. Mod_rewrite opcional
+* **Compatibilidade:** WHMCS 7.8.3, PHP 7.x. Mod_rewrite opcional
 
 
 # Como Instalar
 
 1. Crie sua conta na PagHiper [clique aqui para saber como](https://github.com/paghiper/whmcs/wiki/Como-criar-seu-cadastro-na-PagHiper).
 
-2. Baixe o gateway da [PagHiper](https://github.com/paghiper/whmcs/archive/2.0.1.1.zip), extraia o conteúdo e faça upload das pastas includes e modules para a raíz da sua instalação do WHMCS
+2. Baixe o gateway da [PagHiper](https://github.com/paghiper/whmcs/archive/v2.0.1.3.zip), extraia o conteúdo e faça upload das pastas includes e modules para a raíz da sua instalação do WHMCS
 
 3. Dentro da área administrativa do seu WHMCS, vá em: Setup > Payments > Payment Gateways (em inglês) ou Opções > Pagamentos > Portais para Pagamento
 
@@ -33,8 +34,41 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 ## Disponíveis em alguns dias:
 
-* Emissão antecipada de boletos (automaticamente, no momento da criação da fatura via Cron)
-* Disponibilização de linha digitável no painel e e-mails de cobrança/fatura
+* Disponibilização de linha digitável no painel
+
+## 2.0.3 - 2020/01/03
+
+`Melhorias implementadas`
+
+* Cancelamento automático de boletos (na baixa e pagto. parcial de faturas)
+
+`Bugs resolvidos`
+
+* PDF de fatura mostrava boleto em branco de maneira intermitente
+* Pagamentos duplicados em alguns ambientes
+
+## 2.0.2 - 2019/11/14
+
+`Melhorias implementadas`
+
+* BUGFIX: Faturas parcialmente pagas agora são interpretadas corretamente
+* Segurança: Maior proteção contra XSS e SQL injection
+* Melhor precisão na determinação de nova data de vencimento, ao reemitir uma fatura vencida
+* Novo texto descritivo para a multa proporcional no back-end
+* Refatoração geral, redução do número de queries e mais
+
+## 2.0.1.3 - 2019/10/14
+
+`Bugs resolvidos`
+
+* Conciliação de multa/desconto impedia baixa das faturas como esperado no WHMCS v7.8
+
+## 2.0.1.2 - 2019/05/20
+
+`Bugs resolvidos`
+
+* Boleto não era resgatado caso taxa personalizada estivesse sendo aplicada
+* Multa fatorada e descrição fixa não funcionavam em circunstâncias específicas
 
 ## 2.0.1.1 - 2019/02/09
 
