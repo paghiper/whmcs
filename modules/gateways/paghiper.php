@@ -729,7 +729,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
 
             }
 
-            if(empty($billet) && empty($reserved_billet)) {
+            if(empty($billet) && empty($reserved_billet)) { 
                 $reissue = TRUE;
             }
         }
@@ -917,10 +917,16 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                 } elseif ($status == "paid" || $status == "Aprovado") {
 
                     // Essa função checa se a transação ja foi registrada no banco de dados. 
-                    checkCbTransID($transaction_id);
+                    $checkTransId = checkCbTransID($transaction_id);
 
                     // Calcula a taxa cobrada pela PagHiper de maneira dinâmica e registra para uso no painel.
                     $fee = $transaction_fee;
+
+                    // Logamos a transação no log de Gateways do WHMCS.
+                    logTransaction($GATEWAY["name"],$request,"Transação Concluída");
+
+                    // Logamos status no banco
+                    log_status_to_db($status, $transaction_id);
 
                     // Se estiver tudo certo, checamos se o valor pago é diferente do configurado na fatura
                     if($results['balance'] !== $ammount_paid) {
@@ -949,11 +955,6 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                     // Registramos o pagamento e damos baixa na fatura
                     addInvoicePayment($invoice_id,$transaction_id,$ammount_paid,$fee,'paghiper');
 
-                    // Logamos a transação no log de Gateways do WHMCS.
-                    logTransaction($GATEWAY["name"],$request,"Transação Concluída");
-
-                    // Logamos status no banco
-                    log_status_to_db($status, $transaction_id);
                 // Transação Cancelada. 
                 } else if ($status == "canceled" || $status == "Cancelado") {
                     // Boleto não foi pago, logamos apenas como memorando
@@ -971,6 +972,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
             logTransaction($GATEWAY["name"],$json,"Falha ao buscar ID da transação no banco."); 
 
         }
+
     exit();
 
     }
