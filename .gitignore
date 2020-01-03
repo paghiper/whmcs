@@ -7,9 +7,7 @@
 
 !LICENSE
 
-!includes/hooks/create_paghiper_slip.\php
-
-!includes/hooks/cancel_paghiper_slips.\php
+!includes/hooks/*_paghiper_*.\php
 
 !modules/gateways/paghiper
 
