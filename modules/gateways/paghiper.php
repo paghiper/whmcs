@@ -919,6 +919,15 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                     // Essa função checa se a transação ja foi registrada no banco de dados. 
                     $checkTransId = checkCbTransID($transaction_id);
 
+                    /**
+                     * Infelizmente a função checkCbTransID não é totalmente confiável na versão 7 do WHMCS.
+                     * Por conta disso, precisamos checar se a transação ja sofreu baixa no banco
+                     */ 
+                    $unpaid_transactions = mysql_query("SELECT transaction_id, status FROM mod_paghiper WHERE transaction_id = '{$transaction_id}' AND status = 'paid'");
+                    if(mysql_num_rows($unpaid_transactions) >= 1) {
+                        die('Notificação ja foi processada');
+                    }
+
                     // Calcula a taxa cobrada pela PagHiper de maneira dinâmica e registra para uso no painel.
                     $fee = $transaction_fee;
 
@@ -931,17 +940,16 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
                     // Se estiver tudo certo, checamos se o valor pago é diferente do configurado na fatura
                     if($results['balance'] !== $ammount_paid) {
 
-                            // Subtraimos valor de balanço do valor pago. Funciona tanto para desconto como acréscimo.
-                            // Ex. 1: Valor pago | R$ 18 - R$ 20 (Balanço) = -R$ 2 [Desconto]
-                            // Ex. 2: Valor pago | R$ 21 - R$ 20 (Balanço) = +R$ 1 [Multa]
-                            $value = $ammount_paid - $results['balance'];
+                        // Subtraimos valor de balanço do valor pago. Funciona tanto para desconto como acréscimo.
+                        // Ex. 1: Valor pago | R$ 18 - R$ 20 (Balanço) = -R$ 2 [Desconto]
+                        // Ex. 2: Valor pago | R$ 21 - R$ 20 (Balanço) = +R$ 1 [Multa]
+                        $value = $ammount_paid - $results['balance'];
 
                         if($results['balance'] > $ammount_paid) {
 
                             // Conciliação: Desconto por antecipação (Valor de balanço da Invoice - Valor total pago)
                             $desc = 'Desconto por pagamento antecipado';
                             add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
-
 
                         } else {
 
