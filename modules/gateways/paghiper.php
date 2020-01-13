@@ -646,6 +646,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         // Pegamos a data de vencimento e a data de hoje
         $invoiceDuedate = $invoice['duedate']; // Data de vencimento da fatura
         $dataHoje = date('Y-m-d'); // Data de Hoje
+        $grace_days = (int) $GATEWAY['open_after_day_due'];
         
         // Se a data do vencimento da fatura for maior que o dia de hoje
         if ( strtotime($invoiceDuedate) >= strtotime(date('Y-m-d')) ) {
@@ -661,12 +662,21 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
             $reissue_unpaid = (isset($reissue_unpaid_cont) && ($reissue_unpaid_cont === 0 || !empty($reissue_unpaid_cont))) ? $reissue_unpaid_cont : 1 ;
             if($reissue_unpaid == -1) {
 
-                // Mostrar tela de boleto cancelado
-                $ico = 'boleto-cancelled.png';
-                $title = 'Este boleto venceu!';
-                $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
-                echo print_screen($ico, $title, $message);
-                exit();
+                // Checamos por um período de tolerância para pagto. antes de mostrar tela de boleto vencido
+                if( strtotime(date('Y-m-d', strtotime($invoiceDuedate . " +$grace_days day"))) >= strtotime(date('Y-m-d')) ) {
+                   
+                    $billetDuedate = $invoiceDuedate;
+
+                } else {
+
+                    // Mostrar tela de boleto cancelado
+                    $ico = 'boleto-cancelled.png';
+                    $title = 'Este boleto venceu!';
+                    $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
+                    echo print_screen($ico, $title, $message);
+                    exit();
+
+                }
 
             } elseif($reissue_unpaid == 0) {
                 $billetDuedate  = date('Y-m-d');  
@@ -678,7 +688,6 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
 
         // Definimos a data limite de vencimento, caso haja tolerância para pagto. após a data estipulada no WHMCS
         if($reissue_unpaid !== 0 && $reissue_unpaid !== '') {
-            $grace_days = $GATEWAY['open_after_day_due'];
             $current_limit_date = ($reissue_unpaid > 1 ) ? date('Y-m-d', strtotime($due_date . " -$grace_days days")) : date('Y-m-d', strtotime($due_date . " -$grace_days day"));
         } else {
             // Caso contrário, a data limite é a de hoje
