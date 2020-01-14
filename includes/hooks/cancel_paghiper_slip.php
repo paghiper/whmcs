@@ -75,6 +75,6 @@ function cancel_paghiper_slips($vars) {
 	}
 }
 
-add_hook('AddInvoicePayment', 1, 'cancel_paghiper_slips');
+//add_hook('AddInvoicePayment', 1, 'cancel_paghiper_slips');
 add_hook('InvoiceCancelled', 1, 'cancel_paghiper_slips');
 add_hook('InvoicePaid', 1, 'cancel_paghiper_slips');
