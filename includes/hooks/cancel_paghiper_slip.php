@@ -9,7 +9,8 @@ if (!defined("WHMCS")) die("This file cannot be accessed directly");
 
 function cancel_paghiper_slips($vars) {
 
-    require_once ("../init.php");
+	$whmcs->load_function("gateway");
+	
 	$invoice_id = $vars['invoiceid'];
 
 	// Initialise gateway configuration
@@ -76,6 +77,8 @@ function cancel_paghiper_slips($vars) {
 
 	return true;
 }
+
+// TODO: Cancelar on update totals também
 
 //add_hook('UpdateInvoiceTotal', 1, 'cancel_paghiper_slips');
 add_hook('InvoiceCancelled', 1, 'cancel_paghiper_slips');
