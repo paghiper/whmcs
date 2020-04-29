@@ -365,7 +365,7 @@ function generate_paghiper_billet($invoice, $params) {
 
     $data_post = json_encode( $paghiper_data );
 
-    $url = "http://api.paghiper.com/transaction/create/";
+    $url = "https://api.paghiper.com/transaction/create/";
     $mediaType = "application/json"; // formato da requisição
     $charset = "UTF-8";
     $headers = array();
