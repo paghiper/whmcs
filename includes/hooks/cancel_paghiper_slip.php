@@ -73,6 +73,8 @@ function cancel_paghiper_slips($vars) {
 
 		}
 	}
+
+	return true;
 }
 
 //add_hook('AddInvoicePayment', 1, 'cancel_paghiper_slips');
