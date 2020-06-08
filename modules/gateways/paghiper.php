@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.0.3
+ * @version    2.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -25,7 +25,7 @@ function paghiper_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.0.3</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.1</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -646,7 +646,6 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
         // Pegamos a data de vencimento e a data de hoje
         $invoiceDuedate = $invoice['duedate']; // Data de vencimento da fatura
         $dataHoje = date('Y-m-d'); // Data de Hoje
-        $grace_days = (int) $GATEWAY['open_after_day_due'];
         
         // Se a data do vencimento da fatura for maior que o dia de hoje
         if ( strtotime($invoiceDuedate) >= strtotime(date('Y-m-d')) ) {
@@ -662,21 +661,12 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
             $reissue_unpaid = (isset($reissue_unpaid_cont) && ($reissue_unpaid_cont === 0 || !empty($reissue_unpaid_cont))) ? $reissue_unpaid_cont : 1 ;
             if($reissue_unpaid == -1) {
 
-                // Checamos por um período de tolerância para pagto. antes de mostrar tela de boleto vencido
-                if( strtotime(date('Y-m-d', strtotime($invoiceDuedate . " +$grace_days day"))) >= strtotime(date('Y-m-d')) ) {
-                   
-                    $billetDuedate = $invoiceDuedate;
-
-                } else {
-
-                    // Mostrar tela de boleto cancelado
-                    $ico = 'boleto-cancelled.png';
-                    $title = 'Este boleto venceu!';
-                    $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
-                    echo print_screen($ico, $title, $message);
-                    exit();
-
-                }
+                // Mostrar tela de boleto cancelado
+                $ico = 'boleto-cancelled.png';
+                $title = 'Este boleto venceu!';
+                $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
+                echo print_screen($ico, $title, $message);
+                exit();
 
             } elseif($reissue_unpaid == 0) {
                 $billetDuedate  = date('Y-m-d');  
@@ -688,6 +678,7 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
 
         // Definimos a data limite de vencimento, caso haja tolerância para pagto. após a data estipulada no WHMCS
         if($reissue_unpaid !== 0 && $reissue_unpaid !== '') {
+            $grace_days = (!empty($GATEWAY['open_after_day_due'])) ? $GATEWAY['open_after_day_due'] : 0;
             $current_limit_date = ($reissue_unpaid > 1 ) ? date('Y-m-d', strtotime($due_date . " -$grace_days days")) : date('Y-m-d', strtotime($due_date . " -$grace_days day"));
         } else {
             // Caso contrário, a data limite é a de hoje
