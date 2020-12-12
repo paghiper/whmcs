@@ -194,7 +194,8 @@ if (!defined("WHMCS")) {
         $order_id = $invoice['invoiceid'];
         $invoice_total = apply_custom_taxes((float) $invoice['balance'], $GATEWAY);
 
-        $sql = "SELECT * FROM mod_paghiper WHERE due_date >= '$current_limit_date' AND order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' ORDER BY ABS( DATEDIFF( due_date, '$billetDuedate' ) ) ASC LIMIT 1;";
+        $transaction_type = (isset($_GET) && array_key_exists('pix', $_GET)) ? 'pix' : 'billet';
+        $sql = "SELECT * FROM mod_paghiper WHERE transaction_type = '$transaction_type' due_date >= '$current_limit_date' AND order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' ORDER BY ABS( DATEDIFF( due_date, '$billetDuedate' ) ) ASC LIMIT 1;";
 
         $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
         if(!empty($billet)) {
