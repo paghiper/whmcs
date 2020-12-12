@@ -310,7 +310,7 @@ function generate_paghiper_billet($invoice, $params) {
 
 	$data_post = json_encode( $paghiper_data );
 
-    $url = (isset($_GET) && array_key_exists('pix', $_GET)) ? "https://pix.paghiper.com/invoice/create/" : "https://api.paghiper.com/transaction/create/";
+    $url = ($is_pix) ? "https://pix.paghiper.com/invoice/create/" : "https://api.paghiper.com/transaction/create/";
     $mediaType = "application/json"; // formato da requisição
     $charset = "UTF-8";
     $headers = array();
@@ -337,21 +337,21 @@ function generate_paghiper_billet($invoice, $params) {
     if($httpCode == 201) {
 
 		// Exemplo de como capturar a resposta json
-		$transaction_type 	= ((isset($_GET) && array_key_exists('pix', $_GET))) ? 'pix' : 'billet';
-        $transaction_id 	= (array_key_exists('pix_create_request', $json)) ? $json['pix_create_request']['transaction_id'] : $json['create_request']['transaction_id'];
-        $order_id 			= (array_key_exists('pix_create_request', $json)) ? $json['pix_create_request']['order_id'] : $json['create_request']['order_id'];
-        $due_date 			= (array_key_exists('pix_create_request', $json)) ? $json['pix_create_request']['due_date'] : $json['create_request']['due_date'];
-        $status 			= (array_key_exists('pix_create_request', $json)) ? $json['pix_create_request']['status'] : $json['create_request']['status'];
-        $url_slip 			= (array_key_exists('pix_create_request', $json)) ? null : $json['create_request']['bank_slip']['url_slip'];
-        $url_slip_pdf 		= (array_key_exists('pix_create_request', $json)) ? null : $json['create_request']['bank_slip']['url_slip_pdf'];
-        $digitable_line 	= (array_key_exists('pix_create_request', $json)) ? null : $json['create_request']['bank_slip']['digitable_line'];
+		$transaction_type 	= ($is_pix) ? 'pix' : 'billet';
+        $transaction_id 	= ($is_pix) ? $json['pix_create_request']['transaction_id'] : $json['create_request']['transaction_id'];
+        $order_id 			= ($is_pix) ? $json['pix_create_request']['order_id'] : $json['create_request']['order_id'];
+        $due_date 			= ($is_pix) ? $json['pix_create_request']['due_date'] : $json['create_request']['due_date'];
+        $status 			= ($is_pix) ? $json['pix_create_request']['status'] : $json['create_request']['status'];
+        $url_slip 			= ($is_pix) ? null : $json['create_request']['bank_slip']['url_slip'];
+        $url_slip_pdf 		= ($is_pix) ? null : $json['create_request']['bank_slip']['url_slip_pdf'];
+        $digitable_line 	= ($is_pix) ? null : $json['create_request']['bank_slip']['digitable_line'];
 		$open_after_day_due = $gateway_settings['open_after_day_due'];
 		
-		$qrcode_base64 		= (array_key_exists('pix_create_request', $json)) ? $json['pix_create_request']['pix_code']['qrcode_base64'] : null;
-		$qrcode_image_url 	= (array_key_exists('pix_create_request', $json)) ? $json['pix_create_request']['pix_code']['qrcode_image_url'] : null;
-		$emv 				= (array_key_exists('pix_create_request', $json)) ? $json['pix_create_request']['pix_code']['emv'] : null;
-		$bacen_url 			= (array_key_exists('pix_create_request', $json)) ? $json['pix_create_request']['pix_code']['bacen_url'] : null;
-		$pix_url 			= (array_key_exists('pix_create_request', $json)) ? $json['pix_create_request']['pix_code']['pix_url'] : null;
+		$qrcode_base64 		= ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_base64'] : null;
+		$qrcode_image_url 	= ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_image_url'] : null;
+		$emv 				= ($is_pix) ? $json['pix_create_request']['pix_code']['emv'] : null;
+		$bacen_url 			= ($is_pix) ? $json['pix_create_request']['pix_code']['bacen_url'] : null;
+		$pix_url 			= ($is_pix) ? $json['pix_create_request']['pix_code']['pix_url'] : null;
 
 		$slip_value = $total;
 
@@ -367,7 +367,7 @@ function generate_paghiper_billet($invoice, $params) {
 
         if($return_json) {
             header('Content-Type: application/json');
-            return (array_key_exists('pix_create_request', $json)) ? json_encode($json['pix_create_request']) : json_encode($json['create_request']);
+            return ($is_pix) ? json_encode($json['pix_create_request']) : json_encode($json['create_request']);
 		}
 
 
@@ -461,6 +461,7 @@ function create_paghiper_table() {
           `open_after_day_due` int(2) DEFAULT NULL,
           `slip_value` decimal(11,2) DEFAULT NULL,
 		  `qrcode_base64` varchar(255) DEFAULT NULL,
+		  `qrcode_image_url` varchar(255) DEFAULT NULL,
 		  `emv` varchar(255) DEFAULT NULL,
 		  `pix_url` varchar(255) DEFAULT NULL,
 		  `bacen_url` varchar(255) DEFAULT NULL,

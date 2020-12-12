@@ -22,7 +22,7 @@ if (!defined("WHMCS")) {
 	$whmcs->load_function("invoice");
 
     // Initialize module settings
-	$gateway_code = (isset($_GET) && array_key_exists('pix', $_GET)) ? "paghiper_pix" : "paghiper"; 
+	$gateway_code = ($is_pix) ? "paghiper_pix" : "paghiper"; 
 	$GATEWAY = getGatewayVariables($gateway_code);
 
     // Define variáveis para configurações do gateway
@@ -71,7 +71,7 @@ if (!defined("WHMCS")) {
                 // Mostrar tela de boleto indisponível
                 $ico = 'boleto-cancelled.png';
                 $title = 'Boleto não disponível para essa fatura!';
-                $message = 'O método de pagamento escolhido para esta fatura não é ' . (($gateway_code == 'paghiper_pix') ? 'PIX' : 'boleto bancário') . '. Caso ache que isso é um erro, contate o suporte.';
+                $message = 'O método de pagamento escolhido para esta fatura não é ' . (($is_pix) ? 'PIX' : 'boleto bancário') . '. Caso ache que isso é um erro, contate o suporte.';
                 echo print_screen($ico, $title, $message);
                 exit();
 
@@ -194,7 +194,7 @@ if (!defined("WHMCS")) {
         $order_id = $invoice['invoiceid'];
         $invoice_total = apply_custom_taxes((float) $invoice['balance'], $GATEWAY);
 
-        $transaction_type = (isset($_GET) && array_key_exists('pix', $_GET)) ? 'pix' : 'billet';
+        $transaction_type = ($is_pix) ? 'pix' : 'billet';
         $sql = "SELECT * FROM mod_paghiper WHERE transaction_type = '$transaction_type' due_date >= '$current_limit_date' AND order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' ORDER BY ABS( DATEDIFF( due_date, '$billetDuedate' ) ) ASC LIMIT 1;";
 
         $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
@@ -268,7 +268,7 @@ if (!defined("WHMCS")) {
             } else {
                 $invoiceid = $_GET["invoiceid"];
 				$urlRetorno = $systemurl.'/modules/gateways/';
-				$urlRetorno .= (isset($_GET) && array_key_exists('pix', $_GET)) ? 'paghiper_pix.php?pix=true' : 'paghiper.php';
+				$urlRetorno .= ($is_pix) ? 'paghiper_pix.php?pix=true' : 'paghiper.php';
                 // Executamos o checkout transparente e printamos o resultado
 
                 try {
@@ -333,7 +333,7 @@ if (!defined("WHMCS")) {
         $order_id = (empty($billet)) ? $_POST['idPlataforma'] : $billet['order_id'];
 
         // Agora vamos buscar o status da transação diretamente na PagHiper, usando a API.
-        $url = (isset($_GET) && array_key_exists('pix', $_GET)) ? "https://pix.paghiper.com/invoice/notification/" : "https://api.paghiper.com/transaction/notification/";
+        $url = ($is_pix) ? "https://pix.paghiper.com/invoice/notification/" : "https://api.paghiper.com/transaction/notification/";
         $data_post = json_encode( $paghiper_data );
         $mediaType = "application/json"; // formato da requisição
         $charset = "UTF-8";
