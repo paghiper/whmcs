@@ -9,6 +9,10 @@
 
 !includes/hooks/*_paghiper_*.\php
 
+!modules/gateways/paghiper.php
+
+!modules/gateways/paghiper_pix.\php
+
 !modules/gateways/paghiper/**/*
 
 .DS_Store
