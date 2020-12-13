@@ -166,7 +166,7 @@ return $code;
 
 function generate_paghiper_billet($invoice, $params) {
 
-    global $return_json;
+    global $return_json, $is_pix;
 	
 	// Prepare variables that we'll be using during the process
 	$postData    = array();
@@ -331,7 +331,7 @@ function generate_paghiper_billet($invoice, $params) {
 
     // captura o http code
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-	curl_close($ch);
+    curl_close($ch);
 
     // CÓDIGO 201 SIGNIFICA QUE O BOLETO FOI GERADO COM SUCESSO
     if($httpCode == 201) {
@@ -353,7 +353,9 @@ function generate_paghiper_billet($invoice, $params) {
 		$bacen_url 			= ($is_pix) ? $json['pix_create_request']['pix_code']['bacen_url'] : null;
 		$pix_url 			= ($is_pix) ? $json['pix_create_request']['pix_code']['pix_url'] : null;
 
-		$slip_value = $total;
+        $slip_value = $total;
+        
+        print_r($json['pix_create_request']);
 
         try {
 
@@ -361,6 +363,12 @@ function generate_paghiper_billet($invoice, $params) {
 
             $query = full_query($sql);
         } catch (Exception $e) {
+
+            $ico = 'boleto-cancelled.png';
+            $title = 'Ops! Não foi possível emitir o boleto bancário.';
+            $message = 'Por favor entre em contato com o suporte. Erro 0x004681';
+            
+            echo print_screen($ico, $title, $message);
             logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir o boleto no banco de dados. Por favor entre em contato com o suporte.");
         }
 

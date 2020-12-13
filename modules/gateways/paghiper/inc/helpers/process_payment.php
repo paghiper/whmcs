@@ -19,7 +19,7 @@ if (!defined("WHMCS")) {
     // Inicializar WHMCS, carregar o gateway e a fatura.
     require_once ("../../init.php");
     $whmcs->load_function("gateway");
-	$whmcs->load_function("invoice");
+    $whmcs->load_function("invoice");
 
     // Initialize module settings
 	$gateway_code = ($is_pix) ? "paghiper_pix" : "paghiper"; 
@@ -155,7 +155,7 @@ if (!defined("WHMCS")) {
         // Definimos a data limite de vencimento, caso haja tolerância para pagto. após a data estipulada no WHMCS
         if($reissue_unpaid !== 0 && $reissue_unpaid !== '') {
             $grace_days = (!empty($GATEWAY['open_after_day_due'])) ? $GATEWAY['open_after_day_due'] : 0;
-            $current_limit_date = ($reissue_unpaid > 1 ) ? date('Y-m-d', strtotime($invoiceDuedate . " -$grace_days days")) : date('Y-m-d', strtotime($invoiceDuedate . " -$grace_days day"));
+            $current_limit_date = ($reissue_unpaid > 1) ? date('Y-m-d', strtotime($invoiceDuedate . " -$grace_days days")) : date('Y-m-d', strtotime($invoiceDuedate . " -$grace_days day"));
         } else {
             // Caso contrário, a data limite é a de hoje
             $current_limit_date = $dataHoje;
@@ -165,7 +165,8 @@ if (!defined("WHMCS")) {
         if ( strtotime($invoiceDuedate) >= strtotime(date('Y-m-d')) ) {
 
             // Usamos a data de vencimento normalmente
-            $billetDuedate  = $invoiceDuedate;
+            $billetDuedate      = $invoiceDuedate;
+            $current_limit_date = $invoiceDuedate;
 
         // Se a data de vencimento da fatura for menor que o dia de hoje
         } elseif( $current_limit_date < strtotime(date('Y-m-d')) ) {
@@ -183,9 +184,11 @@ if (!defined("WHMCS")) {
                 exit();
 
             } elseif($reissue_unpaid == 0) {
-                $billetDuedate  = date('Y-m-d');  
+                $billetDuedate  = date('Y-m-d');
+                $current_limit_date = date('Y-m-d');
             } else {
-                $billetDuedate  = date('Y-m-d', ($reissue_unpaid == 1) ? strtotime("+$reissue_unpaid day") : strtotime("+$reissue_unpaid days"));  
+                $billetDuedate  = date('Y-m-d', ($reissue_unpaid == 1) ? strtotime("+$reissue_unpaid day") : strtotime("+$reissue_unpaid days"));
+                $current_limit_date = date('Y-m-d', ($reissue_unpaid == 1) ? strtotime("+$reissue_unpaid day") : strtotime("+$reissue_unpaid days"));
             }
             
         } 
@@ -195,9 +198,9 @@ if (!defined("WHMCS")) {
         $invoice_total = apply_custom_taxes((float) $invoice['balance'], $GATEWAY);
 
         $transaction_type = ($is_pix) ? 'pix' : 'billet';
-        $sql = "SELECT * FROM mod_paghiper WHERE transaction_type = '$transaction_type' due_date >= '$current_limit_date' AND order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' ORDER BY ABS( DATEDIFF( due_date, '$billetDuedate' ) ) ASC LIMIT 1;";
-
+        $sql = "SELECT * FROM mod_paghiper WHERE transaction_type = '$transaction_type' AND due_date >= '$current_limit_date' AND order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' ORDER BY ABS( DATEDIFF( due_date, '$billetDuedate' ) ) ASC LIMIT 1;";
         $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
+
         if(!empty($billet)) {
             $due_date           = $billet['due_date'];
             $grace_days         = $billet['open_after_day_due'];
@@ -268,7 +271,7 @@ if (!defined("WHMCS")) {
             } else {
                 $invoiceid = $_GET["invoiceid"];
 				$urlRetorno = $systemurl.'/modules/gateways/';
-				$urlRetorno .= ($is_pix) ? 'paghiper_pix.php?pix=true' : 'paghiper.php';
+				$urlRetorno .= ($is_pix) ? 'paghiper_pix.php' : 'paghiper.php';
                 // Executamos o checkout transparente e printamos o resultado
 
                 try {
