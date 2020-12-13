@@ -269,7 +269,7 @@ if (!defined("WHMCS")) {
             if($_GET["invoiceid"] == '') {
                 exit("Fatura inexistente");
             } else {
-                $invoiceid = $_GET["invoiceid"];
+                $invoiceid = intval($_GET["invoiceid"]);
 				$urlRetorno = $systemurl.'/modules/gateways/';
 				$urlRetorno .= ($is_pix) ? 'paghiper_pix.php' : 'paghiper.php';
                 // Executamos o checkout transparente e printamos o resultado
