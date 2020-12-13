@@ -23,7 +23,6 @@ $whmcs_url = rtrim(\App::getSystemUrl(),"/");
 $json_url = $whmcs_url."/modules/gateways/";
 $json_url .= ($is_pix) ? 'paghiper_pix.php' : 'paghiper.php';
 $json_url .= "?invoiceid=".$invoiceid."&uuid=".$clientsdetails['userid']."&mail=".$clientsdetails['email']."&json=1";
-$json_url .= ($is_pix) ? '&pix=true' : '';
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $json_url);
