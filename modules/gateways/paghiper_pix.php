@@ -81,12 +81,6 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "FriendlyName" => "Exibe ou não a frase fixa do boleto (configurada no painel da PagHiper)",
             "Type" => "yesno"
         ),
-        "open_after_day_due" => array(
-            "FriendlyName" => "Tolerância para pagto",
-            "Type" => "text",
-            "Size" => "2",
-            "Description" => "Número máximo de dias em que o boleto poderá ser pago após o vencimento. (Prática comum para quem opta por cobrar juros e multas)."
-        ),
         "reissue_unpaid" => array(
             "FriendlyName" => "Vencimento padrão para boletos emitidos",
             'Type' => 'dropdown',
@@ -100,29 +94,6 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
                 '5'     => '+5 dias',
             ),
             'Description' => 'Escolha a quantidade de dias para o vencimento de boletos reemitidos (para faturas ja vencidas). Caso decida não permitir reemissão, você precisará mudar a data de vencimento manualmente.',
-        ),
-        "late_payment_fine" => array(
-            "FriendlyName" => "Percentual da multa por atraso (%)",
-            "Type" => "text",
-            "Size" => "1",
-            "Description" => "O percentual máximo autorizado é de 2%, de acordo artigo 52, parágrafo primeiro do Código de Defesa do Consumidor, Lei 8.078/90"
-        ),
-        "per_day_interest" => array(
-            "FriendlyName" => "Juros proporcional",
-            "Type" => "yesno",
-            "Description" => "Ao aplicar 1% de juros máximo ao mês, esse percentual será cobrado proporcionalmente aos dias de atraso.<br><br>Dividindo 1% por 30 dias = 0,033% por dia de atraso."
-        ),
-        "early_payment_discounts_days" => array(
-            "FriendlyName" => "Qtde. de dias para aplicação de desconto",
-            "Type" => "text",
-            "Size" => "2",
-            "Description" => "Número de dias em que o pagamento pode ser realizado com antecedência recebendo o desconto extra."
-        ),
-        "early_payment_discounts_cents" => array(
-            "FriendlyName" => "Desconto por pagto. antecipado",
-            "Type" => "text",
-            "Size" => "6",
-            "Description" => "Valor do desconto que será aplicado caso o pagamento ocorra de forma antecipada. Em percentual (Ex.: 10%)"
         ),
         "admin" => array(
             "FriendlyName" => "Administrador atribuído",
