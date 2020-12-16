@@ -364,7 +364,7 @@ function generate_paghiper_billet($invoice, $params) {
             $query = full_query($sql);
         } catch (Exception $e) {
 
-            $ico = 'boleto-cancelled.png';
+            $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
             $title = 'Ops! Não foi possível emitir o boleto bancário.';
             $message = 'Por favor entre em contato com o suporte. Erro 0x004681';
             
@@ -393,7 +393,7 @@ function generate_paghiper_billet($invoice, $params) {
 
         if(!$return_json) { 
 
-            $ico = 'boleto-cancelled.png';
+            $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
             $title = 'Ops! Não foi possível emitir o boleto bancário.';
             if(isset($json['create_request']['response_message']) && $json['create_request']['response_message'] == 'payer_cpf_cnpj invalido') {
                 $message = 'CPF/CNPJ inválido no cadastro. Por favor verifique os dados e tente novamente.';

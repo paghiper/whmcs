@@ -69,7 +69,7 @@ if (!defined("WHMCS")) {
         if($invoice['paymentmethod'] !== $gateway_code && $issue_all == 0) {
 
                 // Mostrar tela de boleto indisponível
-                $ico = 'boleto-cancelled.png';
+                $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Boleto não disponível para essa fatura!';
                 $message = 'O método de pagamento escolhido para esta fatura não é ' . (($is_pix) ? 'PIX' : 'boleto bancário') . '. Caso ache que isso é um erro, contate o suporte.';
                 echo print_screen($ico, $title, $message);
@@ -99,7 +99,7 @@ if (!defined("WHMCS")) {
             case "Paid":
 
                 // Mostrar tela de boleto pago
-                $ico = 'boleto-ok.png';
+                $ico = ($is_pix) ? 'pix-ok.png' : 'billet-ok.png';
                 $title = 'Fatura paga!';
                 $message = 'Este boleto ja foi compensado no sistema e consta como pago.';
                 echo print_screen($ico, $title, $message);
@@ -109,7 +109,7 @@ if (!defined("WHMCS")) {
             case "Draft":
 
                 // Mostrar tela de boleto indisponível
-                $ico = 'boleto-cancelled.png';
+                $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Esta fatura ainda não está disponível!';
                 $message = 'Este boleto ainda não está disponível. Caso acredite que seja um erro, por favor acione o suporte.';
                 echo print_screen($ico, $title, $message);
@@ -127,7 +127,7 @@ if (!defined("WHMCS")) {
             case "Cancelled":
 
                 // Mostrar tela de boleto indisponível
-                $ico = 'boleto-cancelled.png';
+                $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Esta fatura foi cancelada!';
                 $message = 'Este boleto foi cancelado. Caso acredite que seja um erro, por favor acione o suporte.';
                 echo print_screen($ico, $title, $message);
@@ -137,7 +137,7 @@ if (!defined("WHMCS")) {
             case "Refunded":
 
                 // Mostrar tela de boleto indisponível
-                $ico = 'boleto-cancelled.png';
+                $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Este boleto venceu!';
                 $message = 'Este boleto foi estornado. Caso acredite que seja um erro, por favor acione o suporte.';
                 echo print_screen($ico, $title, $message);
@@ -177,7 +177,7 @@ if (!defined("WHMCS")) {
             if($reissue_unpaid == -1) {
 
                 // Mostrar tela de boleto cancelado
-                $ico = 'boleto-cancelled.png';
+                $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Este boleto venceu!';
                 $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
                 echo print_screen($ico, $title, $message);
@@ -230,7 +230,7 @@ if (!defined("WHMCS")) {
             $reserved_billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
             if(!empty($reserved_billet)) {
 
-                $ico = 'boleto-waiting.png';
+                $ico = ($is_pix) ? 'pix-waiting.png' : 'billet-waiting.png';
                 $title = 'Pagamento pré-confirmado.';
                 $message = 'Este boleto teve o pagamento pré-confirmado e está aguardando compensação bancária. Por favor, aguarde.';
                 echo print_screen($ico, $title, $message);
