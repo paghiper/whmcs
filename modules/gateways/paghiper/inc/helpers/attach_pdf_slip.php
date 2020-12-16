@@ -102,23 +102,36 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
             $pix_url    = ($result->pix_code) ? $result->pix_code->pix_url : $result->pix_url;
             $bacen_url  = ($result->pix_code) ? $result->pix_code->bacen_url : $result->bacen_url;
 
-            // Position at 15 mm from bottom
-            $pdf->SetY(15);
-            // Set font
-            $pdf->SetFont('opensans', '', 8);
-            // Page number
-            $pdf->Cell(0, 10, $emv);
+            $pdf->Image($whmcs_url.'/modules/gateways/paghiper/assets/img/pix.jpg', 'R', 220, 40, '', 'JPEG', false, 'C', false, 10, 'C', false, false, 0, false, false, false);
+
+
             $pdf->Image($filename, 'C', 50, '', '', 'PNG', false, 'C', false, 300, 'C', false, false, 0, false, false, false);
+
+            // Position at 15 mm from bottom
+            $pdf->SetY(140);
+
+            // Set font
+            $pdf->SetFont('dejavusansb', '', 12);
+
+            // Page number
+            $pdf->Multicell(0, 10, 'Use a opção QR Code no seu app de internet banking', $border=0, $align='C');
+
+            // Set font
+            $pdf->SetFont('dejavusans', '', 8);
+
+            $pdf->SetY(146);
+            $pdf->Multicell(0, 10, 'Ou, se preferir, copie o texto abaixo para fazer o pagamento', $border=0, $align='C');
+
+            // Position at 15 mm from bottom
+            $pdf->SetY(160);
+            // Page number
+            $pdf->Multicell(0, 10, $emv, $border=0, $align='C');
         }
 
         $pdf->AddPage();
 
     }
 
-} 
-
-header("Content-type: application/pdf");
-$pdf->Output('name.pdf', 'I');
-exit();
+}
 
 ?>
