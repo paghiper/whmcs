@@ -70,7 +70,7 @@ if (!defined("WHMCS")) {
 
                 // Mostrar tela de boleto indisponível
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                $title = (($is_pix) ? 'PIX' : 'boleto bancário') . ' não disponível para essa fatura!';
+                $title = (($is_pix) ? 'PIX' : 'Boleto bancário') . ' não disponível para essa fatura!';
                 $message = 'O método de pagamento escolhido para esta fatura não é ' . (($is_pix) ? 'PIX' : 'boleto bancário') . '. Caso ache que isso é um erro, contate o suporte.';
                 echo print_screen($ico, $title, $message);
                 exit();
