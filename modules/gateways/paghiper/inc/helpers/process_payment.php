@@ -305,6 +305,7 @@ if (!defined("WHMCS")) {
                     
                     //echo generate_paghiper_billet($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$return_json);
                     echo generate_paghiper_billet($invoice, $params);
+
                 } catch (Exception $e) {
                     echo 'Erro ao solicitar boleto: ',  $e->getMessage(), "\n";
                 }
@@ -516,7 +517,7 @@ if (!defined("WHMCS")) {
 
         }
 
-    exit();
+        exit();
 
     }
 }

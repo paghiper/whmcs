@@ -454,36 +454,24 @@ function generate_paghiper_billet($invoice, $params) {
         if($return_json) {
             header('Content-Type: application/json');
             return ($is_pix) ? json_encode($json['pix_create_request']) : json_encode($json['create_request']);
-		}
+        }
+        
+        if(!empty($qrcode_image_url)) {
+            $code = '';
 
+            $title = 'Use a opção QR Code no seu app de internet banking';
+            $description = 'Valor: R$ ' . number_format($billet_value, 2, ',', '.');
 
-		if(!empty($qrcode_image_url)) {
-			$output = "<img src='{$qrcode_image_url}'>";
-		} else {
-			$output = fetch_remote_url($billet_url);
-		}
+            $code = sprintf('<pre id="emvCode" data-emv="%s">%s</pre>', $emv, $emv);
 
-        return $output;
+            return print_screen($qrcode_image_url, $title, $description, $code);
+        } else {
+            return fetch_remote_url($url_slip);
+        }
 
     } else {
 
         // Não foi possível solicitar o boleto.
-
-        if(!$return_json) { 
-
-            $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Ops! Não foi possível emitir o boleto bancário.';
-            if(isset($json['create_request']['response_message']) && $json['create_request']['response_message'] == 'payer_cpf_cnpj invalido') {
-                $message = 'CPF/CNPJ inválido no cadastro. Por favor verifique os dados e tente novamente.';
-            } else {
-                $message = 'Por favor entre em contato com o suporte.';
-            }
-            
-            echo print_screen($ico, $title, $message);
-        } else {
-            die('Não foi possível emitir o boleto.');
-        }
-
         logTransaction($GATEWAY["name"],array('json' => $json, 'post' => $_POST),"Não foi possível solicitar o boleto.");
         return false;
     }
