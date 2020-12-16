@@ -139,9 +139,7 @@ function paghiper_pix_link($params) {
     // Código do checkout
     $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
     <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}&pix=true\" method=\"post\">
-    <input type='image' src='https://www.paghiper.com/img/checkout/boleto/boleto-240px-148px.jpg' 
-    title='Pagar com Boleto' alt='Pagar com Boleto' border='0'
-     align='absbottom' width='120' height='74' /><br>
+    <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/pix.jpg' title='Pagar com Pix' alt='Pagar com Pix' border='0' align='absbottom' width='120' height='74' /><br>
     <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
     <br> <br>
     <div class='alert alert-warning' role='alert'>
