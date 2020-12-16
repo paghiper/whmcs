@@ -108,8 +108,11 @@ function check_if_subaccount($user_id, $email, $invoice_userid) {
     return false;
 }
 
-function print_screen($ico, $title, $message) {
+function print_screen($ico, $title, $message, $code = null) {
+
     global $systemurl;
+    $img_url = (preg_match("/http/i", $ico)) ? $ico : $systemurl.'/modules/gateways/paghiper/assets/img/'.$ico;
+
     $code = '
         <!DOCTYPE html>
         <html>
@@ -127,9 +130,10 @@ function print_screen($ico, $title, $message) {
 
         <div class="container">
           <div>
-            <img style="max-width: 200px;" src="'.$systemurl.'/modules/gateways/paghiper/assets/img/'.$ico.'">
+            <img '.((!preg_match("/http/i", $ico)) ? 'style="max-width: 200px;"' : '').' src="'.$img_url.'">
             <h3>'.$title.'</h3>
             <p>'.$message.'</p>
+            '.(($code) ? $code : '').'
           </div>
         </div>
 
@@ -138,25 +142,100 @@ function print_screen($ico, $title, $message) {
               width: 100%;
               height: 100%;
               overflow: hidden;
+              margin: 0px;
+              padding: 0px;
             }
             * {
               font-family: Open Sans;
             }
             .container {
-              display: table;
               width: 100%;
               height: 100%;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
             }
             .container div {
-              display: table-cell;
-              vertical-align: middle;
               text-align: center;
             }
             .container div * {
               max-width: 90%;
               margin: 0px auto;
             }
+
+            pre {
+                background: #cfd4e1;
+                white-space: normal;
+                line-break: anywhere;
+                padding: 10px;
+                margin: 20px auto !important;
+                border-radius: 4px;
+                border: 1px solid #545d6f;
+                color: #545d6f;
+                position: relative;
+                text-align: left;
+                padding-right: 180px;
+                cursor: pointer;
+            }
+
+            pre:after {
+                content: "Toque para copiar";
+                background: #545d6f;
+                color: white;
+                padding: 5px 10px;
+                position: absolute;
+                right: 4px;
+                bottom: 4px;
+                border-radius: 3px;
+                height: calc(100% - 18px);
+                vertical-align: middle;
+                display: flex;
+                justify-content: center;
+                flex-direction: column;
+                pointer-events: none;
+            }
+
+            @media only screen and (min-width: 601px) {
+                pre {
+                    max-width: calc(90% - 180px) !important;
+                }
+            }
+
+            @media only screen and (max-width: 600px) {
+                pre {
+                    padding: 10px 10px 60px;
+                }
+                
+                pre:after {
+                    width: calc(100% - 28px);
+                    height: 40px;
+                    text-align: center;
+                }
+            }
         </style>
+        <script>
+            var emvContainer = document.getElementById("emvCode");
+            var emvCode = emvContainer.getAttribute("data-emv");
+
+            emvContainer.addEventListener("click", function() {
+                alert("Código PIX copiado!");
+
+                // Create new element
+                var el = document.createElement(\'textarea\');
+                // Set value (string to be copied)
+                el.value = emvCode;
+                // Set non-editable to avoid focus and move outside of view
+                el.setAttribute(\'readonly\', \'\');
+                el.style = {position: \'absolute\', left: \'-9999px\'};
+                document.body.appendChild(el);
+                // Select text inside element
+                el.select();
+                // Copy text to clipboard
+                document.execCommand(\'copy\');
+                // Remove temporary element
+                document.body.removeChild(el);
+            });
+        </script>
         </body>
 
         </html>';

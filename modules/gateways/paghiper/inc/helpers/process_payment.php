@@ -219,6 +219,7 @@ if (!defined("WHMCS")) {
             $billet_url         = $billet['url_slip'];
             $qrcode_image_url   = $billet['qrcode_image_url'];
             $billet_value       = $billet['slip_value'];
+            $emv                = $billet['emv'];
         }
 
         // TODO: Resolver incompatibilidade na query para boletos ja vencidos porém com margem de pagto. ainda
@@ -319,7 +320,13 @@ if (!defined("WHMCS")) {
                 echo json_encode($billet);
             } else {
                 if(!empty($qrcode_image_url)) {
-                    echo "<img src='{$qrcode_image_url}'>";
+                    $code = '';
+
+                    $title = 'Use a opção QR Code no seu app de internet banking';
+                    $description = 'Valor: R$ ' . number_format($billet_value, 2, ',', '.');
+
+                    $code = sprintf('<pre id="emvCode" data-emv="%s">%s</pre>', $emv, $emv);
+                    echo print_screen($qrcode_image_url, $title, $description, $code);
                 } else {
                     echo fetch_remote_url($billet_url);
                 }
