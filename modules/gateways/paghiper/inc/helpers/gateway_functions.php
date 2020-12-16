@@ -416,29 +416,28 @@ function generate_paghiper_billet($invoice, $params) {
     if($httpCode == 201) {
 
 		// Exemplo de como capturar a resposta json
-		$transaction_type 	= ($is_pix) ? 'pix' : 'billet';
-        $transaction_id 	= ($is_pix) ? $json['pix_create_request']['transaction_id'] : $json['create_request']['transaction_id'];
-        $order_id 			= ($is_pix) ? $json['pix_create_request']['order_id'] : $json['create_request']['order_id'];
-        $due_date 			= ($is_pix) ? $json['pix_create_request']['due_date'] : $json['create_request']['due_date'];
-        $status 			= ($is_pix) ? $json['pix_create_request']['status'] : $json['create_request']['status'];
-        $url_slip 			= ($is_pix) ? null : $json['create_request']['bank_slip']['url_slip'];
-        $url_slip_pdf 		= ($is_pix) ? null : $json['create_request']['bank_slip']['url_slip_pdf'];
-        $digitable_line 	= ($is_pix) ? null : $json['create_request']['bank_slip']['digitable_line'];
-		$open_after_day_due = $gateway_settings['open_after_day_due'];
+		$transaction_type 	        = ($is_pix) ? 'pix' : 'billet';
+        $transaction_id 	        = ($is_pix) ? $json['pix_create_request']['transaction_id'] : $json['create_request']['transaction_id'];
+        $order_id 			        = ($is_pix) ? $json['pix_create_request']['order_id'] : $json['create_request']['order_id'];
+        $due_date 			        = ($is_pix) ? $json['pix_create_request']['due_date'] : $json['create_request']['due_date'];
+        $status 			        = ($is_pix) ? $json['pix_create_request']['status'] : $json['create_request']['status'];
+        $url_slip 			        = ($is_pix) ? null : $json['create_request']['bank_slip']['url_slip'];
+        $url_slip_pdf 		        = ($is_pix) ? null : $json['create_request']['bank_slip']['url_slip_pdf'];
+        $digitable_line 	        = ($is_pix) ? null : $json['create_request']['bank_slip']['digitable_line'];
+        $bar_code_number_to_image   = ($is_pix) ? null : $json['create_request']['bank_slip']['bar_code_number_to_image'];
+		$open_after_day_due         = $gateway_settings['open_after_day_due'];
 		
-		$qrcode_base64 		= ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_base64'] : null;
-		$qrcode_image_url 	= ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_image_url'] : null;
-		$emv 				= ($is_pix) ? $json['pix_create_request']['pix_code']['emv'] : null;
-		$bacen_url 			= ($is_pix) ? $json['pix_create_request']['pix_code']['bacen_url'] : null;
-		$pix_url 			= ($is_pix) ? $json['pix_create_request']['pix_code']['pix_url'] : null;
+		$qrcode_base64 		        = ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_base64'] : null;
+		$qrcode_image_url 	        = ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_image_url'] : null;
+		$emv 				        = ($is_pix) ? $json['pix_create_request']['pix_code']['emv'] : null;
+		$bacen_url 			        = ($is_pix) ? $json['pix_create_request']['pix_code']['bacen_url'] : null;
+		$pix_url 			        = ($is_pix) ? $json['pix_create_request']['pix_code']['pix_url'] : null;
 
         $slip_value = $total;
-        
-        print_r($json['pix_create_request']);
 
         try {
 
-            $sql = "INSERT INTO mod_paghiper (transaction_type,transaction_id,order_id,due_date,status,url_slip,url_slip_pdf,digitable_line,open_after_day_due,slip_value,qrcode_base64,qrcode_image_url,emv,bacen_url,pix_url) VALUES ('$transaction_type', '$transaction_id','$order_id','$due_date','$status','$url_slip','$url_slip_pdf','$digitable_line','$open_after_day_due','$slip_value','$qrcode_base64','$qrcode_image_url','$emv','$bacen_url','$pix_url');";
+            $sql = "INSERT INTO mod_paghiper (transaction_type,transaction_id,order_id,due_date,status,url_slip,url_slip_pdf,digitable_line,bar_code_number_to_image,open_after_day_due,slip_value,qrcode_base64,qrcode_image_url,emv,bacen_url,pix_url) VALUES ('$transaction_type', '$transaction_id','$order_id','$due_date','$status','$url_slip','$url_slip_pdf','$digitable_line','$bar_code_number_to_image', '$open_after_day_due','$slip_value','$qrcode_base64','$qrcode_image_url','$emv','$bacen_url','$pix_url');";
 
             $query = full_query($sql);
         } catch (Exception $e) {
