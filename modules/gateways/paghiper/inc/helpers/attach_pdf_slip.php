@@ -33,8 +33,8 @@ $result = json_decode($json);
 
 $transaction_id = (isset($result->transaction_id)) ? $result->transaction_id : '';
 $asset_url = (!$is_pix) ? 
-    ((isset($result->bank_slip)) ? $result->bank_slip->url_slip_pdf : $result->url_slip_pdf) : 
-    ((isset($result->pix_code)) ? $result->pix_code->qrcode_image_url : $result->qrcode_image_url);
+    ((property_exists($result, 'bank_slip') && !is_null($result->bank_slip)) ? $result->bank_slip->url_slip_pdf : $result->url_slip_pdf) : 
+    ((property_exists($result, 'pix_code') && !is_null($result->pix_code)) ? $result->pix_code->qrcode_image_url : $result->qrcode_image_url);
 
 if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url) && !empty($asset_url)) && (isset($transaction_id) && !empty($transaction_id))){
 
@@ -107,7 +107,7 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
             // Set font
             $pdf->SetFont('opensans', '', 8);
             // Page number
-            $pdf->Cell(0, 10, 'COMPANY NAME');
+            $pdf->Cell(0, 10, $emv);
             $pdf->Image($filename, 'C', 50, '', '', 'PNG', false, 'C', false, 300, 'C', false, false, 0, false, false, false);
         }
 
