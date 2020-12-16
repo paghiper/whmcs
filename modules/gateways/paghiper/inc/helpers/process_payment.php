@@ -70,7 +70,7 @@ if (!defined("WHMCS")) {
 
                 // Mostrar tela de boleto indisponível
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                $title = 'Boleto não disponível para essa fatura!';
+                $title = (($is_pix) ? 'PIX' : 'boleto bancário') . ' não disponível para essa fatura!';
                 $message = 'O método de pagamento escolhido para esta fatura não é ' . (($is_pix) ? 'PIX' : 'boleto bancário') . '. Caso ache que isso é um erro, contate o suporte.';
                 echo print_screen($ico, $title, $message);
                 exit();
@@ -81,7 +81,12 @@ if (!defined("WHMCS")) {
         if( check_if_subaccount($user_id, $user_email, $invoice['userid'] ) == FALSE ) {
             if(intval($invoice['userid']) !== $user_id) {
                 // ID não bate
-                die("Desculpe, você não está autorizado a visualizar esta fatura.");
+                // Mostrar tela de boleto indisponível
+                $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                $title = 'Desculpe!';
+                $message = 'Você não está autorizado a ver este recurso. Caso ache que isso é um erro, contate o suporte.';
+                echo print_screen($ico, $title, $message);
+
                 exit();
             } else {
                 $query = "SELECT email FROM tblclients WHERE id = '$user_id' LIMIT 1"; 
@@ -89,6 +94,13 @@ if (!defined("WHMCS")) {
                 $data = mysql_fetch_array($result);
                 $email = $data[0]; 
                 if($email !== $user_email) {
+
+                    // Mostrar tela de boleto indisponível
+                    $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                    $title = 'Desculpe!';
+                    $message = 'Você não está autorizado a ver este recurso. Caso ache que isso é um erro, contate o suporte.';
+                    echo print_screen($ico, $title, $message);
+
                     exit;
                 }
             }
@@ -101,7 +113,7 @@ if (!defined("WHMCS")) {
                 // Mostrar tela de boleto pago
                 $ico = ($is_pix) ? 'pix-ok.png' : 'billet-ok.png';
                 $title = 'Fatura paga!';
-                $message = 'Este boleto ja foi compensado no sistema e consta como pago.';
+                $message = 'Este '.(($is_pix) ? 'PIX' : 'boleto').' ja foi compensado no sistema e consta como pago.';
                 echo print_screen($ico, $title, $message);
                 exit();
 
@@ -111,7 +123,7 @@ if (!defined("WHMCS")) {
                 // Mostrar tela de boleto indisponível
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Esta fatura ainda não está disponível!';
-                $message = 'Este boleto ainda não está disponível. Caso acredite que seja um erro, por favor acione o suporte.';
+                $message = 'Este '.(($is_pix) ? 'PIX' : 'boleto').' ainda não está disponível. Caso acredite que seja um erro, por favor acione o suporte.';
                 echo print_screen($ico, $title, $message);
                 exit();
 
@@ -230,9 +242,9 @@ if (!defined("WHMCS")) {
             $reserved_billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
             if(!empty($reserved_billet)) {
 
-                $ico = ($is_pix) ? 'pix-waiting.png' : 'billet-waiting.png';
+                $ico = ($is_pix) ? 'pix-reserved.png' : 'billet-reserved.png';
                 $title = 'Pagamento pré-confirmado.';
-                $message = 'Este boleto teve o pagamento pré-confirmado e está aguardando compensação bancária. Por favor, aguarde.';
+                $message = 'Este '.(($is_pix) ? 'PIX' : 'boleto').' teve o pagamento pré-confirmado e está aguardando compensação bancária. Por favor, aguarde.';
                 echo print_screen($ico, $title, $message);
                 exit();
 
