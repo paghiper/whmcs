@@ -50,19 +50,18 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
     } else {
         if(is_writable($filename) || touch($filename)) {
 
-            echo $asset_url;
-            exit();
-    
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $asset_url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        
-            $rawdata = curl_exec($ch);
-
-            $fp = fopen($filename, 'w');
-            fwrite($fp, $rawdata);
-            fclose($fp);
+            if(0 == filesize( $filename )) {
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $asset_url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             
+                $rawdata = curl_exec($ch);
+    
+                $fp = fopen($filename, 'w');
+                fwrite($fp, $rawdata);
+                fclose($fp);
+            }
+    
             if(file_exists($filename)) {
                 $print_paghiper_page = TRUE;
             }
@@ -97,7 +96,12 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
             $pdf->SetPrintFooter(false);
     
         // Caso não seja, tentamos printar os dados do PIX
-        } else {            
+        } else {
+
+            $emv        = ($result->pix_code) ? $result->pix_code->emv : $result->emv;
+            $pix_url    = ($result->pix_code) ? $result->pix_code->pix_url : $result->pix_url;
+            $bacen_url  = ($result->pix_code) ? $result->pix_code->bacen_url : $result->bacen_url;
+
             // Position at 15 mm from bottom
             $pdf->SetY(15);
             // Set font
@@ -113,8 +117,8 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
 
 } 
 
-/*header("Content-type: application/pdf");
+header("Content-type: application/pdf");
 $pdf->Output('name.pdf', 'I');
-exit();*/
+exit();
 
 ?>
