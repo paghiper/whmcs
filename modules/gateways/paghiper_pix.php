@@ -143,7 +143,7 @@ function paghiper_pix_link($params) {
     <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Pagar usando PIX</button>
     <br> <br>
     <div class='alert alert-warning' role='alert'>
-    <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
+    Seu pagamento PIX está sendo gerado. Quando o pagamento for efetuado, a confirmação se dá imediatamente.
     </div>
     <!-- FIM DO BOLETO PAGHIPER -->
     </form>

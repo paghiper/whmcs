@@ -491,6 +491,7 @@ function check_table() {
             }
         }
 
+        // TODO Checar todos os campos e modificar as tabelas a partir de uma lista dinâmica
         $slip_value = full_query("SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'slip_value' AND `type` = 'decimal(11,2)'");
         if(mysql_num_rows($slip_value) == 0) {
             $alter_table = full_query("ALTER TABLE `mod_paghiper` CHANGE `slip_value` `slip_value` DECIMAL(11,2) NULL DEFAULT NULL;");

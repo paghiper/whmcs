@@ -416,7 +416,7 @@ if (!defined("WHMCS")) {
                 if ($status == "pending" || $status == "Aguardando") {
                     $addtransvalues['userid'] = $results['userid'];
                     $addtransvalues['invoiceid'] = $order_id;
-                    $addtransvalues['description'] = "Boleto gerado aguardando pagamento.";
+                    $addtransvalues['description'] = (($is_pix) ? 'PIX' : 'Boleto')." gerado aguardando pagamento.";
                     $addtransvalues['amountin'] = '0.00';
                     $addtransvalues['fees'] = '0.00';
                     $addtransvalues['paymentmethod'] = $gateway_code;
