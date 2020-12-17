@@ -22,6 +22,9 @@ Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
 5. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais, e pronto.
 
+6. Adicione o texto abaixo no arquivo invoicepdf.tpl do seu tema, para anexar boletos e códigos PIX ao PDF das faturas (opcional)
+```<?php require_once(dirname(__FILE__).'/../../modules/gateways/paghiper/inc/helpers/attach_pdf_slip.php'); ?>```
+
 Se tiver dúvidas sobre esse processo, acesse nosso [guia de configuração de plugin](https://github.com/paghiper/whmcs/wiki/Configurando-o-plugin-no-seu-WHMCS)
 
 
