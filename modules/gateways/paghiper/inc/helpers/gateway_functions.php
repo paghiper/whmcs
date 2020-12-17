@@ -195,13 +195,17 @@ function print_screen($ico, $title, $message, $code = null) {
                 pointer-events: none;
             }
 
-            @media only screen and (min-width: 601px) {
+            @media only screen and (min-width: 641px) {
+
+                .container div * {
+                    max-width: 600px;
+                }
                 pre {
-                    max-width: calc(90% - 180px) !important;
+                    max-width: calc(600px - 180px) !important;
                 }
             }
 
-            @media only screen and (max-width: 600px) {
+            @media only screen and (max-width: 640px) {
                 pre {
                     padding: 10px 10px 60px;
                 }
