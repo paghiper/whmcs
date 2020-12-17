@@ -78,11 +78,11 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "Description" => "Taxa cobrada a mais do cliente por utilizar esse meio de pagamento, exemplo: 2.0 (dois reais). Obs: Use o ponto (.) como delimitador de casas decimais.<br> Recomendamos não cobrar nenhuma taxa."
         ),
         "fixed_description" => array(
-            "FriendlyName" => "Exibe ou não a frase fixa do boleto (configurada no painel da PagHiper)",
+            "FriendlyName" => "Exibe ou não a frase fixa no PIX (configurada no painel da PagHiper)",
             "Type" => "yesno"
         ),
         "reissue_unpaid" => array(
-            "FriendlyName" => "Vencimento padrão para boletos emitidos",
+            "FriendlyName" => "Vencimento padrão para PIX emitidos",
             'Type' => 'dropdown',
             'Options' => array(
                 '-1'    => 'Não permitir reemissão',
@@ -93,7 +93,7 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
                 '4'     => '+4 dias',
                 '5'     => '+5 dias',
             ),
-            'Description' => 'Escolha a quantidade de dias para o vencimento de boletos reemitidos (para faturas ja vencidas). Caso decida não permitir reemissão, você precisará mudar a data de vencimento manualmente.',
+            'Description' => 'Escolha a quantidade de dias para o vencimento para os PIX reemitidos (para faturas ja vencidas). Caso decida não permitir reemissão, você precisará mudar a data de vencimento manualmente.',
         ),
         "admin" => array(
             "FriendlyName" => "Administrador atribuído",
@@ -127,7 +127,7 @@ function paghiper_pix_link($params) {
     $systemurl = rtrim($params['systemurl'],"/");
     $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
     
-    // Abrir o boleto automaticamente ao abrir a fatura 
+    // Envia para a tela de PIX automaticamente ao abrir a fatura 
     if($params['abrirauto'] == true):
         $target = '';
         $abrirAuto = "<script type='text/javascript'> document.paghiper.submit()</script>";
@@ -140,7 +140,7 @@ function paghiper_pix_link($params) {
     $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
     <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}&pix=true\" method=\"post\">
     <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/pix.jpg' title='Pagar com Pix' alt='Pagar com Pix' border='0' align='absbottom' width='120' height='74' /><br>
-    <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
+    <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Pagar usando PIX</button>
     <br> <br>
     <div class='alert alert-warning' role='alert'>
     <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
