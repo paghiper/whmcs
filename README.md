@@ -4,10 +4,10 @@ Emita boletos bancários direto do seu WHMCS.
 Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos automática.
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 2.0.3
+* **Versão mais Recente:** 2.1
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.2.0, cURL e JSON ativado.
-* **Compatibilidade:** WHMCS 7.8.3, PHP 7.x. Mod_rewrite opcional
+* **Compatibilidade:** WHMCS 8, PHP 7.x. Mod_rewrite opcional
 
 
 # Como Instalar
@@ -20,11 +20,18 @@ Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
 4. Após, va na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure pelo modulo de nome: “PagHiper Boleto” e clique em cima.
 
-5. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais, e pronto.
+5. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais.
 
-6. Adicione o texto abaixo no arquivo invoicepdf.tpl do seu tema, para anexar boletos e códigos PIX ao PDF das faturas (opcional)
+6. Repita o processo para a configuração do PIX:
+Na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure pelo modulo de nome: “PagHiper PIX” e clique em cima.
+
+7. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais.
+
+8. Adicione o texto abaixo no arquivo invoicepdf.tpl do seu tema, para anexar boletos e códigos PIX ao PDF das faturas (opcional)
 
 ```<?php require_once(dirname(__FILE__).'/../../modules/gateways/paghiper/inc/helpers/attach_pdf_slip.php'); ?>```
+
+9. Para inserir código PIX e linha digitável de boletos, edite seu template de e-mail em Opções (Setup) > Modelos de e-mail (E-mail templates). Você pode usar dois campos de mesclagens, um para boleto e outro para PIX, respectivamente: {$linha_digitavel} e {$codigo_pix}. Basta inserí-los nos templates de comunicação de e-mail nos locais desejados.
 
 Se tiver dúvidas sobre esse processo, acesse nosso [guia de configuração de plugin](https://github.com/paghiper/whmcs/wiki/Configurando-o-plugin-no-seu-WHMCS)
 
