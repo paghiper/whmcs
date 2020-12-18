@@ -1,13 +1,14 @@
-# WHMCS - Módulo de boleto PagHiper 
+# WHMCS - Módulo de PIX e Boleto PagHiper 
 
+Emissão de PIX de forma simplificada ( com retorno automático )
 Emita boletos bancários direto do seu WHMCS.
 Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos automática.
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 2.0.3
+* **Versão mais Recente:** 2.1
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.2.0, cURL e JSON ativado.
-* **Compatibilidade:** WHMCS 7.8.3, PHP 7.x. Mod_rewrite opcional
+* **Compatibilidade:** WHMCS 7.X, 8.X, PHP 7.x. Mod_rewrite opcional
 
 
 # Como Instalar
@@ -18,7 +19,7 @@ Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
 3. Dentro da área administrativa do seu WHMCS, vá em: Setup > Payments > Payment Gateways (em inglês) ou Opções > Pagamentos > Portais para Pagamento
 
-4. Após, va na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure pelo modulo de nome: “PagHiper Boleto” e clique em cima.
+4. Após, va na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure pelo modulo de nome: “PagHiper Boleto” e “PagHiper PIX” e clique em cima.
 
 5. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais, e pronto.
 
