@@ -11,22 +11,27 @@ Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 * **Versão mais Recente:** 2.1
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.2.0, cURL e JSON ativado.
-* **Compatibilidade:** WHMCS 7.X, 8.X, PHP 7.x. Mod_rewrite opcional
+* **Compatibilidade:** WHMCS 8, 8.X, PHP 7.x. Mod_rewrite opcional
 
 
 # Como Instalar
 
-1. Crie sua conta na PagHiper [clique aqui para saber como](https://atendimento.paghiper.com/hc/pt-br/articles/115005079914-O-que-%C3%A9-necess%C3%A1rio-para-se-cadastrar-no-PagHiper-).
+1. Crie sua conta na PagHiper [clique aqui para saber como](https://github.com/paghiper/whmcs/wiki/Como-criar-seu-cadastro-na-PagHiper).
 
 2. Baixe o gateway da **PagHiper**, extraia o conteúdo e faça upload das pastas includes e modules para a raíz da sua instalação do WHMCS
 
 3. Dentro da área administrativa do seu WHMCS, vá em: Setup > Payments > Payment Gateways (em inglês) ou Opções > Pagamentos > Portais para Pagamento
 
-4. Após, va na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure pelo modulo de nome: “PagHiper Boleto” e “PagHiper PIX” e clique em cima.
+4. Após, va na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure pelo modulo de nome: “PagHiper Boleto” e clique em cima.
 
-5. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais, e pronto.
+5. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais.
 
-6. Adicione o texto abaixo no arquivo invoicepdf.tpl do seu tema, para anexar boletos e códigos PIX ao PDF das faturas (opcional)
+6. Repita o processo para a configuração do PIX:
+Na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure pelo modulo de nome: “PagHiper PIX” e clique em cima.
+
+7. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais.
+
+8. Adicione o texto abaixo no arquivo invoicepdf.tpl do seu tema, para anexar boletos e códigos PIX ao PDF das faturas (opcional)
 
 ```<?php require_once(dirname(__FILE__).'/../../modules/gateways/paghiper/inc/helpers/attach_pdf_slip.php'); ?>```
 
