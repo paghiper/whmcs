@@ -425,7 +425,7 @@ function generate_paghiper_billet($invoice, $params) {
     // Preparate data to send
     $paghiper_data = array(
        "apiKey"                         => $gateway_settings['api_key'],
-       "partners_id"                    => (($is_pix) ? "EMIIKD1R" : "12WIT2XD"),
+       "partners_id"                    => (($is_pix) ? "98IS0XYC" : "12WIT2XD"),
        "order_id"                       => $invoice_id,
 
        // Informações para a criação e liquidação da fatura
