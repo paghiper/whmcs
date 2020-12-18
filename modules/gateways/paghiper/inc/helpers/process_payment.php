@@ -321,13 +321,7 @@ if (!defined("WHMCS")) {
                 echo json_encode($billet);
             } else {
                 if(!empty($qrcode_image_url)) {
-                    $code = '';
-
-                    $title = 'Use a opção QR Code no seu app de internet banking';
-                    $description = 'Valor: R$ ' . number_format($billet_value, 2, ',', '.');
-
-                    $code = sprintf('<pre id="emvCode" data-emv="%s">%s</pre>', $emv, $emv);
-                    echo print_screen($qrcode_image_url, $title, $description, $code);
+                    echo print_screen($qrcode_image_url, null, null, array('is_pix' => true, 'invoice_id' => $order_id, 'payment_value' => $billet_value, 'pix_emv' => $emv));
                 } else {
                     echo fetch_remote_url($billet_url);
                 }

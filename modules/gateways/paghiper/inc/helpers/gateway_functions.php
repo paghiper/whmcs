@@ -108,40 +108,84 @@ function check_if_subaccount($user_id, $email, $invoice_userid) {
     return false;
 }
 
-function print_screen($ico, $title, $message, $code = null) {
+function print_screen($ico, $title, $message, $conf = null) {
 
     global $systemurl;
     $img_url = (preg_match("/http/i", $ico)) ? $ico : $systemurl.'/modules/gateways/paghiper/assets/img/'.$ico;
+    $ico_style = ((!preg_match('/http/i', $ico)) ? 'style="max-width: 200px;"' : '');
+    $code = ($code) ? $code : '';
 
-    $code = '
+    $is_pix             = ($conf && array_key_exists('is_pix', $conf) && $conf['is_pix'] === true) ? $conf['is_pix'] : false;
+    $invoice_id         = ($conf && array_key_exists('invoice_id', $conf)) ? $conf['invoice_id'] : null;
+    $pix_emv            = ($conf && array_key_exists('pix_emv', $conf)) ? $conf['pix_emv'] : null;
+    $payment_value      = ($conf && array_key_exists('payment_value', $conf)) ? $conf['payment_value'] : null;
+    $upper_instructions = ($conf && array_key_exists('upper_instructions', $conf)) ? $conf['upper_instructions'] : null;
+    $lower_instructions = ($conf && array_key_exists('lower_instructions', $conf)) ? $conf['lower_instructions'] : null;
+
+    $page_title = ($is_pix) ? 'Pagamento por PIX' : $title;
+    $title      = ($is_pix) ? '' : "<h3>{$title}</h3>";
+    $message    = ($is_pix) ? '' : "<p>{$message}</p>";
+
+    $lateral_instructions = ($is_pix) ? "<div class='ul-container'><ul>
+        <li>Abra o app do seu banco ou instituição financeira e <strong>entre no ambiente Pix</strong>.</li>
+        <li>Escolha a opção <strong>Pagar com QR Code</strong> e escanele o código ao lado.</li>
+        <li>Confirme as informações e finalize o pagamento.</li>
+    </ul></div>" : '';
+
+    $upper_instructions = ($is_pix) ? (($invoice_id) ? sprintf('<h3>Fatura #%s</h3>', $invoice_id) : '') : '';
+    if($is_pix) {
+        $upper_instructions .= sprintf('<p>Valor: R$ %s</p>', number_format($payment_value, 2, ',', '.'));
+    }
+
+    $lower_instructions = ($is_pix) ? sprintf('
+                    <div id="emvCode" data-emv="%s">
+                        <pre>%s</pre>
+                        <button>
+                            <span>Pagar com <strong>PIX copia e cola</strong></span>
+                        </button>
+                    </div>
+                    <div>Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.<br>
+                    Você será avisado assim que isso ocorrer!</div>', $pix_emv, $pix_emv) : '';
+
+    $code = "
         <!DOCTYPE html>
         <html>
 
         <head>
-          <meta charset="utf-8">
-          <title>'.$title.'</title>
-          <meta name="author" content="">
-          <meta name="description" content="">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <meta charset='utf-8'>
+          <title>{$page_title}</title>
+          <meta name='author' content='>
+          <meta name='description' content='>
+          <meta name='viewport' content='width=device-width, initial-scale=1'>
         </head>
 
         <body>
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,600" rel="stylesheet"> 
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,600' rel='stylesheet'> 
 
-        <div class="container">
+        <div class='container'>
           <div>
-            <img '.((!preg_match("/http/i", $ico)) ? 'style="max-width: 200px;"' : '').' src="'.$img_url.'">
-            <h3>'.$title.'</h3>
-            <p>'.$message.'</p>
-            '.(($code) ? $code : '').'
+            <div class='img-container'>
+                <div>
+                    <img {$ico_style} src='{$img_url}'>
+                    {$upper_instructions}
+                </div>
+                
+                {$lateral_instructions}
+            </div>
+
+            {$lower_instructions}
+            
+            {$title}
+            {$message}
+            
           </div>
         </div>
 
-        <style type="text/css">
+        <style type='text/css'>
             html, body {
               width: 100%;
               height: 100%;
-              overflow: hidden;
+              overflow-x: auto;
               margin: 0px;
               padding: 0px;
             }
@@ -151,7 +195,7 @@ function print_screen($ico, $title, $message, $code = null) {
             .container {
               width: 100%;
               height: 100%;
-              display: flex;
+              display: inline-flex;
               flex-direction: column;
               justify-content: center;
             }
@@ -163,10 +207,8 @@ function print_screen($ico, $title, $message, $code = null) {
               margin: 0px auto;
             }
 
-            pre {
+            #emvCode {
                 background: #cfd4e1;
-                white-space: normal;
-                line-break: anywhere;
                 padding: 10px;
                 margin: 20px auto !important;
                 border-radius: 4px;
@@ -178,71 +220,144 @@ function print_screen($ico, $title, $message, $code = null) {
                 cursor: pointer;
             }
 
-            pre:after {
-                content: "Toque para copiar";
+            #emvCode pre {
+                white-space: normal;
+                line-break: anywhere;
+            }
+
+            button {
                 background: #545d6f;
                 color: white;
                 padding: 5px 10px;
                 position: absolute;
                 right: 4px;
                 bottom: 4px;
+                border: unset;
                 border-radius: 3px;
-                height: calc(100% - 18px);
+                width: 160px;
+                height: calc(100% - 8px);
                 vertical-align: middle;
                 display: flex;
                 justify-content: center;
                 flex-direction: column;
-                pointer-events: none;
+                align-items: center;
+                cursor: pointer;
             }
 
-            @media only screen and (min-width: 641px) {
+            .ul-container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                flex-grow: 1;
+            }
+
+            .ul-container ul {
+                text-align: left;
+                list-style-type: none;
+                max-width: 400px;
+                margin: 0px;
+            }
+
+            .ul-container ul li {
+                margin-bottom: 40px !important;
+                padding-left: 65px;
+                position: relative;
+            }
+
+            .ul-container ul li:before {
+                content: '';
+                position: absolute;
+                display: block;
+                width: 50px;
+                height: 50px;
+                border-radius: 40px;
+                left: 0px;
+                top: 50%;
+                transform: translateY(-50%);
+                background-size: contain;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, .15);
+            }
+
+            .ul-container ul li:first-child:before {     background-image: url({$systemurl}/modules/gateways/paghiper/assets/img/ico_1-app.png); }
+            .ul-container ul li:nth-child(2):before { background-image: url({$systemurl}/modules/gateways/paghiper/assets/img/ico_2-qr.png); }
+            .ul-container ul li:last-child:before { background-image: url({$systemurl}/modules/gateways/paghiper/assets/img/ico_3-ok.png); }
+
+            @media (max-width: 980px) {
+
+                body {
+                    font-size: 25px;
+                }
+
+                .ul-container ul {
+                    max-width: 80%;
+                    margin: 60px auto 20px;
+                }
+
+                img {
+                    min-width: 70%;
+                }
+
+                #emvCode {
+                    padding: 20px 10px 90px;
+                }
+
+                button {
+                    width: calc(100% - 8px);
+                    max-width: unset !important;
+                    height: 70px;
+                    text-align: center;
+                    flex-direction: row;
+
+                    font-size: 18px
+                }
+            }
+
+            @media only screen and (min-width: 1024px) {
 
                 .container div * {
-                    max-width: 600px;
+                    max-width: 940px;
                 }
-                pre {
-                    max-width: calc(600px - 180px) !important;
-                }
-            }
 
-            @media only screen and (max-width: 640px) {
-                pre {
-                    padding: 10px 10px 60px;
+                #emvCode {
+                    max-width: calc(940px - 180px) !important;
                 }
-                
-                pre:after {
-                    width: calc(100% - 28px);
-                    height: 40px;
-                    text-align: center;
+
+                button strong {
+                    display: block;
                 }
+
+                .img-container {
+                    display: flex;
+                }
+
             }
         </style>
         <script>
-            var emvContainer = document.getElementById("emvCode");
-            var emvCode = emvContainer.getAttribute("data-emv");
+            var emvContainer = document.getElementById('emvCode');
+            var emvCode = emvContainer.getAttribute('data-emv');
 
-            emvContainer.addEventListener("click", function() {
-                alert("Código PIX copiado!");
+            emvContainer.addEventListener('click', function() {
+                alert('Código PIX copiado!');
 
                 // Create new element
-                var el = document.createElement(\'textarea\');
+                var el = document.createElement('textarea');
                 // Set value (string to be copied)
                 el.value = emvCode;
                 // Set non-editable to avoid focus and move outside of view
-                el.setAttribute(\'readonly\', \'\');
-                el.style = {position: \'absolute\', left: \'-9999px\'};
+                el.setAttribute('readonly', '');
+                el.style = {position: 'absolute', left: '-9999px'};
                 document.body.appendChild(el);
                 // Select text inside element
                 el.select();
                 // Copy text to clipboard
-                document.execCommand(\'copy\');
+                document.execCommand('copy');
                 // Remove temporary element
                 document.body.removeChild(el);
             });
         </script>
         </body>
 
-        </html>';
+        </html>";
 return $code;
 
 }
@@ -461,14 +576,7 @@ function generate_paghiper_billet($invoice, $params) {
         }
         
         if(!empty($qrcode_image_url)) {
-            $code = '';
-
-            $title = 'Use a opção QR Code no seu app de internet banking';
-            $description = 'Valor: R$ ' . number_format($billet_value, 2, ',', '.');
-
-            $code = sprintf('<pre id="emvCode" data-emv="%s">%s</pre>', $emv, $emv);
-
-            return print_screen($qrcode_image_url, $title, $description, $code);
+            return print_screen($qrcode_image_url, null, null, array('is_pix' => true, 'invoice_id' => $order_id, 'payment_value' => $slip_value, 'pix_emv' => $emv));
         } else {
             return fetch_remote_url($url_slip);
         }
