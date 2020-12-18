@@ -11,7 +11,7 @@ Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 * **Versão mais Recente:** 2.1
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.2.0, cURL e JSON ativado.
-* **Compatibilidade:** WHMCS 8, 8.X, PHP 7.x. Mod_rewrite opcional
+* **Compatibilidade:** WHMCS 8.X, PHP 7.x. Mod_rewrite opcional
 
 
 # Como Instalar
