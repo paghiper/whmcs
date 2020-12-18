@@ -9,10 +9,10 @@
 
 !includes/hooks/*_paghiper_*.\php
 
-!modules/gateways/paghiper
+!modules/gateways/paghiper.php
 
-!modules/gateways/paghiper/assets/img
+!modules/gateways/paghiper_pix.\php
 
-!modules/gateways/paghiper/inc/fpdi/**/*
+!modules/gateways/paghiper/**/*
 
-!modules/gateways/paghiper.\php
+.DS_Store

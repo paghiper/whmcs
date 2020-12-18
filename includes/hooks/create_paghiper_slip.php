@@ -21,11 +21,14 @@ function display_digitable_line($vars) {
         $json = file_get_contents($whmcs_url."/modules/gateways/paghiper.php?invoiceid=".$invoice_id."&uuid=".$invoice['client_id']."&mail=".$invoice['email']."&json=1");
         $result = json_decode($json);
         $digitable_line = (isset($result->bank_slip)) ? $result->bank_slip->digitable_line : $result->digitable_line;
+        $bar_code_number_to_image = (isset($result->bank_slip)) ? $result->bank_slip->bar_code_number_to_image : $result->bar_code_number_to_image;
+        
 
         if($digitable_line) {
-            $merge_fields['linha_digitavel'] = '<span>Linha digitável: <br><span style="font-size: 16px; color: #000000"><strong>';
+            $merge_fields['linha_digitavel'] = '<div style="text-align: center;"><span>Linha digitável: <br><span style="font-size: 16px; color: #000000"><strong>';
+            $merge_fields['linha_digitavel'] .= "<img style='max-width: 100%;' src='{$whmcs_url}/modules/gateways/paghiper/assets/php/barcode.php?codigo={$bar_code_number_to_image}'>";
             $merge_fields['linha_digitavel'] .= $digitable_line;
-            $merge_fields['linha_digitavel'] .= '</strong></span></span>';
+            $merge_fields['linha_digitavel'] .= '</strong></span></span></div>';
         }
 
 

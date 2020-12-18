@@ -1,8 +1,8 @@
 <?php
 /**
- * PagHiper - Módulo oficial para integração com WHMCS
+ * PagHiper PIX - Módulo oficial para integração com WHMCS
  * 
- * @package    PagHiper para WHMCS
+ * @package    PagHiper PIX para WHMCS
  * @version    2.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
@@ -12,12 +12,12 @@
  */
 
 // Opções padrão do Gateway
-function paghiper_config($params = NULL) {
+function paghiper_pix_config($params = NULL) {
     $config = array(
         'FriendlyName' => array(
             "Type" => "System",
-            "Value" => "PagHiper Boleto"
-        ),
+            "Value" => "PagHiper PIX"
+		),
         "nota" => array(
             "FriendlyName" => "Nota",
             "Description" => "
@@ -40,7 +40,6 @@ function paghiper_config($params = NULL) {
                <li><h5>Suporte</h5><p>Se tiver qualquer duvida, visite a nossa <a href='https://www.paghiper.com/atendimento/' target='_blank'><strong>central de atendimento</strong></a></p></li>
            </ul>"
         ),
-        
         'email' => array(
             "FriendlyName" => "Email",
             "Type" => "text",
@@ -78,22 +77,12 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "Size" => "7",
             "Description" => "Taxa cobrada a mais do cliente por utilizar esse meio de pagamento, exemplo: 2.0 (dois reais). Obs: Use o ponto (.) como delimitador de casas decimais.<br> Recomendamos não cobrar nenhuma taxa."
         ),
-        "abrirauto" => array(
-            "FriendlyName" => "Abrir boleto ao abrir fatura?",
-            "Type" => "yesno"
-        ),
         "fixed_description" => array(
-            "FriendlyName" => "Exibe ou não a frase fixa do boleto (configurada no painel da PagHiper)",
+            "FriendlyName" => "Exibe ou não a frase fixa no PIX (configurada no painel da PagHiper)",
             "Type" => "yesno"
-        ),
-        "open_after_day_due" => array(
-            "FriendlyName" => "Tolerância para pagto",
-            "Type" => "text",
-            "Size" => "2",
-            "Description" => "Número máximo de dias em que o boleto poderá ser pago após o vencimento. (Prática comum para quem opta por cobrar juros e multas)."
         ),
         "reissue_unpaid" => array(
-            "FriendlyName" => "Vencimento padrão para boletos emitidos",
+            "FriendlyName" => "Vencimento padrão para PIX emitidos",
             'Type' => 'dropdown',
             'Options' => array(
                 '-1'    => 'Não permitir reemissão',
@@ -104,39 +93,7 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
                 '4'     => '+4 dias',
                 '5'     => '+5 dias',
             ),
-            'Description' => 'Escolha a quantidade de dias para o vencimento de boletos reemitidos (para faturas ja vencidas). Caso decida não permitir reemissão, você precisará mudar a data de vencimento manualmente.',
-        ),
-        "late_payment_fine" => array(
-            "FriendlyName" => "Percentual da multa por atraso (%)",
-            "Type" => "text",
-            "Size" => "1",
-            "Description" => "O percentual máximo autorizado é de 2%, de acordo artigo 52, parágrafo primeiro do Código de Defesa do Consumidor, Lei 8.078/90"
-        ),
-        "per_day_interest" => array(
-            "FriendlyName" => "Juros proporcional",
-            "Type" => "yesno",
-            "Description" => "Ao aplicar 1% de juros máximo ao mês, esse percentual será cobrado proporcionalmente aos dias de atraso.<br><br>Dividindo 1% por 30 dias = 0,033% por dia de atraso."
-        ),
-        "early_payment_discounts_days" => array(
-            "FriendlyName" => "Qtde. de dias para aplicação de desconto",
-            "Type" => "text",
-            "Size" => "2",
-            "Description" => "Número de dias em que o pagamento pode ser realizado com antecedência recebendo o desconto extra."
-        ),
-        "early_payment_discounts_cents" => array(
-            "FriendlyName" => "Desconto por pagto. antecipado",
-            "Type" => "text",
-            "Size" => "6",
-            "Description" => "Valor do desconto que será aplicado caso o pagamento ocorra de forma antecipada. Em percentual (Ex.: 10%)"
-        ),
-        "issue_all" => array(
-            "FriendlyName" => "Gerar boletos para todos os pedidos?",
-            'Type' => 'dropdown',
-            'Options' => array(
-                '1'    => 'Sim',
-                '0'     => 'Não',
-            ),
-            'Description' => 'Caso selecione não, boletos bancários e lihnas digitáveis serão selecionadas somente caso o cliente selecione "Boleto Bancário" (ou o nome que você configurar no primeiro campo de configuração) como método de pagamento padrão.',
+            'Description' => 'Escolha a quantidade de dias para o vencimento para os PIX reemitidos (para faturas ja vencidas). Caso decida não permitir reemissão, você precisará mudar a data de vencimento manualmente.',
         ),
         "admin" => array(
             "FriendlyName" => "Administrador atribuído",
@@ -147,31 +104,30 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
         ),
         'suporte' => array(
             "FriendlyName" => "<span class='label label-primary'><i class='fa fa-question-circle'></i> Suporte</span>",
-            "Description" => '<h2>Para informações ou duvidas: </h2><br><br>
-<ul>
-<li>Duvidas sobre a conta <strong> PAGHIPER:</strong> <br><br>
-Devem ser resolvidas diretamente na central de atendimento: <br>
-<strong><a href="https://www.paghiper.com/atendimento" target="_blank">https://www.paghiper.com/atendimento</a></strong></li>
-<br><br><br>
-<li>Duvidas sobre o <strong> Modulo WHMCS </strong> <br><br>
-Tem uma dúvida ou quer contribuir para o projeto? Acesse nosso repositório no GitHub!
-<br>
-<strong><a href="https://github.com/paghiper/whmcs" target="_blank">https://github.com/paghiper/whmcs</a></strong></li>
-</ul><br>'
-        )
-       
-    );
-    return $config;
+			"Description" => '<h2>Para informações ou duvidas: </h2><br><br>
+			<ul>
+			<li>Duvidas sobre a conta <strong> PAGHIPER:</strong> <br><br>
+			Devem ser resolvidas diretamente na central de atendimento: <br>
+			<strong><a href="https://www.paghiper.com/atendimento" target="_blank">https://www.paghiper.com/atendimento</a></strong></li>
+			<br><br><br>
+			<li>Duvidas sobre o <strong> Modulo WHMCS </strong> <br><br>
+			Tem uma dúvida ou quer contribuir para o projeto? Acesse nosso repositório no GitHub!
+			<br>
+			<strong><a href="https://github.com/paghiper/whmcs" target="_blank">https://github.com/paghiper/whmcs</a></strong></li>
+			</ul><br>'
+		)
+	);
+
+	return $config;
 }
 
-function paghiper_link($params) {
+function paghiper_pix_link($params) {
 
     // Definimos os dados para retorno e checkout.
     $systemurl = rtrim($params['systemurl'],"/");
     $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
-
     
-    // Abrir o boleto automaticamente ao abrir a fatura 
+    // Envia para a tela de PIX automaticamente ao abrir a fatura 
     if($params['abrirauto'] == true):
         $target = '';
         $abrirAuto = "<script type='text/javascript'> document.paghiper.submit()</script>";
@@ -182,12 +138,12 @@ function paghiper_link($params) {
 
     // Código do checkout
     $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
-    <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}\" method=\"post\">
-    <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/billet.jpg' title='Pagar com Boleto' alt='Pagar com Boleto' border='0' align='absbottom' width='120' height='74' /><br>
-    <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
+    <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}&pix=true\" method=\"post\">
+    <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/pix.jpg' title='Pagar com Pix' alt='Pagar com Pix' border='0' align='absbottom' width='120' height='74' /><br>
+    <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Pagar usando PIX</button>
     <br> <br>
     <div class='alert alert-warning' role='alert'>
-    <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
+    Seu pagamento PIX está sendo gerado. Quando o pagamento for efetuado, a confirmação se dá imediatamente.
     </div>
     <!-- FIM DO BOLETO PAGHIPER -->
     </form>
@@ -197,7 +153,7 @@ function paghiper_link($params) {
 
 }
 
-$is_pix = FALSE;
+$is_pix = TRUE;
 
 require_once('paghiper/inc/helpers/gateway_functions.php');
 require_once('paghiper/inc/helpers/process_payment.php');

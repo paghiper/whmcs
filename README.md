@@ -22,6 +22,10 @@ Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
 5. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais, e pronto.
 
+6. Adicione o texto abaixo no arquivo invoicepdf.tpl do seu tema, para anexar boletos e códigos PIX ao PDF das faturas (opcional)
+
+```<?php require_once(dirname(__FILE__).'/../../modules/gateways/paghiper/inc/helpers/attach_pdf_slip.php'); ?>```
+
 Se tiver dúvidas sobre esse processo, acesse nosso [guia de configuração de plugin](https://github.com/paghiper/whmcs/wiki/Configurando-o-plugin-no-seu-WHMCS)
 
 
@@ -35,6 +39,22 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 ## Disponíveis em alguns dias:
 
 * Disponibilização de linha digitável no painel
+
+## 2.1 - 2020/12/18
+
+`Melhorias implementadas`
+
+* Suporte nativo ao PIX PagHiper
+* Processo de instalação simplificado
+* Novas telas de status e ícones
+* Pedidos com boleto agora levam o código de barras junto com a linha digitável
+* Melhorias de segurança
+* Refatoração completa do plug-in
+
+`Bugs resolvidos`
+
+* Em alguns casos, o campo de nome era utilizado na emissão do boleto, mesmo com CNPJ do cliente informado
+* Só exibimos boleto e PIX para usuários com moeda em 
 
 ## 2.0.3 - 2020/01/03
 
