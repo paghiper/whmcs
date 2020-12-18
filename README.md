@@ -16,7 +16,7 @@ Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
 # Como Instalar
 
-1. Crie sua conta na PagHiper [clique aqui para saber como](https://github.com/paghiper/whmcs/wiki/Como-criar-seu-cadastro-na-PagHiper).
+1. Crie sua conta na PagHiper [clique aqui para saber como](https://atendimento.paghiper.com/hc/pt-br/articles/115005079914-O-que-%C3%A9-necess%C3%A1rio-para-se-cadastrar-no-PagHiper-).
 
 2. Baixe o gateway da **PagHiper**, extraia o conteúdo e faça upload das pastas includes e modules para a raíz da sua instalação do WHMCS
 
