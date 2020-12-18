@@ -40,6 +40,22 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Disponibilização de linha digitável no painel
 
+## 2.1 - 2020/12/18
+
+`Melhorias implementadas`
+
+* Suporte nativo ao PIX PagHiper
+* Processo de instalação simplificado
+* Novas telas de status e ícones
+* Pedidos com boleto agora levam o código de barras junto com a linha digitável
+* Melhorias de segurança
+* Refatoração completa do plug-in
+
+`Bugs resolvidos`
+
+* Em alguns casos, o campo de nome era utilizado na emissão do boleto, mesmo com CNPJ do cliente informado
+* Só exibimos boleto e PIX para usuários com moeda em 
+
 ## 2.0.3 - 2020/01/03
 
 `Melhorias implementadas`
