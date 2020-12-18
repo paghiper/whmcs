@@ -20,9 +20,14 @@ Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
 4. Após, va na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure pelo modulo de nome: “PagHiper Boleto” e clique em cima.
 
-5. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais, e pronto.
+5. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais.
 
-6. Adicione o texto abaixo no arquivo invoicepdf.tpl do seu tema, para anexar boletos e códigos PIX ao PDF das faturas (opcional)
+6. Repita o processo para a configuração do PIX:
+Na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure pelo modulo de nome: “PagHiper PIX” e clique em cima.
+
+7. Será exibida uma pagina semelhante a que se encontra na figura abaixo. Basta configurar com suas credenciais.
+
+8. Adicione o texto abaixo no arquivo invoicepdf.tpl do seu tema, para anexar boletos e códigos PIX ao PDF das faturas (opcional)
 
 ```<?php require_once(dirname(__FILE__).'/../../modules/gateways/paghiper/inc/helpers/attach_pdf_slip.php'); ?>```
 
