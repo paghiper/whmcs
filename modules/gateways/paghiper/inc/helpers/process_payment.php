@@ -293,7 +293,15 @@ if (!defined("WHMCS")) {
 						'clientid' 	=> $invoice['userid'],
 						'stats'		=> false
 					);
-					$client_details = localAPI('getClientsDetails', $query_params, $whmcsAdmin);
+                    $client_details = localAPI('getClientsDetails', $query_params, $whmcsAdmin);
+                    
+                    if(array_key_exists('currency_code', $client_details['client']) && ($client_details['client']['currency_code'] !== 'BRL' && $client_details['client']['currency_code'] !== 'R$')) {
+                        $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                        $title = 'Método de pagamento indisponível para a moeda selecionada';
+                        $message = 'Este método de pagamento só pode ser utilizado para pagamentos em R$ (BRL)<br>Caso creia que isso seja um erro, entre em contato com o suporte.';
+                        echo print_screen($ico, $title, $message);
+                        exit();
+                    }
 
                     $params = array(
 						'client_data'		=> $client_details['client'],
