@@ -1,8 +1,11 @@
 # WHMCS - Módulo de PIX e Boleto PagHiper 
 
 Emissão de PIX de forma simplificada ( com retorno automático ).
+
 Emita boletos bancários direto do seu WHMCS.
+
 Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos automática.
+
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
 * **Versão mais Recente:** 2.1
