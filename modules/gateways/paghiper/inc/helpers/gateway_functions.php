@@ -562,11 +562,11 @@ function generate_paghiper_billet($invoice, $params) {
         } catch (Exception $e) {
 
             $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Ops! Não foi possível emitir o boleto bancário.';
+            $title = 'Ops! Não foi possível emitir o '.(($is_pix) ? 'boleto bancário' : 'PIX').'.';
             $message = 'Por favor entre em contato com o suporte. Erro 0x004681';
             
             echo print_screen($ico, $title, $message);
-            logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir o boleto no banco de dados. Por favor entre em contato com o suporte.");
+            logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
         }
 
 
@@ -584,7 +584,7 @@ function generate_paghiper_billet($invoice, $params) {
     } else {
 
         // Não foi possível solicitar o boleto.
-        logTransaction($GATEWAY["name"],array('json' => $json, 'post' => $_POST),"Não foi possível solicitar o boleto.");
+        logTransaction($GATEWAY["name"],array('json' => $json, 'post' => $_POST),"Não foi possível criar a transação.");
         return false;
     }
  
@@ -619,6 +619,8 @@ function check_table() {
                 logTransaction($GATEWAY["name"],$_POST,"Não foi possível adicionar os campos para suporte ao PIX. Por favor cheque se o usuário MySQL tem permissões para alterar a tabela mod_paghiper");
             }
         }
+
+
     } else {
         create_paghiper_table();
     }

@@ -23,7 +23,7 @@ if (!defined("WHMCS")) {
 
     // Initialize module settings
 	$gateway_code = ($is_pix) ? "paghiper_pix" : "paghiper"; 
-	$GATEWAY = getGatewayVariables($gateway_code);
+    $GATEWAY = getGatewayVariables($gateway_code);
 
     // Define variáveis para configurações do gateway
     $gateway_name = $GATEWAY["name"];
@@ -499,7 +499,7 @@ if (!defined("WHMCS")) {
                     }
 
                     // Registramos o pagamento e damos baixa na fatura
-                    addInvoicePayment($invoice_id,$transaction_id,$ammount_paid,$fee,'paghiper');
+                    addInvoicePayment($invoice_id,$transaction_id,$ammount_paid,$fee,$gateway_code);
 
                 // Transação Cancelada. 
                 } else if ($status == "canceled" || $status == "Cancelado") {
