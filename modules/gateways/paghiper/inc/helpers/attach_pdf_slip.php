@@ -13,14 +13,17 @@
 
 use setasign\Fpdi;
 
-$query = mysql_query("SELECT paymentmethod FROM tblinvoices WHERE id = {$invoiceid};");
+$query = mysql_query("SELECT paymentmethod, total FROM tblinvoices WHERE id = {$invoiceid};");
 $result = mysql_fetch_assoc($query);
+
+$invoice_total = $result['total'];
 $payment_method_slug = $result['paymentmethod'];
 
 $is_pix = ($payment_method_slug == 'paghiper_pix');
 
 $whmcs_url = rtrim(\App::getSystemUrl(),"/");
-$json_url = $whmcs_url."/modules/gateways/";
+$assets_url = "{$whmcs_url}/modules/gateways/paghiper/assets/img";
+$json_url = "{$whmcs_url}/modules/gateways/";
 $json_url .= ($is_pix) ? 'paghiper_pix.php' : 'paghiper.php';
 $json_url .= "?invoiceid=".$invoiceid."&uuid=".$clientsdetails['userid']."&mail=".$clientsdetails['email']."&json=1";
 
@@ -102,36 +105,64 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
             $pix_url    = ($result->pix_code) ? $result->pix_code->pix_url : $result->pix_url;
             $bacen_url  = ($result->pix_code) ? $result->pix_code->bacen_url : $result->bacen_url;
 
-            $pdf->Image($whmcs_url.'/modules/gateways/paghiper/assets/img/pix.jpg', 'R', 220, 40, '', 'JPEG', false, 'C', false, 10, 'C', false, false, 0, false, false, false);
+            $pdf->Image($whmcs_url.'/modules/gateways/paghiper/assets/img/pix.jpg', 10, 10, 25, '', 'JPEG');
 
-
-            $pdf->Image($filename, 'C', 50, '', '', 'PNG', false, 'C', false, 300, 'C', false, false, 0, false, false, false);
-
-            // Position at 15 mm from bottom
-            $pdf->SetY(140);
+            $pdf->SetXY(38, 8);
 
             // Set font
-            $pdf->SetFont('dejavusansb', '', 12);
+            $pdf->SetFont('dejavusans', 'B', 12);
+            $pdf->Cell(30, 20, 'Pague sua fatura usando PIX!', 0, 'C');
 
-            // Page number
-            $pdf->Multicell(0, 10, 'Use a opção QR Code no seu app de internet banking', $border=0, $align='C');
 
-            // Set font
+            // Instruções
+            $pdf->SetXY(20, 35);
+            $pdf->SetFont('dejavusans', '', 12);
+            $pdf->Ln(10);
+            $pdf->SetX(60);
+            $pdf->Image("{$assets_url}/ico_1-app.png", 30, 35, 30, '', 'PNG');
+            $pdf->Multicell(120, 0, 'Abra o app do seu banco ou instituição financeira e entre no ambiente Pix.', 0, 'L');
+            $pdf->Ln(20);
+            $pdf->SetX(60);
+            $pdf->Image("{$assets_url}/ico_2-qr.png", 30, 65, 30, '', 'PNG');
+            $pdf->Multicell(120, 0, 'Escolha a opção Pagar com QR Code e escanele o código ao lado.', 0, 'L');
+            $pdf->Ln(20);
+            $pdf->SetX(60);
+            $pdf->StartTransform();
+            // set clipping mask
+            $pdf->Circle(45, 109, 10, 0, 360, 'CNZ');
+            $pdf->Image("{$assets_url}/ico_3-ok.png", 35, 99, 20, '', 'PNG');
+            $pdf->StopTransform();
+            $pdf->Multicell(120, 0, 'Confirme as informações e finalize o pagamento.', 0, 'L');
+
+
+            $pdf->Image($filename, 'C', 130, '', '', 'PNG', false, 'C', false, 300, 'C', false, false, 0, false, false, false);
+
+            $pdf->SetY(215);
+            $pdf->SetFont('dejavusans', 'B', 12);
+            $pdf->Multicell(0, 10, "Fatura #{$invoiceid} - R$ ".number_format($invoice_total, 2, ',', '.'), $border=0, $align='C');
+
+            $pdf->SetY(234);
+            $pdf->SetFont('dejavusans', 'B', 9);
+            $pdf->Multicell(0, 10, 'Você também pode pagar usando PIX copia e cola:', $border=0, $align='C');
+
             $pdf->SetFont('dejavusans', '', 8);
-
-            $pdf->SetY(146);
-            $pdf->Multicell(0, 10, 'Ou, se preferir, copie o texto abaixo para fazer o pagamento', $border=0, $align='C');
-
-            // Position at 15 mm from bottom
-            $pdf->SetY(160);
-            // Page number
+            $pdf->SetY(240);
             $pdf->Multicell(0, 10, $emv, $border=0, $align='C');
+            
+            $pdf->SetY(260);
+            $pdf->Multicell(0, 10, 'Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.
+            Você será avisado assim que isso ocorrer!', $border=0, $align='C');
         }
 
         $pdf->AddPage();
 
     }
 
-}
+} 
+
+// Uncomment for debugging
+/*header("Content-type: application/pdf");
+$pdf->Output('name.pdf', 'I');
+exit();*/
 
 ?>
