@@ -164,53 +164,12 @@ if (!defined("WHMCS")) {
         $invoiceDuedate = $invoice['duedate']; // Data de vencimento da fatura
         $dataHoje = date('Y-m-d'); // Data de Hoje
 
-        // Definimos a data limite de vencimento, caso haja tolerância para pagto. após a data estipulada no WHMCS
-        if($reissue_unpaid !== 0 && $reissue_unpaid !== '') {
-            $grace_days = (!empty($GATEWAY['open_after_day_due'])) ? $GATEWAY['open_after_day_due'] : 0;
-            $current_limit_date = ($reissue_unpaid > 1) ? date('Y-m-d', strtotime($invoiceDuedate . " -$grace_days days")) : date('Y-m-d', strtotime($invoiceDuedate . " -$grace_days day"));
-        } else {
-            // Caso contrário, a data limite é a de hoje
-            $current_limit_date = $dataHoje;
-		}
-        
-        // Se a data do vencimento da fatura for maior que o dia de hoje
-        if ( strtotime($invoiceDuedate) >= strtotime(date('Y-m-d')) ) {
-
-            // Usamos a data de vencimento normalmente
-            $billetDuedate      = $invoiceDuedate;
-            $current_limit_date = $invoiceDuedate;
-
-        // Se a data de vencimento da fatura for menor que o dia de hoje
-        } elseif( $current_limit_date < strtotime(date('Y-m-d')) ) {
-
-            // Pegamos a data de hoje, adicionamos um dia e usamos como nova data de vencimento
-            $reissue_unpaid_cont = (int) $GATEWAY['reissue_unpaid'];
-            $reissue_unpaid = (isset($reissue_unpaid_cont) && ($reissue_unpaid_cont === 0 || !empty($reissue_unpaid_cont))) ? $reissue_unpaid_cont : 1 ;
-            if($reissue_unpaid == -1) {
-
-                // Mostrar tela de boleto cancelado
-                $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                $title = 'Este boleto venceu!';
-                $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
-                echo print_screen($ico, $title, $message);
-                exit();
-
-            } elseif($reissue_unpaid == 0) {
-                $billetDuedate  = date('Y-m-d');
-                $current_limit_date = date('Y-m-d');
-            } else {
-                $billetDuedate  = date('Y-m-d', ($reissue_unpaid == 1) ? strtotime("+$reissue_unpaid day") : strtotime("+$reissue_unpaid days"));
-                $current_limit_date = date('Y-m-d', ($reissue_unpaid == 1) ? strtotime("+$reissue_unpaid day") : strtotime("+$reissue_unpaid days"));
-            }
-            
-        } 
-
         // Lógica: Checar se um boleto ja foi emitido pra essa fatura
         $order_id = $invoice['invoiceid'];
         $invoice_total = apply_custom_taxes((float) $invoice['balance'], $GATEWAY);
 
         $transaction_type = ($is_pix) ? 'pix' : 'billet';
-        $sql = "SELECT * FROM mod_paghiper WHERE transaction_type = '$transaction_type' AND due_date >= '$current_limit_date' AND order_id = '$order_id' AND status = 'pending' AND slip_value = '$invoice_total' ORDER BY ABS( DATEDIFF( due_date, '$billetDuedate' ) ) ASC LIMIT 1;";
+        $sql = "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND slip_value = '{$invoice_total}' AND ('{$dataHoje}' >= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY) OR due_date <= '{$dataHoje}') ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
         $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
 
         if(!empty($billet)) {
@@ -222,8 +181,6 @@ if (!defined("WHMCS")) {
             $emv                = $billet['emv'];
         }
 
-        // TODO: Resolver incompatibilidade na query para boletos ja vencidos porém com margem de pagto. ainda
-
         // Só re-emitimos a fatura se os valores forem diferentes, se limite para pagamento ja tiver expirado (somando os dias de tolerência) e se o status for não-pago.
         if( 
             (
@@ -231,8 +188,6 @@ if (!defined("WHMCS")) {
                 empty($billet) || 
                 // Caso não haja URL de boleto disponível no banco
                 (empty($billet_url) && empty($qrcode_image_url)) ||
-                // Caso a data presente não esteja dentro da data limite para pagamento
-                strtotime($current_limit_date) < strtotime(date('Y-m-d')) || 
                 // Caso o vencimento esteja no futuro mas for diferente do definido na fatura
                 (strtotime($invoiceDuedate) > strtotime(date('Y-m-d')) && $due_date !== $invoiceDuedate)
             ) 
@@ -258,6 +213,20 @@ if (!defined("WHMCS")) {
 
         // Lógica: Checar se a data de vencimento + dias de tolerancia > data de hoje.
         if(isset($reissue) && $reissue) {
+
+            // Pegamos a data de hoje, adicionamos um dia e usamos como nova data de vencimento
+            $reissue_unpaid_cont = (int) $GATEWAY['reissue_unpaid'];
+            $reissue_unpaid = (isset($reissue_unpaid_cont) && ($reissue_unpaid_cont === 0 || !empty($reissue_unpaid_cont))) ? $reissue_unpaid_cont : 1 ;
+            if($reissue_unpaid == -1) {
+
+                // Mostrar tela de boleto cancelado
+                $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                $title = 'Este boleto venceu!';
+                $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
+                echo print_screen($ico, $title, $message);
+                exit();
+
+            }
         
             // Pegamos as datas que definimos anteriormente e transformamos em objeto Date do PHP
             $data1 = new DateTime($billetDuedate); 
