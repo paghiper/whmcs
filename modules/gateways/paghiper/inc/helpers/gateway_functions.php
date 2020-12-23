@@ -389,6 +389,7 @@ function generate_paghiper_billet($invoice, $params) {
 	$gateway_settings 	= $params['gateway_settings'];
 	$notification_url 	= $params['notification_url'];
 	$cpfcnpj 			= $gateway_settings['cpf_cnpj'];
+	$razaosocial        = $gateway_settings['razao_social'];
 
 	// Data received through function params
 	$invoice_id			= $invoice['invoiceid'];
@@ -411,11 +412,15 @@ function generate_paghiper_billet($invoice, $params) {
     } else {
         // Se simples, pegamos somente o que temos
 		$cpf_cnpj     = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'"))));
-		if(strlen($cpf_cnpj) > 11) {
+		if(strlen(substr(trim(str_replace(array('+','-'), '', filter_var($cpf_cnpj, FILTER_SANITIZE_NUMBER_INT))), -14)) == 14) {
 			$cnpj = $cpf_cnpj;
 		} else {
 			$cpf = $cpf_cnpj;
 		}
+    }
+
+    if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
+        $razaosocial_val = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'"))));
     }
 
 
@@ -459,6 +464,9 @@ function generate_paghiper_billet($invoice, $params) {
         if(isset($cnpj) && !empty($cnpj)) {
             if(isset($companyname) && !empty($companyname)) {
                 $paghiper_data["payer_name"] = $companyname;
+            }
+            if (isset($razaosocial_val) && !empty($razaosocial_val)) {
+                $paghiper_data["payer_name"] = $razaosocial_val;
             }
             $paghiper_data["payer_cpf_cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cnpj, FILTER_SANITIZE_NUMBER_INT))), -14);
         } else {

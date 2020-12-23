@@ -66,6 +66,12 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "Size" => "3",
             "Description" => "Defina aqui o ID do campo usado para coletar CPF/CNPJ do seu cliente. Isso é necessário para usar o checkout transparente." . get_customfield_id()
         ),
+        "razao_social" => array(
+            "FriendlyName" => "ID do custom field contendo Razão Social",
+            "Type" => "text",
+            "Size" => "3",
+            "Description" => "Defina aqui o ID do campo usado, caso utilize um campo personalizado para coletar a Razão Social do seu cliente. Isso é opcional para usar no checkout transparente."
+        ),
         "porcento" => array(
             "FriendlyName" => "Taxa Percentual (%)",
             "Type" => "text",
