@@ -52,18 +52,16 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
         $print_paghiper_page = TRUE;
     } else {
 
-        if(0 == filesize( $filename )) {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $asset_url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_REFERER, $asset_url);
-        
-            $rawdata = curl_exec($ch);
-            $pdf_transaction = file_put_contents($filename, $rawdata);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $asset_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_REFERER, $asset_url);
+    
+        $rawdata = curl_exec($ch);
+        $pdf_transaction = file_put_contents($filename, $rawdata);
 
-            if($pdf_transaction) {
-                $print_paghiper_page = TRUE;
-            }
+        if($pdf_transaction) {
+            $print_paghiper_page = TRUE;
         }
     }
 
