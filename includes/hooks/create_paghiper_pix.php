@@ -18,8 +18,14 @@ function display_pix_qr_code($vars) {
         $invoice = mysql_fetch_array(mysql_query("SELECT tblinvoices.*,tblclients.id as client_id, tblclients.email FROM tblinvoices INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.id='$invoice_id'"));
 
         $whmcs_url = rtrim(\App::getSystemUrl(),"/");
-        $json = file_get_contents($whmcs_url."/modules/gateways/paghiper_pix.php?invoiceid=".$invoice_id."&uuid=".$invoice['client_id']."&mail=".$invoice['email']."&json=1&pix=true");
-		$result = json_decode($json);
+        $json_url = $whmcs_url."/modules/gateways/paghiper_pix.php?invoiceid=".$invoice_id."&uuid=".$invoice['client_id']."&mail=".$invoice['email']."&json=1&pix=true";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $json_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $json = curl_exec($ch);
+        $result = json_decode($json);
 		
         $digitable_line 	= (isset($result->pix_code)) ? $result->pix_code->emv : $result->emv;
         $qrcode_image_url 	= (isset($result->pix_code)) ? $result->pix_code->qrcode_image_url : $result->qrcode_image_url;
