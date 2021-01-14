@@ -169,7 +169,7 @@ if (!defined("WHMCS")) {
         $invoice_total = apply_custom_taxes((float) $invoice['balance'], $GATEWAY);
 
         $transaction_type = ($is_pix) ? 'pix' : 'billet';
-        $sql = "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND slip_value = '{$invoice_total}' AND ('{$dataHoje}' >= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY) OR due_date <= '{$dataHoje}') ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
+        $sql = "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND slip_value = '{$invoice_total}' AND ('{$dataHoje}' <= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY) OR due_date <= '{$dataHoje}') ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
         $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
 
         if(!empty($billet)) {
