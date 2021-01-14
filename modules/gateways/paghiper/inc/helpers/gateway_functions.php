@@ -403,14 +403,14 @@ function generate_paghiper_billet($invoice, $params) {
 
         foreach($fields as $field) {
             $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'"));
-            ($i == 0) ? $cpf = trim($result["value"]) : $cnpj = trim($result["value"]);
+            ($i == 0) ? $cpf = convert_to_numeric(trim($result["value"])) : $cnpj = convert_to_numeric(trim($result["value"]));
             if($i == 1) { break; }
             $i++;
         }
 
     } else {
         // Se simples, pegamos somente o que temos
-		$cpf_cnpj     = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'"))));
+		$cpf_cnpj     = convert_to_numeric(trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'")))));
 		if(strlen($cpf_cnpj) > 11) {
 			$cnpj = $cpf_cnpj;
 		} else {
