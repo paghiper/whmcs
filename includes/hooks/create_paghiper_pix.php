@@ -1,8 +1,8 @@
 <?php
 /**
  * Adiciona QR code do PIX nos templates do WHMCS
- * @author     Henrique Cruz | henriquecruz.com.br
- * @copyright  Copyright (c) 2019 https://henriquecruz.com.br
+ * @author     Henrique Cruz
+ * @copyright  Copyright (c) 2019-2021 https://www.paghiper.com/
  */
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
@@ -31,7 +31,7 @@ function display_pix_qr_code($vars) {
         $qrcode_image_url 	= (isset($result->pix_code)) ? $result->pix_code->qrcode_image_url : $result->qrcode_image_url;
 
         if($digitable_line) {
-			$merge_fields['codigo_pix'] = "<div style='text-align: center;'><img width='320' height='320' src='{$qrcode_image_url}'><br>";
+			$merge_fields['codigo_pix'] = "<div style='text-align: center;' class='qr-code-container'><img class='qr-code' width='320' height='320' src='{$qrcode_image_url}'><br>";
             $merge_fields['codigo_pix'] .= '<h2 style="font-size: 16px; color: #000000">Use a opção QR Code no seu app de internet banking<br><span style="font-size: 14px; font-weight: normal;">Ou, se preferir, copie o texto abaixo para fazer o pagamento</span></h2>';
             $merge_fields['codigo_pix'] .= '<span>Seu código PIX: <br><span style="font-size: 16px; color: #000000"><strong>';
             $merge_fields['codigo_pix'] .= $digitable_line;

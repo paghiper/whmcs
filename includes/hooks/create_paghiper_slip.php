@@ -1,8 +1,8 @@
 <?php
 /**
  * Adiciona boleto bancário e link direto para boleto no WHMCS
- * @author     Henrique Cruz | henriquecruz.com.br
- * @copyright  Copyright (c) 2019 https://henriquecruz.com.br
+ * @author     Henrique Cruz
+ * @copyright  Copyright (c) 2019-2021 https://www.paghiper.com/
  */
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
@@ -31,8 +31,8 @@ function display_digitable_line($vars) {
         $bar_code_number_to_image = (isset($result->bank_slip)) ? $result->bank_slip->bar_code_number_to_image : $result->bar_code_number_to_image;
         
         if($digitable_line) {
-            $merge_fields['linha_digitavel'] = '<div style="text-align: center;"><span>Linha digitável: <br><span style="font-size: 16px; color: #000000"><strong>';
-            $merge_fields['linha_digitavel'] .= "<img style='max-width: 100%;' src='{$whmcs_url}/modules/gateways/paghiper/assets/php/barcode.php?codigo={$bar_code_number_to_image}'>";
+            $merge_fields['linha_digitavel'] = '<div style="text-align: center;" class="billet-barcode-container"><span>Linha digitável: <br><span style="font-size: 16px; color: #000000"><strong>';
+            $merge_fields['linha_digitavel'] .= "<img class='billet-barcode' style='max-width: 100%;' height='50' src='{$whmcs_url}/modules/gateways/paghiper/assets/php/barcode.php?codigo={$bar_code_number_to_image}'>";
             $merge_fields['linha_digitavel'] .= $digitable_line;
             $merge_fields['linha_digitavel'] .= '</strong></span></span></div>';
         }

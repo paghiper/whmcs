@@ -1,8 +1,8 @@
 <?php
 /**
  * Cancela boletos bancários não-pagos, atrelados a uma fatura cancelada ou paga.
- * @author     Henrique Cruz | henriquecruz.com.br
- * @copyright  Copyright (c) 2019 https://henriquecruz.com.br
+ * @author     Henrique Cruz
+ * @copyright  Copyright (c) 2019-2021 https://www.paghiper.com/
  */
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
