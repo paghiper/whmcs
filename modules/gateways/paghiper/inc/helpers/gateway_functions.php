@@ -466,11 +466,11 @@ function generate_paghiper_billet($invoice, $params) {
             $paghiper_data["payer_cpf_cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cpf, FILTER_SANITIZE_NUMBER_INT))), -15);
         }
     } elseif(!isset($cpfcnpj) || $cpfcnpj == '') {
-        logTransaction($gateway_settings["name"],$_POST,"Boleto não exibido. Você não definiu os campos de CPF/CNPJ");
+        logTransaction($gateway_settings["name"],array('post' => $_POST, 'json' => $paghiper_data),"Boleto não exibido. Você não definiu os campos de CPF/CNPJ");
     } elseif(!isset($cpf_cnpj) || $cpf_cnpj == '' || (empty($cpf) && empty($cnpj))) {
-        logTransaction($gateway_settings["name"],$_POST,"Boleto não exibido. CPF/CNPJ do cliente não foi informado");
+        logTransaction($gateway_settings["name"],array('post' => $_POST, 'json' => $paghiper_data),"Boleto não exibido. CPF/CNPJ do cliente não foi informado");
     } else {
-        logTransaction($gateway_settings["name"],$_POST,"Boleto não exibido. Erro indefinido");
+        logTransaction($gateway_settings["name"],array('post' => $_POST, 'json' => $paghiper_data),"Boleto não exibido. Erro indefinido");
     }
 
     // Checamos os valores booleanos, 1 por 1
