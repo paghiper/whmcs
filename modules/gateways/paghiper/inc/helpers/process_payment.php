@@ -224,7 +224,7 @@ if (!defined("WHMCS")) {
             // Pegamos a data de hoje, adicionamos um dia e usamos como nova data de vencimento
             $reissue_unpaid_cont = (int) $GATEWAY['reissue_unpaid'];
             $reissue_unpaid = (isset($reissue_unpaid_cont) && ($reissue_unpaid_cont === 0 || !empty($reissue_unpaid_cont))) ? $reissue_unpaid_cont : 1 ;
-            if($reissue_unpaid == -1) {
+            if($reissue_unpaid == -1 && $dataHoje > $invoiceDuedate) {
 
                 // Mostrar tela de boleto cancelado
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
