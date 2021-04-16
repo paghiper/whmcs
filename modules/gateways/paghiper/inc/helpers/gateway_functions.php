@@ -11,7 +11,7 @@
  * @link       https://www.paghiper.com/
  */
 
-function get_customfield_id() {
+function paghiper_get_customfield_id() {
     $fields = mysql_query("SELECT id, fieldname FROM tblcustomfields WHERE type = 'client';");
     if (!$fields) {
         return '<br><br>Erro geral no banco de dados';
@@ -34,7 +34,7 @@ function get_customfield_id() {
     
 }
 
-function add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin) {
+function paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin) {
 
     $postData = array(
         'invoiceid'             => (int) $invoice_id,
@@ -47,7 +47,7 @@ function add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin) {
 
 }
 
-function to_monetary($int) {
+function paghiper_to_monetary($int) {
     return number_format ( $int, 2, '.', '' );
 }
 
@@ -60,7 +60,7 @@ function log_status_to_db($status, $transaction_id) {
     return true;
 }
 
-function fetch_remote_url($url) {
+function paghiper_fetch_remote_url($url) {
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -71,11 +71,11 @@ function fetch_remote_url($url) {
     return $output;
 }
 
-function convert_to_numeric($str) {
+function paghiper_convert_to_numeric($str) {
     return preg_replace('/\D/', '', $str);
 }
 
-function query_scape_string($string) {
+function paghiper_query_scape_string($string) {
 	if(function_exists('mysql_real_escape_string')) {
 		return mysql_real_escape_string($string);
 	}
@@ -84,7 +84,7 @@ function query_scape_string($string) {
 
 }
 
-function apply_custom_taxes($amount, $GATEWAY, $params = NULL){
+function paghiper_apply_custom_taxes($amount, $GATEWAY, $params = NULL){
     if(array_key_exists('amount', $params)) {
         $amount     = $params['amount'];
         $porcento   = $params['porcento'];
@@ -96,7 +96,8 @@ function apply_custom_taxes($amount, $GATEWAY, $params = NULL){
     return number_format(($amount+((($amount / 100) * $porcento) + $taxa)), 2, '.', ''); # Formato: ##.##
 }
 
-function check_if_subaccount($user_id, $email, $invoice_userid) {
+/**
+function paghiper_check_if_subaccount($user_id, $email, $invoice_userid) {
     $query = "SELECT userid, id, email, permissions, invoiceemails FROM tblcontacts WHERE userid = '$user_id' AND email = '$email' LIMIT 1"; 
     $result = mysql_query($query);
     $user = mysql_fetch_array($result);
@@ -108,7 +109,7 @@ function check_if_subaccount($user_id, $email, $invoice_userid) {
     return false;
 }
 
-function print_screen($ico, $title, $message, $conf = null) {
+function paghiper_print_screen($ico, $title, $message, $conf = null) {
 
     global $systemurl;
     $img_url = (preg_match("/http/i", $ico)) ? $ico : $systemurl.'/modules/gateways/paghiper/assets/img/'.$ico;
@@ -403,14 +404,14 @@ function generate_paghiper_billet($invoice, $params) {
 
         foreach($fields as $field) {
             $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'"));
-            ($i == 0) ? $cpf = convert_to_numeric(trim($result["value"])) : $cnpj = convert_to_numeric(trim($result["value"]));
+            ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($result["value"])) : $cnpj = paghiper_convert_to_numeric(trim($result["value"]));
             if($i == 1) { break; }
             $i++;
         }
 
     } else {
         // Se simples, pegamos somente o que temos
-		$cpf_cnpj     = convert_to_numeric(trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'")))));
+		$cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'")))));
 		if(strlen($cpf_cnpj) > 11) {
 			$cnpj = $cpf_cnpj;
 		} else {
@@ -420,7 +421,7 @@ function generate_paghiper_billet($invoice, $params) {
 
 
     // Aplicamos as taxas do gateway sobre o total
-    $total = apply_custom_taxes($total, $gateway_settings, $params);
+    $total = paghiper_apply_custom_taxes($total, $gateway_settings, $params);
     
     // Preparate data to send
     $paghiper_data = array(
@@ -438,7 +439,7 @@ function generate_paghiper_billet($invoice, $params) {
                                                 array(
                                                     'item_id'       => $invoice_id,
                                                     'description'   => 'Fatura #'.$invoice_id,
-                                                    'price_cents'   => convert_to_numeric($total),
+                                                    'price_cents'   => paghiper_convert_to_numeric($total),
                                                     'quantity'      => 1
                                                 ),
                                             ),
@@ -446,7 +447,7 @@ function generate_paghiper_billet($invoice, $params) {
        // Dados do cliente
        "payer_email"                    => $email,
        "payer_name"                     => $firstname . ' ' . $lastname,
-       "payer_phone"                    => convert_to_numeric($phone),
+       "payer_phone"                    => paghiper_convert_to_numeric($phone),
        "payer_street"                   => $address1,
        "payer_complement"               => $address2,
        "payer_city"                     => $city,
@@ -490,7 +491,7 @@ function generate_paghiper_billet($invoice, $params) {
     }
 
     $discount_config = (!empty($gateway_settings['early_payment_discounts_cents'])) ? ltrim(preg_replace('/\D/', '', $gateway_settings['early_payment_discounts_cents']), 0) : '';
-    $discount_value = (!empty($discount_config)) ? convert_to_numeric( number_format($total * (($discount_config > 99) ? 99 / 100 : $discount_config / 100), 2, '.', '' ), 2, '.', '' ) : '';
+    $discount_value = (!empty($discount_config)) ? paghiper_convert_to_numeric( number_format($total * (($discount_config > 99) ? 99 / 100 : $discount_config / 100), 2, '.', '' ), 2, '.', '' ) : '';
 
     $additional_config_text = array(
         'early_payment_discounts_days'  => $gateway_settings['early_payment_discounts_days'],
@@ -502,7 +503,7 @@ function generate_paghiper_billet($invoice, $params) {
 
     foreach($additional_config_text as $k => $v) {
         if(!empty($v)) {
-            $paghiper_data[$k] = convert_to_numeric($v);
+            $paghiper_data[$k] = paghiper_convert_to_numeric($v);
         }
     }
 
@@ -565,7 +566,7 @@ function generate_paghiper_billet($invoice, $params) {
             $title = 'Ops! Não foi possível emitir o '.(($is_pix) ? 'boleto bancário' : 'PIX').'.';
             $message = 'Por favor entre em contato com o suporte. Erro 0x004681';
             
-            echo print_screen($ico, $title, $message);
+            echo paghiper_print_screen($ico, $title, $message);
             logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
         }
 
@@ -576,9 +577,9 @@ function generate_paghiper_billet($invoice, $params) {
         }
         
         if(!empty($qrcode_image_url)) {
-            return print_screen($qrcode_image_url, null, null, array('is_pix' => true, 'invoice_id' => $order_id, 'payment_value' => $slip_value, 'pix_emv' => $emv));
+            return paghiper_print_screen($qrcode_image_url, null, null, array('is_pix' => true, 'invoice_id' => $order_id, 'payment_value' => $slip_value, 'pix_emv' => $emv));
         } else {
-            return fetch_remote_url($url_slip);
+            return paghiper_fetch_remote_url($url_slip);
         }
 
     } else {
@@ -590,7 +591,7 @@ function generate_paghiper_billet($invoice, $params) {
  
 }
 
-function check_table() {
+function paghiper_check_table() {
     $checktable = full_query("SHOW TABLES LIKE 'mod_paghiper'");
     $table_exists = mysql_num_rows($checktable) > 0;
 

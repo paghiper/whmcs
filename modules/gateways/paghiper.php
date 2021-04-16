@@ -64,7 +64,7 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "FriendlyName" => "ID do custom field contendo CPF/CNPJ",
             "Type" => "text",
             "Size" => "3",
-            "Description" => "Defina aqui o ID do campo usado para coletar CPF/CNPJ do seu cliente. Isso é necessário para usar o checkout transparente." . get_customfield_id()
+            "Description" => "Defina aqui o ID do campo usado para coletar CPF/CNPJ do seu cliente. Isso é necessário para usar o checkout transparente." . paghiper_get_customfield_id()
         ),
         "porcento" => array(
             "FriendlyName" => "Taxa Percentual (%)",
