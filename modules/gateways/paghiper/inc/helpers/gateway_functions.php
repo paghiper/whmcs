@@ -51,7 +51,7 @@ function paghiper_to_monetary($int) {
     return number_format ( $int, 2, '.', '' );
 }
 
-function log_status_to_db($status, $transaction_id) {
+function paghiper_log_status_to_db($status, $transaction_id) {
 
     $update = mysql_query("UPDATE mod_paghiper SET status = '$status' WHERE transaction_id = '$transaction_id';");
     if(!$update) {

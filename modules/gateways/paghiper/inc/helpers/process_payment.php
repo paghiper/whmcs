@@ -54,7 +54,7 @@ if (!defined("WHMCS")) {
     );
 
     // Checamos se a tabela da PagHiper está pronta pra uso
-    $custom_table = check_table();
+    $custom_table = paghiper_check_table();
 
     // Se as condições baterem, estamos lidando com um post do checkout transparente.
     if(isset($_GET["invoiceid"])) {
@@ -79,7 +79,7 @@ if (!defined("WHMCS")) {
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = (($is_pix) ? 'PIX' : 'Boleto bancário') . ' não disponível para essa fatura!';
                 $message = 'O método de pagamento escolhido para esta fatura não é ' . (($is_pix) ? 'PIX' : 'boleto bancário') . '. Caso ache que isso é um erro, contate o suporte.';
-                echo print_screen($ico, $title, $message);
+                echo paghiper_print_screen($ico, $title, $message);
                 exit();
 
         }
@@ -92,7 +92,7 @@ if (!defined("WHMCS")) {
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Desculpe!';
                 $message = 'Você não está autorizado a ver este recurso. Caso ache que isso é um erro, contate o suporte.';
-                echo print_screen($ico, $title, $message);
+                echo paghiper_print_screen($ico, $title, $message);
 
                 exit();
             } else {
@@ -106,7 +106,7 @@ if (!defined("WHMCS")) {
                     $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                     $title = 'Desculpe!';
                     $message = 'Você não está autorizado a ver este recurso. Caso ache que isso é um erro, contate o suporte.';
-                    echo print_screen($ico, $title, $message);
+                    echo paghiper_print_screen($ico, $title, $message);
 
                     exit;
                 }
@@ -121,7 +121,7 @@ if (!defined("WHMCS")) {
                 $ico = ($is_pix) ? 'pix-ok.png' : 'billet-ok.png';
                 $title = 'Fatura paga!';
                 $message = 'Este '.(($is_pix) ? 'PIX' : 'boleto').' ja foi compensado no sistema e consta como pago.';
-                echo print_screen($ico, $title, $message);
+                echo paghiper_print_screen($ico, $title, $message);
                 exit();
 
                 break;
@@ -131,7 +131,7 @@ if (!defined("WHMCS")) {
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Esta fatura ainda não está disponível!';
                 $message = 'Este '.(($is_pix) ? 'PIX' : 'boleto').' ainda não está disponível. Caso acredite que seja um erro, por favor acione o suporte.';
-                echo print_screen($ico, $title, $message);
+                echo paghiper_print_screen($ico, $title, $message);
                 exit();
 
                 break;
@@ -149,7 +149,7 @@ if (!defined("WHMCS")) {
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Esta fatura foi cancelada!';
                 $message = 'Este boleto foi cancelado. Caso acredite que seja um erro, por favor acione o suporte.';
-                echo print_screen($ico, $title, $message);
+                echo paghiper_print_screen($ico, $title, $message);
                 exit();
 
                 break;
@@ -159,7 +159,7 @@ if (!defined("WHMCS")) {
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Este boleto venceu!';
                 $message = 'Este boleto foi estornado. Caso acredite que seja um erro, por favor acione o suporte.';
-                echo print_screen($ico, $title, $message);
+                echo paghiper_print_screen($ico, $title, $message);
                 exit();
 
                 break;
@@ -173,7 +173,7 @@ if (!defined("WHMCS")) {
 
         // Lógica: Checar se um boleto ja foi emitido pra essa fatura
         $order_id = $invoice['invoiceid'];
-        $invoice_total = apply_custom_taxes((float) $invoice['balance'], $GATEWAY);
+        $invoice_total = paghiper_apply_custom_taxes((float) $invoice['balance'], $GATEWAY);
 
         $transaction_type = ($is_pix) ? 'pix' : 'billet';
         $sql = "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND slip_value = '{$invoice_total}' AND ('{$dataHoje}' <= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY) OR due_date <= '{$dataHoje}') ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
@@ -208,7 +208,7 @@ if (!defined("WHMCS")) {
                 $ico = ($is_pix) ? 'pix-reserved.png' : 'billet-reserved.png';
                 $title = 'Pagamento pré-confirmado.';
                 $message = 'Este '.(($is_pix) ? 'PIX' : 'boleto').' teve o pagamento pré-confirmado e está aguardando compensação bancária. Por favor, aguarde.';
-                echo print_screen($ico, $title, $message);
+                echo paghiper_print_screen($ico, $title, $message);
                 exit();
 
             }
@@ -230,7 +230,7 @@ if (!defined("WHMCS")) {
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Este boleto venceu!';
                 $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
-                echo print_screen($ico, $title, $message);
+                echo paghiper_print_screen($ico, $title, $message);
                 exit();
 
             }
@@ -275,7 +275,7 @@ if (!defined("WHMCS")) {
                         $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                         $title = 'Método de pagamento indisponível para a moeda selecionada';
                         $message = 'Este método de pagamento só pode ser utilizado para pagamentos em R$ (BRL)<br>Caso creia que isso seja um erro, entre em contato com o suporte.';
-                        echo print_screen($ico, $title, $message);
+                        echo paghiper_print_screen($ico, $title, $message);
                         exit();
                     }
 
@@ -305,9 +305,9 @@ if (!defined("WHMCS")) {
                 echo json_encode($billet);
             } else {
                 if(!empty($qrcode_image_url)) {
-                    echo print_screen($qrcode_image_url, null, null, array('is_pix' => true, 'invoice_id' => $order_id, 'payment_value' => $billet_value, 'pix_emv' => $emv));
+                    echo paghiper_print_screen($qrcode_image_url, null, null, array('is_pix' => true, 'invoice_id' => $order_id, 'payment_value' => $billet_value, 'pix_emv' => $emv));
                 } else {
-                    echo fetch_remote_url($billet_url);
+                    echo paghiper_fetch_remote_url($billet_url);
                 }
             }
             
@@ -377,8 +377,8 @@ if (!defined("WHMCS")) {
 
             $status             = $request['status'];
             $transaction_id     = $request['transaction_id'];
-            $ammount_paid       = to_monetary($request['value_cents_paid'] / 100);
-            $transaction_fee    = to_monetary($request['value_fee_cents'] / 100);
+            $ammount_paid       = paghiper_to_monetary($request['value_cents_paid'] / 100);
+            $transaction_fee    = paghiper_to_monetary($request['value_fee_cents'] / 100);
 
             // Pegamos a fatura como array e armazenamos na variável para uso posterior
             $command = "getinvoice";
@@ -406,7 +406,7 @@ if (!defined("WHMCS")) {
                     logTransaction($GATEWAY["name"],$_POST,"Aguardando o Pagamento");
 
                     // Logamos status no banco
-                    log_status_to_db($status, $transaction_id);
+                    paghiper_log_status_to_db($status, $transaction_id);
 
                 // Transação foi reservada
                 } elseif($status == "reserved") {
@@ -425,7 +425,7 @@ if (!defined("WHMCS")) {
                     logTransaction($GATEWAY["name"],$_POST,"Pagamento pré-confirmado");
 
                     // Logamos status no banco
-                    log_status_to_db($status, $transaction_id);
+                    paghiper_log_status_to_db($status, $transaction_id);
                     
                 // Transação foi aprovada
                 } elseif ($status == "paid" || $status == "Aprovado") {
@@ -449,7 +449,7 @@ if (!defined("WHMCS")) {
                     logTransaction($GATEWAY["name"],$request,"Transação Concluída");
 
                     // Logamos status no banco
-                    log_status_to_db($status, $transaction_id);
+                    paghiper_log_status_to_db($status, $transaction_id);
 
                     // Se estiver tudo certo, checamos se o valor pago é diferente do configurado na fatura
                     if($results['balance'] !== $ammount_paid) {
@@ -483,7 +483,7 @@ if (!defined("WHMCS")) {
                     logTransaction($GATEWAY["name"],$request,"Transação Cancelada");
 
                     // Logamos status no banco
-                    log_status_to_db($status, $transaction_id);
+                    paghiper_log_status_to_db($status, $transaction_id);
                 }
                 //TODO
                 // Prever todos os tipos de retorno.
