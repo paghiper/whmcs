@@ -7,7 +7,7 @@
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
- * @copyright  (c) 2017-2020, PagHiper
+ * @copyright  (c) 2017-2021, PagHiper
  * @link       https://www.paghiper.com/
  */
 
@@ -60,7 +60,7 @@ if (!defined("WHMCS")) {
     if(isset($_GET["invoiceid"])) {
         
         $user_id = intval($_GET["uuid"]);
-		$user_email = query_scape_string($_GET["mail"]);
+		$user_email = paghiper_query_scape_string($_GET["mail"]);
 
         $return_json = (isset($_GET['json']) && $_GET['json'] == 1) ? TRUE : FALSE;
 
@@ -85,7 +85,7 @@ if (!defined("WHMCS")) {
         }
 
         // Checamos se a fatura está sendo exibida por um usuário de sub-conta
-        if( check_if_subaccount($user_id, $user_email, $invoice['userid'] ) == FALSE ) {
+        if( paghiper_check_if_subaccount($user_id, $user_email, $invoice['userid'] ) == FALSE ) {
             if(intval($invoice['userid']) !== $user_id) {
                 // ID não bate
                 // Mostrar tela de boleto indisponível
