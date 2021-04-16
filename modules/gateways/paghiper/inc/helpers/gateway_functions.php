@@ -97,6 +97,81 @@ function paghiper_apply_custom_taxes($amount, $GATEWAY, $params = NULL){
 }
 
 /**
+ * Checa se o Tax ID é um CPF ou CNPJ e chama a função correspondente
+ *
+ * @param  string $cpf CPF a ser validado.
+ *
+ * @return bool
+ */
+
+function paghiper_is_tax_id_valid($cpf_cnpj) {
+
+    $taxid_value = preg_replace('/\D/', '', $cpf_cnpj);
+
+    if(strlen( $taxid_value ) > 11) {
+        return paghiper_is_valid_cnpj($taxid_value);
+    } else {
+        return paghiper_is_valid_cpf($taxid_value);
+    }
+}
+
+/**
+ * Checa se o CNPJ informado é válido
+ *
+ * @param  string $cpf CPF a ser validado.
+ *
+ * @return bool
+ */
+function paghiper_is_valid_cpf( $cpf ) {
+    $cpf = preg_replace( '/[^0-9]/', '', $cpf );
+
+    if ( 11 !== strlen( $cpf ) || preg_match( '/^([0-9])\1+$/', $cpf ) ) {
+        return false;
+    }
+
+    $digit = substr( $cpf, 0, 9 );
+
+    for ( $j = 10; $j <= 11; $j++ ) {
+        $sum = 0;
+
+        for ( $i = 0; $i < $j - 1; $i++ ) {
+            $sum += ( $j - $i ) * intval( $digit[ $i ] );
+        }
+
+        $summod11 = $sum % 11;
+        $digit[ $j - 1 ] = $summod11 < 2 ? 0 : 11 - $summod11;
+    }
+
+    return intval( $digit[9] ) === intval( $cpf[9] ) && intval( $digit[10] ) === intval( $cpf[10] );
+}
+
+/**
+ * Checa se o CNPJ informado é válido
+ *
+ * @param  string $cnpj CNPJ a ser validado.
+ *
+ * @return bool
+ */
+function paghiper_is_valid_cnpj( $cnpj ) {
+    $cnpj = sprintf( '%014s', preg_replace( '{\D}', '', $cnpj ) );
+
+    if ( 14 !== strlen( $cnpj ) || 0 === intval( substr( $cnpj, -4 ) ) ) {
+        return false;
+    }
+
+    for ( $t = 11; $t < 13; ) {
+        for ( $d = 0, $p = 2, $c = $t; $c >= 0; $c--, ( $p < 9 ) ? $p++ : $p = 2 ) {
+            $d += $cnpj[ $c ] * $p;
+        }
+
+        if ( intval( $cnpj[ ++$t ] ) !== ( $d = ( ( 10 * $d ) % 11 ) % 10 ) ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function paghiper_check_if_subaccount($user_id, $email, $invoice_userid) {
     $query = "SELECT userid, id, email, permissions, invoiceemails FROM tblcontacts WHERE userid = '$user_id' AND email = '$email' LIMIT 1"; 
     $result = mysql_query($query);
@@ -417,6 +492,16 @@ function generate_paghiper_billet($invoice, $params) {
 		} else {
 			$cpf = $cpf_cnpj;
 		}
+    }
+
+    // Validate CPF/CNPJ
+    if(!paghiper_is_tax_id_valid($cpf_cnpj)) {
+        $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+        $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
+        $message = 'Por favor entre em contato com o suporte. Erro 0x004681';
+        
+        echo paghiper_print_screen($ico, $title, $message);
+        logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
     }
 
 
