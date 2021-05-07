@@ -236,7 +236,7 @@ if (!defined("WHMCS")) {
             }
         
             // Pegamos as datas que definimos anteriormente e transformamos em objeto Date do PHP
-            $data1 = new DateTime($billetDuedate); 
+            $data1 = new DateTime($invoiceDuedate);
             $data2 = new DateTime($dataHoje);
 
             // Comparamos as datas para enviar o resultado a PagHiper. Isso é necessário pois o gateway pede o vencimento em número de dias no futuro, não como data.
