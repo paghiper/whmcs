@@ -18,7 +18,7 @@ function display_digitable_line($vars) {
         $invoice = mysql_fetch_array(mysql_query("SELECT tblinvoices.*,tblclients.id as client_id, tblclients.email FROM tblinvoices INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.id='$invoice_id'"));
 
         $whmcs_url = rtrim(\App::getSystemUrl(),"/");
-        $json_url = $whmcs_url."/modules/gateways/paghiper_pix.php?invoiceid=".$invoice_id."&uuid=".$invoice['client_id']."&mail=".$invoice['email']."&json=1&pix=true";
+        $json_url = $whmcs_url."/modules/gateways/paghiper.php?invoiceid=".$invoice_id."&uuid=".$invoice['client_id']."&mail=".$invoice['email']."&json=1";
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $json_url);
@@ -32,7 +32,7 @@ function display_digitable_line($vars) {
         
         if($digitable_line) {
             $merge_fields['linha_digitavel'] = '<div style="text-align: center;" class="billet-barcode-container"><span>Linha digitável: <br><span style="font-size: 16px; color: #000000"><strong>';
-            $merge_fields['linha_digitavel'] .= "<img class='billet-barcode' style='max-width: 100%;' height='50' src='{$whmcs_url}/modules/gateways/paghiper/assets/php/barcode.php?codigo={$bar_code_number_to_image}'>";
+            $merge_fields['linha_digitavel'] .= "<img class='billet-barcode' style='max-width: 100%;' height='50' src='{$whmcs_url}/modules/gateways/paghiper/assets/php/barcode.php?codigo={$bar_code_number_to_image}'><br>";
             $merge_fields['linha_digitavel'] .= $digitable_line;
             $merge_fields['linha_digitavel'] .= '</strong></span></span></div>';
         }
