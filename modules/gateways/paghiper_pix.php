@@ -126,6 +126,16 @@ function paghiper_pix_link($params) {
     // Definimos os dados para retorno e checkout.
     $systemurl = rtrim($params['systemurl'],"/");
     $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
+    $customFields = explode("|", $params['cpf_cnpj']); // id dos campos de acordo com configuração do whmcs
+
+    /// TRATAR DADOS CLIENTES
+    $myclientcustomfields = array();
+    foreach($params["clientdetails"]["customfields"] as $key => $value){
+        $myclientcustomfields[$value['id']] = $value['value'];
+    }
+
+    $cpf_pessoa  =   $myclientcustomfields[$customFields[0]];
+    $cnpj_pessoa =   $myclientcustomfields[$customFields[1]];
     
     // Envia para a tela de PIX automaticamente ao abrir a fatura 
     if($params['abrirauto'] == true):
@@ -137,7 +147,9 @@ function paghiper_pix_link($params) {
     endif;
 
     // Código do checkout
-    $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
+    if(paghiper_valida_cpf($cpf_pessoa) || paghiper_valida_cnpj($cnpj_pessoa)) {
+        // caso os parâmetros sejam válidos mostra o PIX
+        $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
     <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}&pix=true\" method=\"post\">
     <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/pix.jpg' title='Pagar com Pix' alt='Pagar com Pix' border='0' align='absbottom' width='120' height='74' /><br>
     <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Pagar usando PIX</button>
@@ -148,6 +160,10 @@ function paghiper_pix_link($params) {
     <!-- FIM DO BOLETO PAGHIPER -->
     </form>
     {$abrirAuto}";
+    }else{
+        // caso o cpf ou cnpj não for reconhecido ou for inválido mostra a mensagem de erro
+        $code = "CPF ou CNPJ inválido, atualize seus dados cadastrais.";
+    }
     
    return $code; 
 

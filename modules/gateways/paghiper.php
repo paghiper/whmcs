@@ -169,6 +169,16 @@ function paghiper_link($params) {
     // Definimos os dados para retorno e checkout.
     $systemurl = rtrim($params['systemurl'],"/");
     $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
+    $customFields = explode("|", $params['cpf_cnpj']); // id dos campos de acordo com configuração do whmcs
+
+    /// TRATAR DADOS CLIENTES
+    $myclientcustomfields = array();
+    foreach($params["clientdetails"]["customfields"] as $key => $value){
+        $myclientcustomfields[$value['id']] = $value['value'];
+    }
+
+    $cpf_pessoa  =   $myclientcustomfields[$customFields[0]];
+    $cnpj_pessoa =   $myclientcustomfields[$customFields[1]];
 
     
     // Abrir o boleto automaticamente ao abrir a fatura 
@@ -181,17 +191,23 @@ function paghiper_link($params) {
     endif;
 
     // Código do checkout
-    $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
-    <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}\" method=\"post\">
-    <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/billet.jpg' title='Pagar com Boleto' alt='Pagar com Boleto' border='0' align='absbottom' width='120' height='74' /><br>
-    <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
-    <br> <br>
-    <div class='alert alert-warning' role='alert'>
-    <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
-    </div>
-    <!-- FIM DO BOLETO PAGHIPER -->
-    </form>
-    {$abrirAuto}";
+    if(paghiper_valida_cpf($cpf_pessoa) || paghiper_valida_cnpj($cnpj_pessoa)) { 
+        // caso os parâmetros sejam válidos mostra o boleto
+        $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
+        <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}\" method=\"post\">
+        <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/billet.jpg' title='Pagar com Boleto' alt='Pagar com Boleto' border='0' align='absbottom' width='120' height='74' /><br>
+        <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
+        <br> <br>
+        <div class='alert alert-warning' role='alert'>
+        <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
+        </div>
+        <!-- FIM DO BOLETO PAGHIPER -->
+        </form>
+        {$abrirAuto}";
+    } else{
+        // caso o cpf ou cnpj não for reconhecido ou for inválido mostra a mensagem de erro
+        $code = "CPF ou CNPJ inválido, atualize seus dados cadastrais.";
+    }
     
    return $code; 
 
