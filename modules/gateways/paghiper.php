@@ -13,6 +13,9 @@
 
 // Opções padrão do Gateway
 function paghiper_config($params = NULL) {
+
+    $custom_fields_conf = paghiper_get_customfield_id();
+    
     $config = array(
         'FriendlyName' => array(
             "Type" => "System",
@@ -64,7 +67,13 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "FriendlyName" => "ID do custom field contendo CPF/CNPJ",
             "Type" => "text",
             "Size" => "3",
-            "Description" => "Defina aqui o ID do campo usado para coletar CPF/CNPJ do seu cliente. Isso é necessário para usar o checkout transparente." . paghiper_get_customfield_id()
+            "Description" => "Defina aqui o ID do campo usado para coletar CPF/CNPJ do seu cliente. Isso é necessário para usar o checkout transparente." . $custom_fields_conf
+        ),
+        "razao_social" => array(
+            "FriendlyName" => "ID do custom field contendo Razão Social",
+            "Type" => "text",
+            "Size" => "3",
+            "Description" => "Defina aqui o ID do campo usado, caso utilize um campo personalizado para coletar a Razão Social do seu cliente. Isso é opcional." . $custom_fields_conf
         ),
         "porcento" => array(
             "FriendlyName" => "Taxa Percentual (%)",
