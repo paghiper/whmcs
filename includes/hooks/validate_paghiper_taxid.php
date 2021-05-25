@@ -76,7 +76,12 @@ function paghiper_clientValidateTaxId($vars){
     }
 
     if(!$isValidTaxId) {
-        return array('CPF/CNPJ inválido!');
+
+        if(array_key_exists('custtype', $vars) && $vars['custtype'] == 'existing') {
+            return array('CPF/CNPJ inválido! Cheque seu cadastro.');
+        } else {
+            return array('CPF/CNPJ inválido!');
+        }
     }
 }
 
