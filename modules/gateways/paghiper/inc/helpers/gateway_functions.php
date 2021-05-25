@@ -590,6 +590,17 @@ function generate_paghiper_billet($invoice, $params) {
     $discount_value = (!empty($discount_config)) ? $total * (($discount_config > 99) ? 99 / 100 : $discount_config / 100) : '';
     $discount_cents = (!empty($discount_value)) ? paghiper_convert_to_numeric(number_format($discount_value, 2, '.', '' )) : 0;
 
+    if(($total - $discount_value) < 3) {
+
+        // Mostrar tela de boleto cancelado
+        $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+        $title = 'Não foi possível gerar o '.(($is_pix) ? 'PIX' : 'boleto').'!';
+        $message = 'O valor com desconto por pagto. antecipado é inferior a R$3,00! Por favor, revise a configuração.';
+        echo paghiper_print_screen($ico, $title, $message);
+        exit();
+
+    }
+
     $additional_config_text = array(
         'early_payment_discounts_days'  => $gateway_settings['early_payment_discounts_days'],
         'early_payment_discounts_cents' => $discount_cents,
