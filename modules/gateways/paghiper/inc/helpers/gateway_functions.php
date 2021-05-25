@@ -585,13 +585,14 @@ function generate_paghiper_billet($invoice, $params) {
             $paghiper_data[$k] = FALSE;
         }
     }
-
-    $discount_config = (!empty($gateway_settings['early_payment_discounts_cents'])) ? ltrim(preg_replace('/\D/', '', $gateway_settings['early_payment_discounts_cents']), 0) : '';
-    $discount_value = (!empty($discount_config)) ? paghiper_convert_to_numeric( number_format($total * (($discount_config > 99) ? 99 / 100 : $discount_config / 100), 2, '.', '' ), 2, '.', '' ) : '';
+    
+    $discount_config = (!empty($gateway_settings['early_payment_discounts_cents'])) ? (float) trim(str_replace(['%', ','], ['', '.'], $gateway_settings['early_payment_discounts_cents']), 0) : '';
+    $discount_value = (!empty($discount_config)) ? $total * (($discount_config > 99) ? 99 / 100 : $discount_config / 100) : '';
+    $discount_cents = (!empty($discount_value)) ? paghiper_convert_to_numeric(number_format($discount_value, 2, '.', '' )) : 0;
 
     $additional_config_text = array(
         'early_payment_discounts_days'  => $gateway_settings['early_payment_discounts_days'],
-        'early_payment_discounts_cents' => $discount_value,
+        'early_payment_discounts_cents' => $discount_cents,
         'open_after_day_due'            => $gateway_settings['open_after_day_due'],
         'late_payment_fine'             => $gateway_settings['late_payment_fine'],
         'open_after_day_due'            => $gateway_settings['open_after_day_due'],
