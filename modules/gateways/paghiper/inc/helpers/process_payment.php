@@ -240,9 +240,14 @@ if (!defined("WHMCS")) {
             $data2 = new DateTime($dataHoje);
 
             // Comparamos as datas para enviar o resultado a PagHiper. Isso é necessário pois o gateway pede o vencimento em número de dias no futuro, não como data.
-            $intervalo = $data1->diff($data2); 
-            $vencimentoBoleto = $intervalo->days;  
+            $intervalo = $data2->diff($data1); 
+            $vencimentoBoleto = $intervalo->format('%R%a');
 
+            if($vencimentoBoleto < 0) {
+                $vencimentoBoleto = $reissue_unpaid;
+            } else {
+                $vencimentoBoleto = $intervalo->days;
+            }
 
             // Calculamos a diferença de dias entre o dia de vencimento e os dias para aplicação de desconto.
             $discount_period = (int) $GATEWAY['early_payment_discounts_days'];
