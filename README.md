@@ -51,6 +51,28 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Disponibilização de linha digitável no painel
 
+## 2.2 - 2021/05/25
+
+`Melhorias implementadas`
+
+* Checagem e validação de CPF/CNPJ no checkout, na página de invoice e na tela de boleto/PIX
+* Exibição das tags de boleto/PIX no editor de templates de e-mail
+* Suporte a campo de razão social (opcional)
+* Melhor lógica de reaproveitamento de boletos
+* Mais informações nos logs
+* Melhor manipulação de CPF/CNPJ para criação de faturas
+* Tela de erro genérica (evita tela branca, caso uma transação não possa ser gerada)
+
+`Bugs resolvidos`
+
+* Boletos vencidos eram ignorados, ainda que dentro do período de tolerância
+* Erro ao cancelar boletos nos logs
+* Bloco de inserção de boleto/PIX PDF era executado apenas na primeira fatura da CRON (mod_lsapi)
+* Maior dinstinção entre as mensagens (evita confusão no front-end)
+* Melhor convenção de naming de funções (evita conflitos com outros módulos/gateways)
+* Warning de operador ternário removido
+
+
 ## 2.1 - 2020/12/18
 
 `Melhorias implementadas`
