@@ -10,6 +10,7 @@ if (!defined("WHMCS")) die("This file cannot be accessed directly");
 function cancel_paghiper_slips($vars) {
 
 	//require_once ("../init.php");
+	require_once(dirname(__FILE__) . '/../../modules/gateways/paghiper/inc/helpers/gateway_functions.php');
 	$invoice_id = $vars['invoiceid'];
 
 	// Initialise gateway configuration
