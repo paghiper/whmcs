@@ -61,6 +61,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Melhor lógica de reaproveitamento de boletos
 * Mais informações nos logs
 * Melhor manipulação de CPF/CNPJ para criação de faturas
+* Tela de erro, caso o o valor com desconto por pagto. antecipado seja menor que R$ 3
 * Tela de erro genérica (evita tela branca, caso uma transação não possa ser gerada)
 
 `Bugs resolvidos`
@@ -68,6 +69,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Boletos vencidos eram ignorados, ainda que dentro do período de tolerância
 * Erro ao cancelar boletos nos logs
 * Bloco de inserção de boleto/PIX PDF era executado apenas na primeira fatura da CRON (mod_lsapi)
+* Melhor cálculo de desconto para pagto. antecipado
 * Maior dinstinção entre as mensagens (evita confusão no front-end)
 * Melhor convenção de naming de funções (evita conflitos com outros módulos/gateways)
 * Warning de operador ternário removido
