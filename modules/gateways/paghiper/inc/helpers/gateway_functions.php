@@ -681,6 +681,12 @@ function generate_paghiper_billet($invoice, $params) {
     } else {
 
         // Não foi possível solicitar o boleto.
+        $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+        $title = 'Ops! Não foi possível emitir o '.(($is_pix) ? 'boleto bancário' : 'PIX').'.';
+        $message = 'Por favor entre em contato com o suporte. Erro 0x004682';
+        
+        echo paghiper_print_screen($ico, $title, $message);
+
         logTransaction($GATEWAY["name"],array('json' => $json, 'post' => $_POST),"Não foi possível criar a transação.");
         return false;
     }
