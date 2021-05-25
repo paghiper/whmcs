@@ -1,8 +1,14 @@
 <?php
 /**
  * Mostra campos da Paghiper na lista de campos disponíveis para uso nos templates
+ * 
+ * @package    PagHiper e Boleto para WHMCS
+ * @version    2.2
+ * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
- * @copyright  Copyright (c) 2021 https://www.paghiper.com/
+ * @license    BSD License (3-clause)
+ * @copyright  (c) 2017-2021, PagHiper
+ * @link       https://www.paghiper.com/
  */
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");

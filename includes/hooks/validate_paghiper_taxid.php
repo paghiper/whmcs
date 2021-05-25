@@ -1,8 +1,14 @@
 <?php
 /**
  * Valida informações de faturamento do cliente no check-out
+ * 
+ * @package    PagHiper e Boleto para WHMCS
+ * @version    2.2
+ * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
- * @copyright  Copyright (c) 2019-2021 https://www.paghiper.com/
+ * @license    BSD License (3-clause)
+ * @copyright  (c) 2017-2021, PagHiper
+ * @link       https://www.paghiper.com/
  */
 
 require_once(dirname(__FILE__) . '/../../modules/gateways/paghiper/inc/helpers/gateway_functions.php');

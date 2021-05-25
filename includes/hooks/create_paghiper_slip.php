@@ -1,8 +1,14 @@
 <?php
 /**
  * Adiciona boleto bancário e link direto para boleto no WHMCS
+ * 
+ * @package    PagHiper para WHMCS
+ * @version    2.2
+ * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
- * @copyright  Copyright (c) 2019-2021 https://www.paghiper.com/
+ * @license    BSD License (3-clause)
+ * @copyright  (c) 2017-2021, PagHiper
+ * @link       https://www.paghiper.com/
  */
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
