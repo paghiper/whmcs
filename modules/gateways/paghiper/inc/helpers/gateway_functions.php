@@ -499,7 +499,7 @@ function generate_paghiper_billet($invoice, $params) {
     if(!paghiper_is_tax_id_valid($cpf_cnpj)) {
         $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
         $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
-        $message = 'Por favor entre em contato com o suporte. Erro 0x004681';
+        $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
         
         echo paghiper_print_screen($ico, $title, $message);
         logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
@@ -555,7 +555,7 @@ function generate_paghiper_billet($invoice, $params) {
                 } else {
                     $paghiper_data["payer_name"] = $companyname;
                 }
-                
+
             }
             $paghiper_data["payer_cpf_cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cnpj, FILTER_SANITIZE_NUMBER_INT))), -14);
         } else {
