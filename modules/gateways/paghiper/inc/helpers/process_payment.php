@@ -228,8 +228,20 @@ if (!defined("WHMCS")) {
 
                 // Mostrar tela de boleto cancelado
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                $title = 'Este boleto venceu!';
+                $title = 'Este '.(($is_pix) ? 'PIX' : 'boleto').' venceu!';
                 $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
+                echo paghiper_print_screen($ico, $title, $message);
+                exit();
+
+            }
+
+            // Abortamos a exibição, caso valor seja menor que R$ 3
+            if((int) $invoice['total'] < 3) {
+
+                // Mostrar tela de boleto cancelado
+                $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                $title = 'Não foi possível gerar o '.(($is_pix) ? 'PIX' : 'boleto').'!';
+                $message = 'Este '.(($is_pix) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.';
                 echo paghiper_print_screen($ico, $title, $message);
                 exit();
 
