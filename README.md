@@ -51,7 +51,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Disponibilização de linha digitável no painel
 
-## 2.2 - 2021/05/25
+## 2.2 - 2021/05/27
 
 `Melhorias implementadas`
 

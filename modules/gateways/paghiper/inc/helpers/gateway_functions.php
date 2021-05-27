@@ -545,18 +545,17 @@ function generate_paghiper_billet($invoice, $params) {
     if((isset($cpf) && !empty($cpf) && $cpf != "on file") || (isset($cnpj) && !empty($cnpj) && $cnpj != "on file")) {
         if(isset($cnpj) && !empty($cnpj)) {
             if(isset($companyname) && !empty($companyname)) {
-    
-                if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
-                    $razaosocial_val = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'"))));
-                }
-                
-                if(isset($razaosocial_val) && !empty($razaosocial_val) && strlen($razaosocial_val) > 5 ){
-                    $paghiper_data["payer_name"] =  $razaosocial_val;
-                } else {
-                    $paghiper_data["payer_name"] = $companyname;
-                }
-
+                $paghiper_data["payer_name"] = $companyname;
             }
+
+            if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
+                $razaosocial_val = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'"))));
+            }
+            
+            if(isset($razaosocial_val) && !empty($razaosocial_val) && strlen($razaosocial_val) > 5 ){
+                $paghiper_data["payer_name"] =  $razaosocial_val;
+            }
+
             $paghiper_data["payer_cpf_cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cnpj, FILTER_SANITIZE_NUMBER_INT))), -14);
         } else {
             $paghiper_data["payer_cpf_cnpj"] = substr(trim(str_replace(array('+','-'), '', filter_var($cpf, FILTER_SANITIZE_NUMBER_INT))), -15);

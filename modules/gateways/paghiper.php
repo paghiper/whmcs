@@ -73,7 +73,7 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "FriendlyName" => "ID do custom field contendo Razão Social",
             "Type" => "text",
             "Size" => "3",
-            "Description" => "Defina aqui o ID do campo usado, caso utilize um campo personalizado para coletar a Razão Social do seu cliente. Isso é opcional." . $custom_fields_conf
+            "Description" => "Defina aqui o ID do campo usado, caso utilize um campo personalizado para coletar a Razão Social do seu cliente. Isso é opcional."
         ),
         "porcento" => array(
             "FriendlyName" => "Taxa Percentual (%)",
