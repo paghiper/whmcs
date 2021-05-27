@@ -3,7 +3,7 @@
  * Adiciona boleto bancário como página adicional na fatura anexa no WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.1
+ * @version    2.2
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -51,24 +51,17 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
     if(file_exists($filename)) {
         $print_paghiper_page = TRUE;
     } else {
-        if(is_writable($filename) || touch($filename)) {
 
-            if(0 == filesize( $filename )) {
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $asset_url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            
-                $rawdata = curl_exec($ch);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $asset_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_REFERER, $asset_url);
     
-                $fp = fopen($filename, 'w');
-                fwrite($fp, $rawdata);
-                fclose($fp);
-            }
-    
-            if(file_exists($filename)) {
-                $print_paghiper_page = TRUE;
-            }
+        $rawdata = curl_exec($ch);
+        $pdf_transaction = file_put_contents($filename, $rawdata);
 
+        if($pdf_transaction) {
+            $print_paghiper_page = TRUE;
         }
     }
 

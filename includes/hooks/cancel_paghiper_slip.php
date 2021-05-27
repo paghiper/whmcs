@@ -1,8 +1,14 @@
 <?php
 /**
  * Cancela boletos bancários não-pagos, atrelados a uma fatura cancelada ou paga.
- * @author     Henrique Cruz | henriquecruz.com.br
- * @copyright  Copyright (c) 2019 https://henriquecruz.com.br
+ * 
+ * @package    PagHiper para WHMCS
+ * @version    2.2
+ * @author     Equipe PagHiper https://github.com/paghiper/whmcs
+ * @author     Henrique Cruz
+ * @license    BSD License (3-clause)
+ * @copyright  (c) 2017-2021, PagHiper
+ * @link       https://www.paghiper.com/
  */
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
@@ -10,6 +16,7 @@ if (!defined("WHMCS")) die("This file cannot be accessed directly");
 function cancel_paghiper_slips($vars) {
 
 	//require_once ("../init.php");
+	require_once(dirname(__FILE__) . '/../../modules/gateways/paghiper/inc/helpers/gateway_functions.php');
 	$invoice_id = $vars['invoiceid'];
 
 	// Initialise gateway configuration
