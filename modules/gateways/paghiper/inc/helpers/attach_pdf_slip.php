@@ -27,6 +27,8 @@ $json_url = "{$whmcs_url}/modules/gateways/";
 $json_url .= ($is_pix) ? 'paghiper_pix.php' : 'paghiper.php';
 $json_url .= "?invoiceid=".$invoiceid."&uuid=".$clientsdetails['userid']."&mail=".$clientsdetails['email']."&json=1";
 
+$invoice_url = str_replace('&json=1', '', $json_url);
+
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $json_url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -117,7 +119,7 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
             $pdf->Ln(20);
             $pdf->SetX(60);
             $pdf->Image("{$assets_url}/ico_2-qr.png", 30, 65, 30, '', 'PNG');
-            $pdf->Multicell(120, 0, 'Escolha a opção Pagar com QR Code e escanele o código ao lado.', 0, 'L');
+            $pdf->Multicell(120, 0, 'Escolha a opção Pagar com QR Code e escanele o código abaixo.', 0, 'L');
             $pdf->Ln(20);
             $pdf->SetX(60);
             $pdf->StartTransform();
@@ -140,7 +142,10 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
 
             $pdf->SetFont('dejavusans', '', 8);
             $pdf->SetY(240);
-            $pdf->Multicell(0, 10, $emv, $border=0, $align='C');
+            $html = '<form method="post" action="'.$invoice_url.'" enctype="multipart/form-data">
+            <textarea cols="100" rows="3" name="text">'.$emv.'</textarea><br />
+            </form>';
+            $pdf->writeHTML($html, true, 0, true, 0);
             
             $pdf->SetY(260);
             $pdf->Multicell(0, 10, 'Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.
