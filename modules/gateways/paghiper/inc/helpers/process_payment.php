@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.2
+ * @version    2.2.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -480,13 +480,13 @@ if (!defined("WHMCS")) {
 
                             // Conciliação: Desconto por antecipação (Valor de balanço da Invoice - Valor total pago)
                             $desc = 'Desconto por pagamento antecipado';
-                            add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
+                            paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
 
                         } else {
 
                             // Conciliação: Juros e Multas = (Valor total pago - Valor contido na Invoice)
                             $desc = 'Juros e multa por atraso';
-                            add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
+                            paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
 
                         }
                     }
