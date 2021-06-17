@@ -3,7 +3,7 @@
  * Cancela boletos bancários não-pagos, atrelados a uma fatura cancelada ou paga.
  * 
  * @package    PagHiper para WHMCS
- * @version    2.2
+ * @version    2.2.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)
