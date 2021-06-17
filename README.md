@@ -51,6 +51,14 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Disponibilização de linha digitável no painel
 
+## 2.2.1 - 2021/06/17
+
+`Bugs resolvidos`
+
+* Código PIX com quebra de linha indesejada no PDF anexo
+* Crash ao marcar pedido como pago ou cancelado via painel
+* Conciliação (adição de taxa ou desconto a fatura) impedindo a baixa
+
 ## 2.2 - 2021/05/27
 
 `Melhorias implementadas`
