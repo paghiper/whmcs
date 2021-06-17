@@ -12,7 +12,8 @@
  */
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
-function display_pix_qr_code($vars) {
+
+function paghiper_display_pix_qr_code($vars) {
     $merge_fields = [];
     $email_template = $vars['messagename'];
     $invoice_id = $vars['relid'];
@@ -48,4 +49,5 @@ function display_pix_qr_code($vars) {
     }
     return $merge_fields;
 }
-add_hook('EmailPreSend', 1, "display_pix_qr_code");
+
+add_hook('EmailPreSend', 1, "paghiper_display_pix_qr_code");

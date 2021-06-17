@@ -13,7 +13,7 @@
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
 
-function cancel_paghiper_slips($vars) {
+function paghiper_cancel_paghiper_slips($vars) {
 
 	//require_once ("../init.php");
 	require_once(dirname(__FILE__) . '/../../modules/gateways/paghiper/inc/helpers/gateway_functions.php');
@@ -71,11 +71,11 @@ function cancel_paghiper_slips($vars) {
 
 			if($httpCode == 201) {
 				logTransaction($GATEWAY["name"],array('post' => $paghiper_data, 'json' => $json), "Boleto adicional cancelado com sucesso. Transação #{$transaction['transaction_id']}"); 
-				log_status_to_db('canceled', $transaction['transaction_id']);
+				paghiper_log_status_to_db('canceled', $transaction['transaction_id']);
 			} else {
 				// Logamos um erro pra controle
 				logTransaction($GATEWAY["name"],array('post' => $paghiper_data, 'json' => $json), "Não foi possível cancelar o boleto"); 
-				log_status_to_db('force_canceled', $transaction['transaction_id']);
+				paghiper_log_status_to_db('force_canceled', $transaction['transaction_id']);
 			}
 
 		}
@@ -84,6 +84,6 @@ function cancel_paghiper_slips($vars) {
 	return true;
 }
 
-//add_hook('AddInvoicePayment', 1, 'cancel_paghiper_slips');
-add_hook('InvoiceCancelled', 1, 'cancel_paghiper_slips');
-add_hook('InvoicePaid', 1, 'cancel_paghiper_slips');
+//add_hook('AddInvoicePayment', 1, 'paghiper_cancel_paghiper_slips');
+add_hook('InvoiceCancelled', 1, 'paghiper_cancel_paghiper_slips');
+add_hook('InvoicePaid', 1, 'paghiper_cancel_paghiper_slips');

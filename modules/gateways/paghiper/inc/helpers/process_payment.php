@@ -480,13 +480,13 @@ if (!defined("WHMCS")) {
 
                             // Conciliação: Desconto por antecipação (Valor de balanço da Invoice - Valor total pago)
                             $desc = 'Desconto por pagamento antecipado';
-                            add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
+                            paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
 
                         } else {
 
                             // Conciliação: Juros e Multas = (Valor total pago - Valor contido na Invoice)
                             $desc = 'Juros e multa por atraso';
-                            add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
+                            paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
 
                         }
                     }
