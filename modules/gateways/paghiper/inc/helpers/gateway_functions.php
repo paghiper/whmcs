@@ -496,7 +496,7 @@ function generate_paghiper_billet($invoice, $params) {
     }
 
     // Validate CPF/CNPJ
-    if(!paghiper_is_tax_id_valid($cpf_cnpj)) {
+    if(!paghiper_is_tax_id_valid($cpf) && !paghiper_is_tax_id_valid($cnpj)) {
         $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
         $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
         $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
@@ -543,7 +543,7 @@ function generate_paghiper_billet($invoice, $params) {
 
     // Checa se incluimos dados CPF ou CNPJ no post
     if((isset($cpf) && !empty($cpf) && $cpf != "on file") || (isset($cnpj) && !empty($cnpj) && $cnpj != "on file")) {
-        if(isset($cnpj) && !empty($cnpj)) {
+        if(isset($cnpj) && !empty($cnpj) && paghiper_is_tax_id_valid($cnpj)) {
             if(isset($companyname) && !empty($companyname)) {
                 $paghiper_data["payer_name"] = $companyname;
             }
