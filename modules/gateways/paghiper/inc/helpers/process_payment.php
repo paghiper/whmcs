@@ -176,7 +176,9 @@ if (!defined("WHMCS")) {
         $invoice_total = paghiper_apply_custom_taxes((float) $invoice['balance'], $GATEWAY);
 
         $transaction_type = ($is_pix) ? 'pix' : 'billet';
-        $sql = "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND slip_value = '{$invoice_total}' AND ('{$dataHoje}' <= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY) OR due_date <= '{$dataHoje}') ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
+        $sql = (!$is_pix) ? 
+            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND slip_value = '{$invoice_total}' AND ('{$dataHoje}' <= due_date OR '{$dataHoje}' <= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY)) ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1" : 
+            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND slip_value = '{$invoice_total}' AND '{$dataHoje}' <= due_date ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
         $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
 
         if(!empty($billet)) {

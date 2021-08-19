@@ -605,7 +605,7 @@ function generate_paghiper_billet($invoice, $params) {
         'early_payment_discounts_cents' => $discount_cents,
         'open_after_day_due'            => $gateway_settings['open_after_day_due'],
         'late_payment_fine'             => $gateway_settings['late_payment_fine'],
-        'open_after_day_due'            => $gateway_settings['open_after_day_due'],
+        'open_after_day_due'            => ($is_pix) ? 0 : $gateway_settings['open_after_day_due'],
     );
 
     foreach($additional_config_text as $k => $v) {
@@ -652,7 +652,7 @@ function generate_paghiper_billet($invoice, $params) {
         $url_slip_pdf 		        = ($is_pix) ? null : $json['create_request']['bank_slip']['url_slip_pdf'];
         $digitable_line 	        = ($is_pix) ? null : $json['create_request']['bank_slip']['digitable_line'];
         $bar_code_number_to_image   = ($is_pix) ? null : $json['create_request']['bank_slip']['bar_code_number_to_image'];
-		$open_after_day_due         = $gateway_settings['open_after_day_due'];
+		$open_after_day_due         = ($is_pix) ? 0 : $gateway_settings['open_after_day_due'];
 		
 		$qrcode_base64 		        = ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_base64'] : null;
 		$qrcode_image_url 	        = ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_image_url'] : null;
