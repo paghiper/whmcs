@@ -38,19 +38,15 @@ if (!defined("WHMCS")) {
 	$backup_admin = array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins LIMIT 1")));
 
     // Se o usuário admin estiver vazio nas configurações, usamos o padrão
-    $whmcsAdmin = (
-        (empty(trim($gateway_admin))) ? 
+    $whmcsAdmin = (empty(trim($gateway_admin))) ? 
 
         // Caso não tenha um valor para usarmos, pegamos o primeiro admin disponível na tabela
         $backup_admin : 
 
-            // Caso tenha, usamos o preenchido
-            (
-                empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$gateway_admin' LIMIT 1"))))) ?
-                $backup_admin :
-                trim($GATEWAY['admin']
-            )
-
+        // Caso tenha, usamos o preenchido
+        ( empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$gateway_admin' LIMIT 1"))))) ?
+            $backup_admin :
+            trim($GATEWAY['admin'] )
     );
 
     // Checamos se a tabela da PagHiper está pronta pra uso
