@@ -174,11 +174,20 @@ if (!defined("WHMCS")) {
         // Lógica: Checar se um boleto ja foi emitido pra essa fatura
         $order_id = $invoice['invoiceid'];
         $invoice_total = paghiper_apply_custom_taxes((float) $invoice['balance'], $GATEWAY);
+        $invoice_balance = $invoice_total;
+
+        foreach($invoice['items']['item'] as $invoice_key => $invoice_item) {
+
+            if($invoice_item['type'] == 'LateFee') {
+                $invoice_balance -= (float) $invoice_item['amount'];
+            }
+
+        }
 
         $transaction_type = ($is_pix) ? 'pix' : 'billet';
         $sql = (!$is_pix) ? 
-            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND slip_value = '{$invoice_total}' AND ('{$dataHoje}' <= due_date OR '{$dataHoje}' <= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY)) ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1" : 
-            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND slip_value = '{$invoice_total}' AND '{$dataHoje}' <= due_date ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
+            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') AND ('{$dataHoje}' <= due_date OR '{$dataHoje}' <= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY)) ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1" : 
+            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') AND '{$dataHoje}' <= due_date ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
         $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
 
         if(!empty($billet)) {
@@ -203,7 +212,7 @@ if (!defined("WHMCS")) {
             && $invoice['status'] == 'Unpaid'
         ) {
 
-            $sql = "SELECT * FROM mod_paghiper WHERE order_id = '$order_id' AND status = 'reserved' AND slip_value = '$invoice_total' ORDER BY due_date DESC LIMIT 1;";
+            $sql = "SELECT * FROM mod_paghiper WHERE order_id = '{$order_id}' AND status = 'reserved' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') ORDER BY due_date DESC LIMIT 1;";
             $reserved_billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
             if(!empty($reserved_billet)) {
 
