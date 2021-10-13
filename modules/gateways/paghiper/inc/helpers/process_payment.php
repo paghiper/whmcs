@@ -46,8 +46,7 @@ if (!defined("WHMCS")) {
         // Caso tenha, usamos o preenchido
         ( empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$gateway_admin' LIMIT 1"))))) ?
             $backup_admin :
-            trim($GATEWAY['admin'] )
-    );
+            trim($GATEWAY['admin'] );
 
     // Checamos se a tabela da PagHiper está pronta pra uso
     $custom_table = paghiper_check_table();
