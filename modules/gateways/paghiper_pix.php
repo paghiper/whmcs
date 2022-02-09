@@ -171,16 +171,31 @@ function paghiper_pix_link($params) {
 
     if($isValidTaxId) {
 
+        $client_details = [
+            'firstname' 	=> $params['clientdetails']['firstname'],
+            'lastname'		=> $params['clientdetails']['lastname'],
+            'companyname'	=> $params['clientdetails']['companyname'],
+            'email'		    => $params['clientdetails']['email'],
+            'phone'		    => $params['clientdetails']['phonenumber'],
+            'address1'		=> $params['clientdetails']['address1'],
+            'address2'		=> $params['clientdetails']['address2'],
+            'city'   		=> $params['clientdetails']['city'],
+            'state'   		=> $params['clientdetails']['state'],
+            'postcode'		=> $params['clientdetails']['postcode'],
+            'cpf_cnpj'		=> $clientTaxId
+        ];
+
         // Código do checkout
         $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
         <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}&pix=true\" method=\"post\">
-        <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/pix.jpg' title='Pagar com Pix' alt='Pagar com Pix' border='0' align='absbottom' width='120' height='74' /><br>
-        <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Pagar usando PIX</button>
-        <br> <br>
-        <div class='alert alert-warning' role='alert'>
-        Seu pagamento PIX está sendo gerado. Quando o pagamento for efetuado, a confirmação se dá imediatamente.
-        </div>
-        <!-- FIM DO BOLETO PAGHIPER -->
+            <input type=\"hidden\" name=\"client_data\" value='".json_encode($client_details)."'>    
+            <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/pix.jpg' title='Pagar com Pix' alt='Pagar com Pix' border='0' align='absbottom' width='120' height='74' /><br>
+            <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Pagar usando PIX</button>
+            <br> <br>
+            <div class='alert alert-warning' role='alert'>
+            Seu pagamento PIX está sendo gerado. Quando o pagamento for efetuado, a confirmação se dá imediatamente.
+            </div>
+            <!-- FIM DO BOLETO PAGHIPER -->
         </form>
         {$abrirAuto}";
         

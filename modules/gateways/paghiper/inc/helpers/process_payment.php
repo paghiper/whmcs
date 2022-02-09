@@ -288,11 +288,17 @@ if (!defined("WHMCS")) {
 
                 try {
 
-					$query_params = array(
-						'clientid' 	=> $invoice['userid'],
-						'stats'		=> false
-					);
-                    $client_details = localAPI('getClientsDetails', $query_params, $whmcsAdmin);
+                    // Checamos se os dados do cliente vem de um checkout ou do perfil do cliente.
+                    if( !empty($_POST) && json_decode($_POST['client_data']) ) {
+                        $client_details = json_decode($_POST['client_data']);
+                    } else {
+
+                        $query_params = array(
+                            'clientid' 	=> $invoice['userid'],
+                            'stats'		=> false
+                        );
+                        $client_details = localAPI('getClientsDetails', $query_params, $whmcsAdmin);
+                    }
                     
                     if(array_key_exists('currency_code', $client_details['client']) && ($client_details['client']['currency_code'] !== 'BRL' && $client_details['client']['currency_code'] !== 'R$')) {
                         $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';

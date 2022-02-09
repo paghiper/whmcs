@@ -215,29 +215,31 @@ function paghiper_link($params) {
 
     if($isValidTaxId) {
 
-        $client_details['firstname']	= $params['clientdetails']['firstname'];
-        $client_details['lastname']		= $params['clientdetails']['lastname'];
-        $client_details['companyname']	= $params['clientdetails']['companyname'];
-        $client_details['email']		= $params['clientdetails']['email'];
-        $client_details['phone']		= $params['clientdetails']['phonenumber'];
-        $client_details['address1']		= $params['clientdetails']['address1'];
-        $client_details['address2']		= $params['clientdetails']['address2'];
-        $client_details['city']   		= $params['clientdetails']['city'];
-        $client_details['state']   		= $params['clientdetails']['state'];
-        $client_details['postcode']		= $params['clientdetails']['postcode'];
-        $client_details['cpf_cnpj']		= $clientTaxId;
+        $client_details = [
+            'firstname' 	=> $params['clientdetails']['firstname'],
+            'lastname'		=> $params['clientdetails']['lastname'],
+            'companyname'	=> $params['clientdetails']['companyname'],
+            'email'		    => $params['clientdetails']['email'],
+            'phone'		    => $params['clientdetails']['phonenumber'],
+            'address1'		=> $params['clientdetails']['address1'],
+            'address2'		=> $params['clientdetails']['address2'],
+            'city'   		=> $params['clientdetails']['city'],
+            'state'   		=> $params['clientdetails']['state'],
+            'postcode'		=> $params['clientdetails']['postcode'],
+            'cpf_cnpj'		=> $clientTaxId
+        ];
 
         // Código do checkout
         $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
         <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}\" method=\"post\">
-            <input type=\"\" name=\"client_data\" value=\"\">
-        <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/billet.jpg' title='Pagar com Boleto' alt='Pagar com Boleto' border='0' align='absbottom' width='120' height='74' /><br>
-        <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
-        <br> <br>
-        <div class='alert alert-warning' role='alert'>
-        <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
-        </div>
-        <!-- FIM DO BOLETO PAGHIPER -->
+            <input type=\"hidden\" name=\"client_data\" value='".json_encode($client_details)."'>
+            <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/billet.jpg' title='Pagar com Boleto' alt='Pagar com Boleto' border='0' align='absbottom' width='120' height='74' /><br>
+            <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
+            <br> <br>
+            <div class='alert alert-warning' role='alert'>
+            <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
+            </div>
+            <!-- FIM DO BOLETO PAGHIPER --> 
         </form>
         {$abrirAuto}";
 

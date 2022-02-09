@@ -460,6 +460,7 @@ function generate_paghiper_billet($invoice, $params) {
 	$city   			= $params['client_data']['city'];
 	$state   			= $params['client_data']['state'];
 	$postcode			= $params['client_data']['postcode'];
+	$cpf_cnpj			= $params['client_data']['cpf_cnpj'];
 
 	// Data
 	$gateway_settings 	= $params['gateway_settings'];
@@ -471,28 +472,38 @@ function generate_paghiper_billet($invoice, $params) {
 	$invoice_id			= $invoice['invoiceid'];
 	$client_id 			= $invoice['userid'];
 
-    // Checamos se o campo é composto ou simples
-    if(strpos($cpfcnpj, '|')) {
-        // Se composto, pegamos ambos os campos
-        $fields = explode('|', $cpfcnpj);
+    if(empty($cpf_cnpj)) {
 
-        $i = 0;
+        // Checamos se o campo é composto ou simples
+        if(strpos($cpfcnpj, '|')) {
 
-        foreach($fields as $field) {
-            $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'"));
-            ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($result["value"])) : $cnpj = paghiper_convert_to_numeric(trim($result["value"]));
-            if($i == 1) { break; }
-            $i++;
+            // Se composto, pegamos ambos os campos
+            $fields = explode('|', $cpfcnpj);
+    
+            $i = 0;
+    
+            foreach($fields as $field) {
+                $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'"));
+                ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($result["value"])) : $cnpj = paghiper_convert_to_numeric(trim($result["value"]));
+                if($i == 1) { break; }
+                $i++;
+            }
+    
+        } else {
+
+            // Se simples, pegamos somente o que temos
+            $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'")))));
+        
         }
 
-    } else {
-        // Se simples, pegamos somente o que temos
-		$cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'")))));
-		if(strlen($cpf_cnpj) > 11) {
-			$cnpj = $cpf_cnpj;
-		} else {
-			$cpf = $cpf_cnpj;
-		}
+    }
+
+    if(empty($cpf) && !empty($cnpj)) {
+        if(strlen($cpf_cnpj) > 11) {
+            $cnpj = $cpf_cnpj;
+        } else {
+            $cpf = $cpf_cnpj;
+        }
     }
 
     // Validate CPF/CNPJ
