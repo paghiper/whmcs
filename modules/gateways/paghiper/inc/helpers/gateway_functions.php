@@ -709,7 +709,7 @@ function generate_paghiper_billet($invoice, $params) {
         
         echo paghiper_print_screen($ico, $title, $message);
 
-        logTransaction($GATEWAY["name"],array('json' => $json, 'post' => $_POST),"Não foi possível criar a transação.");
+        logTransaction($GATEWAY["name"],array('json' => $json, 'post' => $_POST, 'request' => $data_post),"Não foi possível criar a transação.");
         return false;
     }
  
