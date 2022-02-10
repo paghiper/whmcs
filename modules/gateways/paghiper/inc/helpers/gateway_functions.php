@@ -514,6 +514,7 @@ function generate_paghiper_billet($invoice, $params) {
         
         echo paghiper_print_screen($ico, $title, $message);
         logTransaction($gateway_settings["name"],array('tax_id' => (!empty($cnpj)) ? $cnpj : $cpf, 'invoice_id' => $invoice_id, 'exception' => 'Failed Paghiper TaxID validation'), sprintf("Número de CPF/CNPJ inválido! Não foi possível gerar o %s.", ($is_pix) ? 'PIX' : 'boleto'));
+        exit();
     }
 
 
@@ -686,6 +687,7 @@ function generate_paghiper_billet($invoice, $params) {
             
             echo paghiper_print_screen($ico, $title, $message);
             logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
+            exit();
         }
 
 
