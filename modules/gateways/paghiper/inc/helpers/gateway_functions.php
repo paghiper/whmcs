@@ -499,7 +499,7 @@ function generate_paghiper_billet($invoice, $params) {
 
     }
 
-    if(empty($cpf) && !empty($cnpj)) {
+    if(empty($cpf) && empty($cnpj)) {
         if(strlen($cpf_cnpj) > 11) {
             $cnpj = $cpf_cnpj;
         } else {

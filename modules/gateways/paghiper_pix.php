@@ -147,6 +147,7 @@ function paghiper_pix_link($params) {
 
     // Checamos o CPF/CNPJ novamente, para evitar problemas no checkout
     $taxIdFields = explode("|", $params['cpf_cnpj']);
+    $payerNameField = $params['razao_social'];
 
     $clientCustomFields = [];
     foreach($params["clientdetails"]["customfields"] as $key => $value){
@@ -176,13 +177,13 @@ function paghiper_pix_link($params) {
             'lastname'		=> $params['clientdetails']['lastname'],
             'companyname'	=> $params['clientdetails']['companyname'],
             'email'		    => $params['clientdetails']['email'],
-            'phone'		    => $params['clientdetails']['phonenumber'],
+            'phonenumber'	=> $params['clientdetails']['phonenumber'],
             'address1'		=> $params['clientdetails']['address1'],
             'address2'		=> $params['clientdetails']['address2'],
             'city'   		=> $params['clientdetails']['city'],
             'state'   		=> $params['clientdetails']['state'],
             'postcode'		=> $params['clientdetails']['postcode'],
-            'cpf_cnpj'		=> $clientTaxId
+            'cpf_cnpj'		=> $clientTaxId,
             'razao_social'  => $clientPayerName
         ];
 
