@@ -183,6 +183,7 @@ function paghiper_pix_link($params) {
             'state'   		=> $params['clientdetails']['state'],
             'postcode'		=> $params['clientdetails']['postcode'],
             'cpf_cnpj'		=> $clientTaxId
+            'razao_social'  => $clientPayerName
         ];
 
         // Código do checkout

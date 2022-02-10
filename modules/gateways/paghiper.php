@@ -191,6 +191,7 @@ function paghiper_link($params) {
 
     // Checamos o CPF/CNPJ novamente, para evitar problemas no checkout
     $taxIdFields = explode("|", $params['cpf_cnpj']);
+    $payerNameField = $params['razao_social'];
 
     $clientCustomFields = [];
     foreach($params["clientdetails"]["customfields"] as $key => $value){
@@ -210,6 +211,22 @@ function paghiper_link($params) {
         if(paghiper_is_tax_id_valid($clientTaxId)) {
             $isValidTaxId = true;
             break 1;
+        }
+    }
+
+    $code = '';
+
+    $isValidPayerName = true;
+    $clientPayerName = $clientCustomFields[$payerNameField];
+    foreach($clientTaxIds as $clientTaxId) {
+
+        $taxid_value = preg_replace('/\D/', '', $clientTaxId);
+
+        if(strlen( $taxid_value ) > 11 && empty($params['clientdetails']['companyname']) && empty($payerNameField) && empty($clientPayerName)) {
+            
+            $isValidPayerName = false;
+            $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'Razão social inválida, atualize seus dados cadastrais.');
+
         }
     }
 

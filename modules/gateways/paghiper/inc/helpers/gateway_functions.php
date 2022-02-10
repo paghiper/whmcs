@@ -461,6 +461,7 @@ function generate_paghiper_billet($invoice, $params) {
 	$state   			= $params['client_data']['state'];
 	$postcode			= $params['client_data']['postcode'];
 	$cpf_cnpj			= $params['client_data']['cpf_cnpj'];
+    $razaosocial_val    = $params['client_data']['razao_social'];
 
 	// Data
 	$gateway_settings 	= $params['gateway_settings'];
@@ -560,8 +561,12 @@ function generate_paghiper_billet($invoice, $params) {
                 $paghiper_data["payer_name"] = $companyname;
             }
 
-            if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
-                $razaosocial_val = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'"))));
+            if(empty($razaosocial_val)) {
+
+                if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
+                    $razaosocial_val = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'"))));
+                }
+
             }
             
             if(isset($razaosocial_val) && !empty($razaosocial_val) && strlen($razaosocial_val) > 5 ){
