@@ -147,6 +147,18 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             ),
             'Description' => 'Caso selecione não, boletos bancários e lihnas digitáveis serão selecionadas somente caso o cliente selecione "Boleto Bancário" (ou o nome que você configurar no primeiro campo de configuração) como método de pagamento padrão.',
         ),
+        "tax_id_validation" => array(
+            "FriendlyName" => "Validar campos de CPF/CNPJ no checkout?",
+            'Type' => 'dropdown',
+            'Options' => array(
+                'strict'        => 'Aceitar pedidos somente com CPF e CNPJ válidos',
+                'flexible_f'    => 'Aceitar pedidos, desde que CPF seja válido',
+                'flexible_j'    => 'Aceitar pedidos, desde que CNPJ seja válido',
+                'flexible'      => 'Aceitar pedidos com CPF ou CNPJ válidos, tanto faz',
+                '0'             => 'Não validar nenhum dos campos',
+            ),
+            'Description' => 'Caso selecione não, boletos bancários e lihnas digitáveis serão selecionadas somente caso o cliente selecione "Boleto Bancário" (ou o nome que você configurar no primeiro campo de configuração) como método de pagamento padrão.',
+        ),
         "admin" => array(
             "FriendlyName" => "Administrador atribuído",
             "Type" => "text",
@@ -179,7 +191,6 @@ function paghiper_link($params) {
     $systemurl = rtrim($params['systemurl'],"/");
     $urlRetorno = $systemurl.'/modules/gateways/'.basename(__FILE__);
 
-    
     // Abrir o boleto automaticamente ao abrir a fatura 
     if($params['abrirauto'] == true):
         $target = '';
@@ -237,31 +248,36 @@ function paghiper_link($params) {
             'lastname'		=> $params['clientdetails']['lastname'],
             'companyname'	=> $params['clientdetails']['companyname'],
             'email'		    => $params['clientdetails']['email'],
-            'phone'		    => $params['clientdetails']['phonenumber'],
+            'phonenumber'	=> $params['clientdetails']['phonenumber'],
             'address1'		=> $params['clientdetails']['address1'],
             'address2'		=> $params['clientdetails']['address2'],
             'city'   		=> $params['clientdetails']['city'],
             'state'   		=> $params['clientdetails']['state'],
             'postcode'		=> $params['clientdetails']['postcode'],
-            'cpf_cnpj'		=> $clientTaxId
+            'cpf_cnpj'		=> $clientTaxId,
+            'razao_social'  => $clientPayerName
         ];
 
-        // Código do checkout
-        $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
-        <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}\" method=\"post\">
-            <input type=\"hidden\" name=\"client_data\" value='".json_encode($client_details)."'>
-            <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/billet.jpg' title='Pagar com Boleto' alt='Pagar com Boleto' border='0' align='absbottom' width='120' height='74' /><br>
-            <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
-            <br> <br>
-            <div class='alert alert-warning' role='alert'>
-            <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
-            </div>
-            <!-- FIM DO BOLETO PAGHIPER --> 
-        </form>
-        {$abrirAuto}";
+        if($isValidPayerName) {
+            // Código do checkout
+            $code .= "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
+            <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}\" method=\"post\">
+                <input type=\"hidden\" name=\"client_data\" value='".json_encode($client_details)."'>
+                <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/billet.jpg' title='Pagar com Boleto' alt='Pagar com Boleto' border='0' align='absbottom' width='120' height='74' /><br>
+                <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
+                <br> <br>
+                <div class='alert alert-warning' role='alert'>
+                <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
+                </div>
+                <!-- FIM DO BOLETO PAGHIPER --> 
+            </form>
+            {$abrirAuto}";
+        } else {
+            $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
+        }
 
     } else {
-        $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
+        $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
     }
     
    return $code; 

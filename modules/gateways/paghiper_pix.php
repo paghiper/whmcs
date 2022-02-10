@@ -170,6 +170,22 @@ function paghiper_pix_link($params) {
         }
     }
 
+    $code = '';
+
+    $isValidPayerName = true;
+    $clientPayerName = $clientCustomFields[$payerNameField];
+    foreach($clientTaxIds as $clientTaxId) {
+
+        $taxid_value = preg_replace('/\D/', '', $clientTaxId);
+
+        if(strlen( $taxid_value ) > 11 && empty($params['clientdetails']['companyname']) && empty($payerNameField) && empty($clientPayerName)) {
+            
+            $isValidPayerName = false;
+            $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'Razão social inválida, atualize seus dados cadastrais.');
+
+        }
+    }
+
     if($isValidTaxId) {
 
         $client_details = [
@@ -187,22 +203,26 @@ function paghiper_pix_link($params) {
             'razao_social'  => $clientPayerName
         ];
 
-        // Código do checkout
-        $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
-        <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}&pix=true\" method=\"post\">
-            <input type=\"hidden\" name=\"client_data\" value='".json_encode($client_details)."'>    
-            <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/pix.jpg' title='Pagar com Pix' alt='Pagar com Pix' border='0' align='absbottom' width='120' height='74' /><br>
-            <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Pagar usando PIX</button>
-            <br> <br>
-            <div class='alert alert-warning' role='alert'>
-            Seu pagamento PIX está sendo gerado. Quando o pagamento for efetuado, a confirmação se dá imediatamente.
-            </div>
-            <!-- FIM DO BOLETO PAGHIPER -->
-        </form>
-        {$abrirAuto}";
+        if($isValidPayerName) {
+            // Código do checkout
+            $code .= "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
+            <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}&pix=true\" method=\"post\">
+                <input type=\"hidden\" name=\"client_data\" value='".json_encode($client_details)."'>    
+                <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/pix.jpg' title='Pagar com Pix' alt='Pagar com Pix' border='0' align='absbottom' width='120' height='74' /><br>
+                <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Pagar usando PIX</button>
+                <br> <br>
+                <div class='alert alert-warning' role='alert'>
+                Seu pagamento PIX está sendo gerado. Quando o pagamento for efetuado, a confirmação se dá imediatamente.
+                </div>
+                <!-- FIM DO BOLETO PAGHIPER -->
+            </form>
+            {$abrirAuto}";
+        } else {
+            $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
+        }
         
     } else {
-        $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
+        $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
     }
     
    return $code; 
