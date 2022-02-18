@@ -3,7 +3,7 @@
  * Adiciona boleto bancário como página adicional na fatura anexa no WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.1
+ * @version    2.2.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -26,6 +26,8 @@ $assets_url = "{$whmcs_url}/modules/gateways/paghiper/assets/img";
 $json_url = "{$whmcs_url}/modules/gateways/";
 $json_url .= ($is_pix) ? 'paghiper_pix.php' : 'paghiper.php';
 $json_url .= "?invoiceid=".$invoiceid."&uuid=".$clientsdetails['userid']."&mail=".$clientsdetails['email']."&json=1";
+
+$invoice_url = str_replace('&json=1', '', $json_url);
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $json_url);
@@ -51,24 +53,17 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
     if(file_exists($filename)) {
         $print_paghiper_page = TRUE;
     } else {
-        if(is_writable($filename) || touch($filename)) {
 
-            if(0 == filesize( $filename )) {
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $asset_url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            
-                $rawdata = curl_exec($ch);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $asset_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_REFERER, $asset_url);
     
-                $fp = fopen($filename, 'w');
-                fwrite($fp, $rawdata);
-                fclose($fp);
-            }
-    
-            if(file_exists($filename)) {
-                $print_paghiper_page = TRUE;
-            }
+        $rawdata = curl_exec($ch);
+        $pdf_transaction = file_put_contents($filename, $rawdata);
 
+        if($pdf_transaction) {
+            $print_paghiper_page = TRUE;
         }
     }
 
@@ -124,7 +119,7 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
             $pdf->Ln(20);
             $pdf->SetX(60);
             $pdf->Image("{$assets_url}/ico_2-qr.png", 30, 65, 30, '', 'PNG');
-            $pdf->Multicell(120, 0, 'Escolha a opção Pagar com QR Code e escanele o código ao lado.', 0, 'L');
+            $pdf->Multicell(120, 0, 'Escolha a opção Pagar com QR Code e escanele o código abaixo.', 0, 'L');
             $pdf->Ln(20);
             $pdf->SetX(60);
             $pdf->StartTransform();
@@ -147,7 +142,10 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
 
             $pdf->SetFont('dejavusans', '', 8);
             $pdf->SetY(240);
-            $pdf->Multicell(0, 10, $emv, $border=0, $align='C');
+            $html = '<form method="post" action="'.$invoice_url.'" enctype="multipart/form-data">
+            <textarea cols="100" rows="3" name="text">'.$emv.'</textarea><br />
+            </form>';
+            $pdf->writeHTML($html, true, 0, true, 0);
             
             $pdf->SetY(260);
             $pdf->Multicell(0, 10, 'Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.

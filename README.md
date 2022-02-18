@@ -33,7 +33,7 @@ Na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure p
 
 8. Adicione o texto abaixo no arquivo invoicepdf.tpl do seu tema, para anexar boletos e códigos PIX ao PDF das faturas (opcional)
 
-```<?php require_once(dirname(__FILE__).'/../../modules/gateways/paghiper/inc/helpers/attach_pdf_slip.php'); ?>```
+```<?php include dirname(__FILE__).'/../../modules/gateways/paghiper/inc/helpers/attach_pdf_slip.php'; ?>```
 
 9. Para inserir código PIX e linha digitável de boletos, edite seu template de e-mail em Opções (Setup) > Modelos de e-mail (E-mail templates). Você pode usar dois campos de mesclagens, um para boleto e outro para PIX, respectivamente: {$linha_digitavel} e {$codigo_pix}. Basta inserí-los nos templates de comunicação de e-mail nos locais desejados.
 
@@ -50,6 +50,38 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 ## Disponíveis em alguns dias:
 
 * Disponibilização de linha digitável no painel
+
+## 2.2.1 - 2021/06/17
+
+`Bugs resolvidos`
+
+* Código PIX com quebra de linha indesejada no PDF anexo
+* Crash ao marcar pedido como pago ou cancelado via painel
+* Conciliação (adição de taxa ou desconto a fatura) impedindo a baixa
+
+## 2.2 - 2021/05/27
+
+`Melhorias implementadas`
+
+* Checagem e validação de CPF/CNPJ no checkout, na página de invoice e na tela de boleto/PIX
+* Exibição das tags de boleto/PIX no editor de templates de e-mail
+* Suporte a campo de razão social (opcional)
+* Melhor lógica de reaproveitamento de boletos
+* Mais informações nos logs
+* Melhor manipulação de CPF/CNPJ para criação de faturas
+* Tela de erro, caso o o valor com desconto por pagto. antecipado seja menor que R$ 3
+* Tela de erro genérica (evita tela branca, caso uma transação não possa ser gerada)
+
+`Bugs resolvidos`
+
+* Boletos vencidos eram ignorados, ainda que dentro do período de tolerância
+* Erro ao cancelar boletos nos logs
+* Bloco de inserção de boleto/PIX PDF era executado apenas na primeira fatura da CRON (mod_lsapi)
+* Melhor cálculo de desconto para pagto. antecipado
+* Maior dinstinção entre as mensagens (evita confusão no front-end)
+* Melhor convenção de naming de funções (evita conflitos com outros módulos/gateways)
+* Warning de operador ternário removido
+
 
 ## 2.1 - 2020/12/18
 
