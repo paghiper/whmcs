@@ -1,7 +1,7 @@
 <?php
 /**
  * PagHiper - Módulo oficial para integração com WHMCS
- * 
+ *
  * @package    PagHiper para WHMCS
  * @version    2.2.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
@@ -31,7 +31,7 @@ function paghiper_get_customfield_id() {
     } else {
         return '<br><br>Nenhum campo possível foi encontrado! Por favor <strong><a href="https://github.com/paghiper/whmcs/wiki/Criando-o-campo-de-CPF-CNPJ" target="_blank">acesse o tutorial clicando aqui</a></strong> e veja como pode criar o campo.';
     }
-    
+
 }
 
 function paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin) {
@@ -173,7 +173,7 @@ function paghiper_is_valid_cnpj( $cnpj ) {
 }
 
 function paghiper_check_if_subaccount($user_id, $email, $invoice_userid) {
-    $query = "SELECT userid, id, email, permissions, invoiceemails FROM tblcontacts WHERE userid = '$user_id' AND email = '$email' LIMIT 1"; 
+    $query = "SELECT userid, id, email, permissions, invoiceemails FROM tblcontacts WHERE userid = '$user_id' AND email = '$email' LIMIT 1";
     $result = mysql_query($query);
     $user = mysql_fetch_array($result);
 
@@ -236,7 +236,7 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
         </head>
 
         <body>
-        <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,600' rel='stylesheet'> 
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,600' rel='stylesheet'>
 
         <div class='container'>
           <div>
@@ -245,15 +245,15 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
                     <img {$ico_style} src='{$img_url}'>
                     {$upper_instructions}
                 </div>
-                
+
                 {$lateral_instructions}
             </div>
 
             {$lower_instructions}
-            
+
             {$title}
             {$message}
-            
+
           </div>
         </div>
 
@@ -441,10 +441,10 @@ return $code;
 function generate_paghiper_billet($invoice, $params) {
 
     global $return_json, $is_pix;
-	
+
 	// Prepare variables that we'll be using during the process
 	$postData    = array();
-	
+
 	// Data received from the invoice
 	$total 				= $invoice['balance'];
 	$due_date 			= $params['due_date'];
@@ -500,7 +500,7 @@ function generate_paghiper_billet($invoice, $params) {
         $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
         $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
         $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
-        
+
         echo paghiper_print_screen($ico, $title, $message);
         logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
     }
@@ -508,7 +508,7 @@ function generate_paghiper_billet($invoice, $params) {
 
     // Aplicamos as taxas do gateway sobre o total
     $total = paghiper_apply_custom_taxes($total, $gateway_settings, $params);
-    
+
     // Preparate data to send
     $paghiper_data = array(
        "apiKey"                         => $gateway_settings['api_key'],
@@ -551,7 +551,7 @@ function generate_paghiper_billet($invoice, $params) {
             if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
                 $razaosocial_val = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'"))));
             }
-            
+
             if(isset($razaosocial_val) && !empty($razaosocial_val) && strlen($razaosocial_val) > 5 ){
                 $paghiper_data["payer_name"] =  $razaosocial_val;
             }
@@ -584,7 +584,7 @@ function generate_paghiper_billet($invoice, $params) {
             $paghiper_data[$k] = FALSE;
         }
     }
-    
+
     $discount_config = (!empty($gateway_settings['early_payment_discounts_cents'])) ? (float) trim(str_replace(['%', ','], ['', '.'], $gateway_settings['early_payment_discounts_cents']), 0) : '';
     $discount_value = (!empty($discount_config)) ? $total * (($discount_config > 99) ? 99 / 100 : $discount_config / 100) : '';
     $discount_cents = (!empty($discount_value)) ? paghiper_convert_to_numeric(number_format($discount_value, 2, '.', '' )) : 0;
@@ -653,7 +653,7 @@ function generate_paghiper_billet($invoice, $params) {
         $digitable_line 	        = ($is_pix) ? null : $json['create_request']['bank_slip']['digitable_line'];
         $bar_code_number_to_image   = ($is_pix) ? null : $json['create_request']['bank_slip']['bar_code_number_to_image'];
 		$open_after_day_due         = $gateway_settings['open_after_day_due'];
-		
+
 		$qrcode_base64 		        = ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_base64'] : null;
 		$qrcode_image_url 	        = ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_image_url'] : null;
 		$emv 				        = ($is_pix) ? $json['pix_create_request']['pix_code']['emv'] : null;
@@ -672,7 +672,7 @@ function generate_paghiper_billet($invoice, $params) {
             $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
             $title = 'Ops! Não foi possível emitir o '.(($is_pix) ? 'boleto bancário' : 'PIX').'.';
             $message = 'Por favor entre em contato com o suporte. Erro 0x004681';
-            
+
             echo paghiper_print_screen($ico, $title, $message);
             logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
         }
@@ -682,7 +682,7 @@ function generate_paghiper_billet($invoice, $params) {
             header('Content-Type: application/json');
             return ($is_pix) ? json_encode($json['pix_create_request']) : json_encode($json['create_request']);
         }
-        
+
         if(!empty($qrcode_image_url)) {
             return paghiper_print_screen($qrcode_image_url, null, null, array('is_pix' => true, 'invoice_id' => $order_id, 'payment_value' => $slip_value, 'pix_emv' => $emv));
         } else {
@@ -695,13 +695,13 @@ function generate_paghiper_billet($invoice, $params) {
         $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
         $title = 'Ops! Não foi possível emitir o '.(($is_pix) ? 'boleto bancário' : 'PIX').'.';
         $message = 'Por favor entre em contato com o suporte. Erro 0x004682';
-        
+
         echo paghiper_print_screen($ico, $title, $message);
 
         logTransaction($GATEWAY["name"],array('json' => $json, 'post' => $_POST),"Não foi possível criar a transação.");
         return false;
     }
- 
+
 }
 
 function paghiper_check_table() {
@@ -784,11 +784,11 @@ function create_paghiper_table() {
 
 /**
  * Valida o número de CPF offline
- * 
+ *
  * @param string $cpf
- * 
+ *
  * @return bool $result
- * 
+ *
  */
 function paghiper_valida_cpf($cpf) {
     // Extrai somente os números
@@ -819,11 +819,11 @@ function paghiper_valida_cpf($cpf) {
 
 /**
  * Valida o número de CNPJ offline
- * 
+ *
  * @param string $cnpj
- * 
+ *
  * @return bool $result
- * 
+ *
  */
 function paghiper_valida_cnpj($cnpj) {
     // Verifica se um número foi informado
@@ -840,17 +840,17 @@ function paghiper_valida_cnpj($cnpj) {
         return false;
     }
 
-    // Verifica se nenhuma das sequências invalidas abaixo 
+    // Verifica se nenhuma das sequências invalidas abaixo
     // foi digitada. Caso afirmativo, retorna falso
     else {
         if ($cnpj == '00000000000000' ||
-		$cnpj == '11111111111111' || 
-		$cnpj == '22222222222222' || 
-		$cnpj == '33333333333333' || 
-		$cnpj == '44444444444444' || 
-		$cnpj == '55555555555555' || 
-		$cnpj == '66666666666666' || 
-		$cnpj == '77777777777777' || 
+		$cnpj == '11111111111111' ||
+		$cnpj == '22222222222222' ||
+		$cnpj == '33333333333333' ||
+		$cnpj == '44444444444444' ||
+		$cnpj == '55555555555555' ||
+		$cnpj == '66666666666666' ||
+		$cnpj == '77777777777777' ||
 		$cnpj == '88888888888888' ||
 		$cnpj == '99999999999999') {
             return false;
