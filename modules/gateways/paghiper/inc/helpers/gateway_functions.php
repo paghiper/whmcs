@@ -495,16 +495,30 @@ function generate_paghiper_billet($invoice, $params) {
 		}
     }
 
-    // Validate CPF/CNPJ
-    if(!paghiper_is_tax_id_valid($cpf_cnpj)) {
-        $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-        $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
-        $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
+    $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+    $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
+    $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
 
+    // Se ambos os campos estão vazios.
+    if (empty($cpf) && empty($cnpj)) {
+        $title .= 'ambos inválidos';
         echo paghiper_print_screen($ico, $title, $message);
         logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
-    }
+    } else {
+        // Se o CPF foi informado e é inválido.
+        if (!empty($cpf) && !paghiper_is_valid_cpf($cpf)) {
+            $title .= 'cpf inválidos';
+            echo paghiper_print_screen($ico, $title, $message);
+            logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
+        }
 
+        // Se o CNPJ foi informado e é inválido.
+        if (!empty($cnpj) && !paghiper_is_valid_cnpj($cnpj)) {
+            $title .= 'cnpj inválidos';
+            echo paghiper_print_screen($ico, $title, $message);
+            logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
+        }
+    }
 
     // Aplicamos as taxas do gateway sobre o total
     $total = paghiper_apply_custom_taxes($total, $gateway_settings, $params);
