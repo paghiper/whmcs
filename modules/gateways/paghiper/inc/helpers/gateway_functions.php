@@ -497,7 +497,11 @@ function generate_paghiper_billet($invoice, $params) {
 
     $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
     $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
-    $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
+    $message = <<<HTML
+        Número de CPF/CNPJ inválido! Por favor <a href="/clientarea.php?action=details">atualize seus dados</a>
+        ou entre em contato com o suporte.
+
+    HTML;
 
     // Se ambos os campos estão vazios.
     if (empty($cpf) && empty($cnpj)) {
