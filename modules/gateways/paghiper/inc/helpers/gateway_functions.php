@@ -505,20 +505,17 @@ function generate_paghiper_billet($invoice, $params) {
 
     // Se ambos os campos estão vazios.
     if (empty($cpf) && empty($cnpj)) {
-        $title .= 'ambos inválidos';
         echo paghiper_print_screen($ico, $title, $message);
         logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
     } else {
         // Se o CPF foi informado e é inválido.
         if (!empty($cpf) && !paghiper_is_valid_cpf($cpf)) {
-            $title .= 'cpf inválidos';
             echo paghiper_print_screen($ico, $title, $message);
             logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
         }
 
         // Se o CNPJ foi informado e é inválido.
         if (!empty($cnpj) && !paghiper_is_valid_cnpj($cnpj)) {
-            $title .= 'cnpj inválidos';
             echo paghiper_print_screen($ico, $title, $message);
             logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
         }
