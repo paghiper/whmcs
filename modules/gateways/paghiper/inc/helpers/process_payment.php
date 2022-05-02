@@ -365,6 +365,37 @@ if (!defined("WHMCS")) {
         $billet = mysql_fetch_array(mysql_query("SELECT * FROM mod_paghiper WHERE transaction_id = '$transaction_id' ORDER BY due_date DESC LIMIT 1;"), MYSQL_ASSOC);
         $order_id = (empty($billet)) ? $_POST['idPlataforma'] : $billet['order_id'];
 
+        // Resolvemos disputas entre notifications enviadas simultaneamente
+        $request_bytes  = openssl_random_pseudo_bytes(16, $is_strong);
+        $request_id     = bin2hex($request_bytes);
+
+        $lock_id = paghiper_write_lock_id($request_id, $transaction_id);
+        if(!$lock_id || !$is_strong) {
+            $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+            $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
+            $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
+            
+            echo paghiper_print_screen($ico, $title, $message);
+            logTransaction($gateway_settings["name"],array('tax_id' => (!empty($cnpj)) ? $cnpj : $cpf, 'invoice_id' => $invoice_id, 'exception' => 'Failed to write Paghiper LockID'), sprintf("Não foi possível associar o ID de requisição ao %s.", ($is_pix) ? 'PIX' : 'boleto'));
+            exit();
+        }
+
+        sleep(3);
+
+        $current_lock_id = paghiper_get_lock_id($transaction_id);
+
+        if(!$current_lock_id || ($current_lock_id !== $request_id)) {
+            $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+            $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
+            $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
+            
+            echo paghiper_print_screen($ico, $title, $message);
+            logTransaction($gateway_settings["name"],array('tax_id' => (!empty($cnpj)) ? $cnpj : $cpf, 'invoice_id' => $invoice_id, 'exception' => 'Failed to write Paghiper LockID'), sprintf("O ID de requesição associado %s não é desta sessão.", ($is_pix) ? 'PIX' : 'boleto'));
+            exit();
+        } else {
+            paghiper_write_lock_id(NULL, $transaction_id);
+        }
+
         // Agora vamos buscar o status da transação diretamente na PagHiper, usando a API.
         $url = ($is_pix) ? "https://pix.paghiper.com/invoice/notification/" : "https://api.paghiper.com/transaction/notification/";
         $data_post = json_encode( $paghiper_data );

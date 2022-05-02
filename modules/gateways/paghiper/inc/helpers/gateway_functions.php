@@ -60,6 +60,25 @@ function paghiper_log_status_to_db($status, $transaction_id) {
     return true;
 }
 
+function paghiper_write_lock_id($lock_id, $transaction_id) {
+
+    $update = mysql_query("UPDATE mod_paghiper SET lock_id = '$lock_id' WHERE transaction_id = '$transaction_id';");
+    if(!$update) {
+        return false;
+    }
+    return true;
+}
+
+function paghiper_get_lock_id($transaction_id) {
+
+    $result = mysql_fetch_array(mysql_query("SELECT * FROM mod_paghiper WHERE transaction_id = '$transaction_id';"));
+    if (!$result) {
+        return false;
+    }
+
+    return $result['lock_id'];
+}
+
 function paghiper_fetch_remote_url($url) {
 
     $ch = curl_init();
@@ -752,6 +771,14 @@ function paghiper_check_table() {
             }
         }
 
+        $lock_id = full_query("SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'lock_id'");
+        if(mysql_num_rows($lock_id) == 0) {
+            $alter_table = full_query("ALTER TABLE `mod_paghiper` ADD COLUMN lock_id varchar(64) DEFAULT NULL AFTER bacen_url;");
+            if(!$alter_table) {
+                logTransaction($GATEWAY["name"],$_POST,"Não foi possível atualizar o banco de dados da Paghiper para a versão 1.4. Por favor cheque se o usuário MySQL tem permissões para alterar a tabela mod_paghiper");
+            }
+        }
+
 
     } else {
         create_paghiper_table();
@@ -787,6 +814,7 @@ function create_paghiper_table() {
 		  `emv` varchar(255) DEFAULT NULL,
 		  `pix_url` varchar(255) DEFAULT NULL,
 		  `bacen_url` varchar(255) DEFAULT NULL,
+		  `lock_id` varchar(64) DEFAULT NULL,
           PRIMARY KEY (`id`),
           KEY `transaction_id` (`transaction_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
