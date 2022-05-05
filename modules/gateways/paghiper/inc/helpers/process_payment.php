@@ -385,6 +385,23 @@ if (!defined("WHMCS")) {
         $current_lock_id = paghiper_get_lock_id($transaction_id);
 
         if(!$current_lock_id || ($current_lock_id !== $request_id)) {
+
+            // Função que vamos usar na localAPI
+            $addtransaction = "addtransaction";
+            $transaction_suffix = '-Baixa-Duplicada-Evitada';
+
+            // Log transaction
+            $addtransvalues['userid'] = $results['userid'];
+            $addtransvalues['invoiceid'] = $order_id;
+            $addtransvalues['description'] = 'A nova versão do módulo resolveu com sucesso uma disputa de notificações de baixa simultâneas';
+            $addtransvalues['amountin'] = '0.00';
+            $addtransvalues['fees'] = '0.00';
+            $addtransvalues['paymentmethod'] = $gateway_code;
+            $addtransvalues['transid'] = $transaction_id . $transaction_suffix;
+            $addtransvalues['date'] = date('d/m/Y');
+            $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
+
+
             $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
             $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
             $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
