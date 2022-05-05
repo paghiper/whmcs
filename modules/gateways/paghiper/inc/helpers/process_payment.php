@@ -376,7 +376,7 @@ if (!defined("WHMCS")) {
             $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
             
             echo paghiper_print_screen($ico, $title, $message);
-            logTransaction($gateway_settings["name"],array('tax_id' => (!empty($cnpj)) ? $cnpj : $cpf, 'invoice_id' => $invoice_id, 'exception' => 'Failed to write Paghiper LockID'), sprintf("Não foi possível associar o ID de requisição ao %s.", ($is_pix) ? 'PIX' : 'boleto'));
+            logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'Failed to write Paghiper LockID'), sprintf("Não foi possível associar o ID de requisição ao %s.", ($is_pix) ? 'PIX' : 'boleto'));
             exit();
         }
 
@@ -407,7 +407,7 @@ if (!defined("WHMCS")) {
             $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
             
             echo paghiper_print_screen($ico, $title, $message);
-            logTransaction($gateway_settings["name"],array('tax_id' => (!empty($cnpj)) ? $cnpj : $cpf, 'invoice_id' => $invoice_id, 'exception' => 'Failed to write Paghiper LockID'), sprintf("O ID de requesição associado %s não é desta sessão.", ($is_pix) ? 'PIX' : 'boleto'));
+            logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'LockID doesn\'t match this request'), sprintf("O ID de requesição associado %s não é desta sessão.", ($is_pix) ? 'PIX' : 'boleto'));
             exit();
         } else {
             paghiper_write_lock_id(NULL, $transaction_id);
