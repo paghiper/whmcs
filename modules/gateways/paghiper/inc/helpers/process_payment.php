@@ -372,8 +372,8 @@ if (!defined("WHMCS")) {
         $lock_id = paghiper_write_lock_id($request_id, $transaction_id);
         if(!$lock_id || !$is_strong) {
             $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
-            $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
+            $title = 'Ops! Não foi possível processar a baixa do '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
+            $message = 'Não foi possível associar o Request ID a transação sendo processada.';
             
             echo paghiper_print_screen($ico, $title, $message);
             logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'Failed to write Paghiper LockID'), sprintf("Não foi possível associar o ID de requisição ao %s.", ($is_pix) ? 'PIX' : 'boleto'));
@@ -387,7 +387,7 @@ if (!defined("WHMCS")) {
         if(!$current_lock_id || ($current_lock_id !== $request_id)) {
 
             // Função que vamos usar na localAPI
-            $addtransaction = "addtransaction";
+            /*$addtransaction = "addtransaction";
             $transaction_suffix = '-Baixa-Duplicada-Evitada';
 
             // Log transaction
@@ -399,14 +399,14 @@ if (!defined("WHMCS")) {
             $addtransvalues['paymentmethod'] = $gateway_code;
             $addtransvalues['transid'] = $transaction_id . $transaction_suffix;
             $addtransvalues['date'] = date('d/m/Y');
-            $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
+            $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);*/
 
             $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
             $title = 'Ops! Ação não permitida.';
             $message = 'O thread ID desta notificação não está autorizado a ser processado.';
             
             echo paghiper_print_screen($ico, $title, $message);
-            logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'LockID doesn\'t match this request'), sprintf("O ID de requesição associado %s não é desta sessão. \n\nThread ID: %s\nLock: %s", (($is_pix) ? 'PIX' : 'boleto'), $request_id, $current_lock_id));
+            logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'Thread ID error (0x004682)'), sprintf("O ID de requesição associado %s não é desta sessão. Erro 0x004682 \n\nThread ID: %s\nLock: %s", (($is_pix) ? 'PIX' : 'boleto'), $request_id, $current_lock_id));
             exit();
         } else {
             paghiper_write_lock_id(NULL, $transaction_id);
