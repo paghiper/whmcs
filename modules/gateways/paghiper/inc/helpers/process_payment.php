@@ -401,13 +401,12 @@ if (!defined("WHMCS")) {
             $addtransvalues['date'] = date('d/m/Y');
             $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
 
-
             $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
-            $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
+            $title = 'Ops! Ação não permitida.';
+            $message = 'O thread ID desta notificação não está autorizado a ser processado.';
             
             echo paghiper_print_screen($ico, $title, $message);
-            logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'LockID doesn\'t match this request'), sprintf("O ID de requesição associado %s não é desta sessão.", ($is_pix) ? 'PIX' : 'boleto'));
+            logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'LockID doesn\'t match this request'), sprintf("O ID de requesição associado %s não é desta sessão. \n\nThread ID: %s\nLock: %s", (($is_pix) ? 'PIX' : 'boleto'), $request_id, $current_lock_id));
             exit();
         } else {
             paghiper_write_lock_id(NULL, $transaction_id);
