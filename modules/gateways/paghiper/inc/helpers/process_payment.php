@@ -365,51 +365,54 @@ if (!defined("WHMCS")) {
         $billet = mysql_fetch_array(mysql_query("SELECT * FROM mod_paghiper WHERE transaction_id = '$transaction_id' ORDER BY due_date DESC LIMIT 1;"), MYSQL_ASSOC);
         $order_id = (empty($billet)) ? $_POST['idPlataforma'] : $billet['order_id'];
 
-        // Resolvemos disputas entre notifications enviadas simultaneamente
-        $request_bytes  = openssl_random_pseudo_bytes(16, $is_strong);
-        $request_id     = bin2hex($request_bytes);
+        if (!empty($_POST)) {
 
-        $lock_id = paghiper_write_lock_id($request_id, $transaction_id);
-        if(!$lock_id || !$is_strong) {
-            $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Ops! Não foi possível processar a baixa do '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
-            $message = 'Não foi possível associar o Request ID a transação sendo processada.';
-            
-            echo paghiper_print_screen($ico, $title, $message);
-            logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'Failed to write Paghiper LockID'), sprintf("Não foi possível associar o ID de requisição ao %s.", ($is_pix) ? 'PIX' : 'boleto'));
-            exit();
-        }
-
-        sleep(3);
-
-        $current_lock_id = paghiper_get_lock_id($transaction_id);
-
-        if(!$current_lock_id || ($current_lock_id !== $request_id)) {
-
-            // Função que vamos usar na localAPI
-            /*$addtransaction = "addtransaction";
-            $transaction_suffix = '-Baixa-Duplicada-Evitada';
-
-            // Log transaction
-            $addtransvalues['userid'] = $results['userid'];
-            $addtransvalues['invoiceid'] = $order_id;
-            $addtransvalues['description'] = 'A nova versão do módulo resolveu com sucesso uma disputa de notificações de baixa simultâneas';
-            $addtransvalues['amountin'] = '0.00';
-            $addtransvalues['fees'] = '0.00';
-            $addtransvalues['paymentmethod'] = $gateway_code;
-            $addtransvalues['transid'] = $transaction_id . $transaction_suffix;
-            $addtransvalues['date'] = date('d/m/Y');
-            $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);*/
-
-            $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Ops! Ação não permitida.';
-            $message = 'O thread ID desta notificação não está autorizado a ser processado.';
-            
-            echo paghiper_print_screen($ico, $title, $message);
-            logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'Thread ID error (0x004682)'), sprintf("O ID de requesição associado %s não é desta sessão. Erro 0x004682 \n\nThread ID: %s\nLock: %s", (($is_pix) ? 'PIX' : 'boleto'), $request_id, $current_lock_id));
-            exit();
-        } else {
-            paghiper_write_lock_id(NULL, $transaction_id);
+            // Resolvemos disputas entre notifications enviadas simultaneamente
+            $request_bytes  = openssl_random_pseudo_bytes(16, $is_strong);
+            $request_id     = bin2hex($request_bytes);
+    
+            $lock_id = paghiper_write_lock_id($request_id, $transaction_id);
+            if(!$lock_id || !$is_strong) {
+                $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                $title = 'Ops! Não foi possível processar a baixa do '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
+                $message = 'Não foi possível associar o Request ID a transação sendo processada.';
+                
+                echo paghiper_print_screen($ico, $title, $message);
+                logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'Failed to write Paghiper LockID'), sprintf("Não foi possível associar o ID de requisição ao %s.", ($is_pix) ? 'PIX' : 'boleto'));
+                exit();
+            }
+    
+            sleep(3);
+    
+            $current_lock_id = paghiper_get_lock_id($transaction_id);
+    
+            if(!$current_lock_id || ($current_lock_id !== $request_id)) {
+    
+                // Função que vamos usar na localAPI
+                /*$addtransaction = "addtransaction";
+                $transaction_suffix = '-Baixa-Duplicada-Evitada';
+    
+                // Log transaction
+                $addtransvalues['userid'] = $results['userid'];
+                $addtransvalues['invoiceid'] = $order_id;
+                $addtransvalues['description'] = 'A nova versão do módulo resolveu com sucesso uma disputa de notificações de baixa simultâneas';
+                $addtransvalues['amountin'] = '0.00';
+                $addtransvalues['fees'] = '0.00';
+                $addtransvalues['paymentmethod'] = $gateway_code;
+                $addtransvalues['transid'] = $transaction_id . $transaction_suffix;
+                $addtransvalues['date'] = date('d/m/Y');
+                $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);*/
+    
+                $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                $title = 'Ops! Ação não permitida.';
+                $message = 'O thread ID desta notificação não está autorizado a ser processado.';
+                
+                echo paghiper_print_screen($ico, $title, $message);
+                logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'Thread ID error (0x004682)'), sprintf("O ID de requesição associado %s não é desta sessão. Erro 0x004682 \n\nThread ID: %s\nLock: %s", (($is_pix) ? 'PIX' : 'boleto'), $request_id, $current_lock_id));
+                exit();
+            } else {
+                paghiper_write_lock_id(NULL, $transaction_id);
+            }
         }
 
         // Agora vamos buscar o status da transação diretamente na PagHiper, usando a API.
@@ -503,6 +506,8 @@ if (!defined("WHMCS")) {
                     // Salvamos as informações no log de transações do WHMCS
                     logTransaction($GATEWAY["name"],$_POST,"Pagamento pré-confirmado");
 
+                    //TODO: Implementar re-estabelecimento dos serviços ao pré-confirmar pagamento
+
                     // Logamos status no banco
                     paghiper_log_status_to_db($status, $transaction_id);
                     
@@ -549,6 +554,8 @@ if (!defined("WHMCS")) {
                             // Conciliação: Juros e Multas = (Valor total pago - Valor contido na Invoice)
                             $desc = 'Juros e multa por atraso';
                             paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
+
+                            // TODO: Implementar mensagem alternativa, caso valor adicional venha de taxas
 
                         }
                     }
