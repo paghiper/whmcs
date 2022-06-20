@@ -28,7 +28,7 @@ function paghiper_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.2.1</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.3</h2></td>
                     </tr>
                 </tbody>
             </table>
