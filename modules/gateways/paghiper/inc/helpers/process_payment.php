@@ -291,7 +291,7 @@ if (!defined("WHMCS")) {
                     $client_data = json_decode(html_entity_decode($_POST['client_data']), TRUE);
 
                     // Checamos se os dados do cliente vem de um checkout ou do perfil do cliente.
-                    if( !empty($_POST) && $client_data ) {
+                    if( !empty($_POST) && is_array($client_data) && !empty($client_data) ) {
                         $client_details = $client_data;
                     } else {
 
@@ -300,7 +300,7 @@ if (!defined("WHMCS")) {
                             'stats'		=> false
                         );
                         $client_query = localAPI('getClientsDetails', $query_params, $whmcsAdmin);
-                        $client_details = $client_details['client'];
+                        $client_details = $client_query['client'];
                     }
                     
                     if(array_key_exists('currency_code', $client_details['client']) && ($client_details['client']['currency_code'] !== 'BRL' && $client_details['client']['currency_code'] !== 'R$')) {
