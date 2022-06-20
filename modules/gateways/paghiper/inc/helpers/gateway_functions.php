@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.2.1
+ * @version    2.3
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -58,6 +58,25 @@ function paghiper_log_status_to_db($status, $transaction_id) {
         return false;
     }
     return true;
+}
+
+function paghiper_write_lock_id($lock_id, $transaction_id) {
+
+    $update = mysql_query("UPDATE mod_paghiper SET lock_id = '$lock_id' WHERE transaction_id = '$transaction_id';");
+    if(!$update) {
+        return false;
+    }
+    return true;
+}
+
+function paghiper_get_lock_id($transaction_id) {
+
+    $result = mysql_fetch_array(mysql_query("SELECT * FROM mod_paghiper WHERE transaction_id = '$transaction_id';"));
+    if (!$result) {
+        return false;
+    }
+
+    return $result['lock_id'];
 }
 
 function paghiper_fetch_remote_url($url) {
@@ -460,6 +479,8 @@ function generate_paghiper_billet($invoice, $params) {
 	$city   			= $params['client_data']['city'];
 	$state   			= $params['client_data']['state'];
 	$postcode			= $params['client_data']['postcode'];
+	$cpf_cnpj			= $params['client_data']['cpf_cnpj'];
+    $razaosocial_val    = $params['client_data']['razao_social'];
 
 	// Data
 	$gateway_settings 	= $params['gateway_settings'];
@@ -471,38 +492,49 @@ function generate_paghiper_billet($invoice, $params) {
 	$invoice_id			= $invoice['invoiceid'];
 	$client_id 			= $invoice['userid'];
 
-    // Checamos se o campo é composto ou simples
-    if(strpos($cpfcnpj, '|')) {
-        // Se composto, pegamos ambos os campos
-        $fields = explode('|', $cpfcnpj);
+    if(empty($cpf_cnpj)) {
 
-        $i = 0;
+        // Checamos se o campo é composto ou simples
+        if(strpos($cpfcnpj, '|')) {
 
-        foreach($fields as $field) {
-            $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'"));
-            ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($result["value"])) : $cnpj = paghiper_convert_to_numeric(trim($result["value"]));
-            if($i == 1) { break; }
-            $i++;
+            // Se composto, pegamos ambos os campos
+            $fields = explode('|', $cpfcnpj);
+    
+            $i = 0;
+    
+            foreach($fields as $field) {
+                $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'"));
+                ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($result["value"])) : $cnpj = paghiper_convert_to_numeric(trim($result["value"]));
+                if($i == 1) { break; }
+                $i++;
+            }
+    
+        } else {
+
+            // Se simples, pegamos somente o que temos
+            $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'")))));
+        
         }
 
-    } else {
-        // Se simples, pegamos somente o que temos
-		$cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'")))));
-		if(strlen($cpf_cnpj) > 11) {
-			$cnpj = $cpf_cnpj;
-		} else {
-			$cpf = $cpf_cnpj;
-		}
+    }
+
+    if(empty($cpf) && empty($cnpj)) {
+        if(strlen($cpf_cnpj) > 11) {
+            $cnpj = $cpf_cnpj;
+        } else {
+            $cpf = $cpf_cnpj;
+        }
     }
 
     // Validate CPF/CNPJ
-    if(!paghiper_is_tax_id_valid($cpf_cnpj)) {
+    if(!paghiper_is_tax_id_valid($cpf) && !paghiper_is_tax_id_valid($cnpj)) {
         $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
         $title = 'Ops! Não foi possível emitir o '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
         $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
         
         echo paghiper_print_screen($ico, $title, $message);
-        logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
+        logTransaction($gateway_settings["name"],array('tax_id' => (!empty($cnpj)) ? $cnpj : $cpf, 'invoice_id' => $invoice_id, 'exception' => 'Failed Paghiper TaxID validation'), sprintf("Número de CPF/CNPJ inválido! Não foi possível gerar o %s.", ($is_pix) ? 'PIX' : 'boleto'));
+        exit();
     }
 
 
@@ -543,13 +575,17 @@ function generate_paghiper_billet($invoice, $params) {
 
     // Checa se incluimos dados CPF ou CNPJ no post
     if((isset($cpf) && !empty($cpf) && $cpf != "on file") || (isset($cnpj) && !empty($cnpj) && $cnpj != "on file")) {
-        if(isset($cnpj) && !empty($cnpj)) {
+        if(isset($cnpj) && !empty($cnpj) && paghiper_is_tax_id_valid($cnpj)) {
             if(isset($companyname) && !empty($companyname)) {
                 $paghiper_data["payer_name"] = $companyname;
             }
 
-            if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
-                $razaosocial_val = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'"))));
+            if(empty($razaosocial_val)) {
+
+                if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
+                    $razaosocial_val = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'"))));
+                }
+
             }
             
             if(isset($razaosocial_val) && !empty($razaosocial_val) && strlen($razaosocial_val) > 5 ){
@@ -605,7 +641,7 @@ function generate_paghiper_billet($invoice, $params) {
         'early_payment_discounts_cents' => $discount_cents,
         'open_after_day_due'            => $gateway_settings['open_after_day_due'],
         'late_payment_fine'             => $gateway_settings['late_payment_fine'],
-        'open_after_day_due'            => $gateway_settings['open_after_day_due'],
+        'open_after_day_due'            => ($is_pix) ? 0 : $gateway_settings['open_after_day_due'],
     );
 
     foreach($additional_config_text as $k => $v) {
@@ -652,7 +688,7 @@ function generate_paghiper_billet($invoice, $params) {
         $url_slip_pdf 		        = ($is_pix) ? null : $json['create_request']['bank_slip']['url_slip_pdf'];
         $digitable_line 	        = ($is_pix) ? null : $json['create_request']['bank_slip']['digitable_line'];
         $bar_code_number_to_image   = ($is_pix) ? null : $json['create_request']['bank_slip']['bar_code_number_to_image'];
-		$open_after_day_due         = $gateway_settings['open_after_day_due'];
+		$open_after_day_due         = ($is_pix) ? 0 : $gateway_settings['open_after_day_due'];
 		
 		$qrcode_base64 		        = ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_base64'] : null;
 		$qrcode_image_url 	        = ($is_pix) ? $json['pix_create_request']['pix_code']['qrcode_image_url'] : null;
@@ -675,6 +711,7 @@ function generate_paghiper_billet($invoice, $params) {
             
             echo paghiper_print_screen($ico, $title, $message);
             logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
+            exit();
         }
 
 
@@ -698,7 +735,7 @@ function generate_paghiper_billet($invoice, $params) {
         
         echo paghiper_print_screen($ico, $title, $message);
 
-        logTransaction($GATEWAY["name"],array('json' => $json, 'post' => $_POST),"Não foi possível criar a transação.");
+        logTransaction($GATEWAY["name"],array('json' => $json, 'post' => $_POST, 'request' => $data_post),"Não foi possível criar a transação.");
         return false;
     }
  
@@ -731,6 +768,14 @@ function paghiper_check_table() {
             $alter_table = full_query("ALTER TABLE `mod_paghiper` ADD COLUMN transaction_type varchar(45) DEFAULT NULL AFTER id, ADD COLUMN bar_code_number_to_image varchar(54) AFTER digitable_line, ADD COLUMN qrcode_base64 varchar(255) DEFAULT NULL, ADD COLUMN qrcode_image_url varchar(255) DEFAULT NULL, ADD COLUMN emv varchar(255) DEFAULT NULL, ADD COLUMN pix_url varchar(255) DEFAULT NULL, ADD COLUMN bacen_url varchar(255) DEFAULT NULL;");
             if(!$alter_table) {
                 logTransaction($GATEWAY["name"],$_POST,"Não foi possível adicionar os campos para suporte ao PIX. Por favor cheque se o usuário MySQL tem permissões para alterar a tabela mod_paghiper");
+            }
+        }
+
+        $lock_id = full_query("SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'lock_id'");
+        if(mysql_num_rows($lock_id) == 0) {
+            $alter_table = full_query("ALTER TABLE `mod_paghiper` ADD COLUMN lock_id varchar(64) DEFAULT NULL AFTER bacen_url;");
+            if(!$alter_table) {
+                logTransaction($GATEWAY["name"],$_POST,"Não foi possível atualizar o banco de dados da Paghiper para a versão 1.4. Por favor cheque se o usuário MySQL tem permissões para alterar a tabela mod_paghiper");
             }
         }
 
@@ -769,6 +814,7 @@ function create_paghiper_table() {
 		  `emv` varchar(255) DEFAULT NULL,
 		  `pix_url` varchar(255) DEFAULT NULL,
 		  `bacen_url` varchar(255) DEFAULT NULL,
+		  `lock_id` varchar(64) DEFAULT NULL,
           PRIMARY KEY (`id`),
           KEY `transaction_id` (`transaction_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=latin1;");

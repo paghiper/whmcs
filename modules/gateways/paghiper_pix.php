@@ -3,7 +3,7 @@
  * PagHiper PIX - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.2.1
+ * @version    2.3
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -28,7 +28,7 @@ function paghiper_pix_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.2.1</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.3</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -147,6 +147,7 @@ function paghiper_pix_link($params) {
 
     // Checamos o CPF/CNPJ novamente, para evitar problemas no checkout
     $taxIdFields = explode("|", $params['cpf_cnpj']);
+    $payerNameField = $params['razao_social'];
 
     $clientCustomFields = [];
     foreach($params["clientdetails"]["customfields"] as $key => $value){
@@ -169,23 +170,59 @@ function paghiper_pix_link($params) {
         }
     }
 
+    $code = '';
+
+    $isValidPayerName = true;
+    $clientPayerName = $clientCustomFields[$payerNameField];
+    foreach($clientTaxIds as $clientTaxId) {
+
+        $taxid_value = preg_replace('/\D/', '', $clientTaxId);
+
+        if(strlen( $taxid_value ) > 11 && empty($params['clientdetails']['companyname']) && empty($payerNameField) && empty($clientPayerName)) {
+            
+            $isValidPayerName = false;
+            $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'Razão social inválida, atualize seus dados cadastrais.');
+
+        }
+    }
+
     if($isValidTaxId) {
 
-        // Código do checkout
-        $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
-        <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}&pix=true\" method=\"post\">
-        <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/pix.jpg' title='Pagar com Pix' alt='Pagar com Pix' border='0' align='absbottom' width='120' height='74' /><br>
-        <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Pagar usando PIX</button>
-        <br> <br>
-        <div class='alert alert-warning' role='alert'>
-        Seu pagamento PIX está sendo gerado. Quando o pagamento for efetuado, a confirmação se dá imediatamente.
-        </div>
-        <!-- FIM DO BOLETO PAGHIPER -->
-        </form>
-        {$abrirAuto}";
+        $client_details = [
+            'firstname' 	=> $params['clientdetails']['firstname'],
+            'lastname'		=> $params['clientdetails']['lastname'],
+            'companyname'	=> $params['clientdetails']['companyname'],
+            'email'		    => $params['clientdetails']['email'],
+            'phonenumber'	=> $params['clientdetails']['phonenumber'],
+            'address1'		=> $params['clientdetails']['address1'],
+            'address2'		=> $params['clientdetails']['address2'],
+            'city'   		=> $params['clientdetails']['city'],
+            'state'   		=> $params['clientdetails']['state'],
+            'postcode'		=> $params['clientdetails']['postcode'],
+            'cpf_cnpj'		=> $clientTaxId,
+            'razao_social'  => $clientPayerName
+        ];
+
+        if($isValidPayerName) {
+            // Código do checkout
+            $code .= "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
+            <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}&pix=true\" method=\"post\">
+                <input type=\"hidden\" name=\"client_data\" value='".json_encode($client_details)."'>    
+                <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/pix.jpg' title='Pagar com Pix' alt='Pagar com Pix' border='0' align='absbottom' width='120' height='74' /><br>
+                <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Pagar usando PIX</button>
+                <br> <br>
+                <div class='alert alert-warning' role='alert'>
+                Seu pagamento PIX está sendo gerado. Quando o pagamento for efetuado, a confirmação se dá imediatamente.
+                </div>
+                <!-- FIM DO BOLETO PAGHIPER -->
+            </form>
+            {$abrirAuto}";
+        } else {
+            $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
+        }
         
     } else {
-        $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
+        $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
     }
     
    return $code; 

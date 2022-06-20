@@ -8,7 +8,7 @@ Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos au
 
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 2.1
+* **Versão mais Recente:** 2.3
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.2.0, cURL e JSON ativado.
 * **Compatibilidade:** WHMCS 8.X, PHP 7.x. Mod_rewrite opcional
@@ -50,6 +50,26 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 ## Disponíveis em alguns dias:
 
 * Disponibilização de linha digitável no painel
+
+## 2.3 - 2022/06/20
+
+`Bugs resolvidos`
+
+* Transações sendo pagas de maneira duplicada
+* Transações PIX sendo exibidas a clientes em alguns casos, ao invés de re-emitidas
+* Melhor validação de TaxID (CPF/CNPJ)
+* Transações pagáveis sendo ignoradas, caso multa por atraso seja aplicada pelo WHMCS
+* Warnings e Deprecated errors
+* Dados de clientes sem cadastro não estavam disponíveis para emissão, em algumas circunstâncias
+* Suporte a campo de razão social separado
+* Número de telefone não estava sendo anexado a transação
+
+`Melhorias`
+
+* Validação de dados e campos aplicada no checkout do front-end
+* Mais pontos e informações de log
+* Refatoração e melhor eficiência de código
+
 
 ## 2.2.1 - 2021/06/17
 

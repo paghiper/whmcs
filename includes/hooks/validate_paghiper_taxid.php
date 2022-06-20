@@ -3,7 +3,7 @@
  * Valida informações de faturamento do cliente no check-out
  * 
  * @package    PagHiper e Boleto para WHMCS
- * @version    2.2.1
+ * @version    2.3
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)
@@ -13,46 +13,42 @@
 
 require_once(dirname(__FILE__) . '/../../modules/gateways/paghiper/inc/helpers/gateway_functions.php');
 
-function paghiper_clientValidateTaxId($vars){
+function paghiper_getClientDetails($vars, $gatewayConfig) {
 
-    if(array_key_exists('paymentmethod', $vars) && strpos($vars['paymentmethod'], "paghiper") !== false) {
-        $gatewayConfig = getGatewayVariables($vars['paymentmethod']);
-    } else {
-        return;
-    }
+    $gateway_admin = $gatewayConfig['admin'];
+    $backup_admin = array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins LIMIT 1")));
 
-    // Checamos o CPF/CNPJ novamente, para evitar problemas no checkout
-    $taxIdFields = explode("|", $gatewayConfig['cpf_cnpj']);
+    // Se o usuário admin estiver vazio nas configurações, usamos o padrão
+    $whmcsAdmin = (
+        (empty(trim($gateway_admin))) ? 
+
+        // Caso não tenha um valor para usarmos, pegamos o primeiro admin disponível na tabela
+        $backup_admin : 
+
+            // Caso tenha, usamos o preenchido
+            (
+                empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$gateway_admin' LIMIT 1"))))) ?
+                $backup_admin :
+                trim($gatewayConfig['admin']
+            )
+
+    );
+
+    $query_params = array(
+        'clientid' 	=> $vars['userid'],
+        'stats'		=> false
+    );
+
+    return localAPI('getClientsDetails', $query_params, $whmcsAdmin);
+}
+
+function paghiper_getClientCustomFields($vars, $gatewayConfig) {
+
     $clientCustomFields = [];
-    $clientTaxIds = [];
 
     if(array_key_exists('custtype', $vars) && $vars['custtype'] == 'existing') {
 
-        $gateway_admin = $gatewayConfig['admin'];
-        $backup_admin = array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins LIMIT 1")));
-    
-        // Se o usuário admin estiver vazio nas configurações, usamos o padrão
-        $whmcsAdmin = (
-            (empty(trim($gateway_admin))) ? 
-    
-            // Caso não tenha um valor para usarmos, pegamos o primeiro admin disponível na tabela
-            $backup_admin : 
-    
-                // Caso tenha, usamos o preenchido
-                (
-                    empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$gateway_admin' LIMIT 1"))))) ?
-                    $backup_admin :
-                    trim($GATEWAY['admin']
-                )
-    
-        );
-
-        $query_params = array(
-            'clientid' 	=> $vars['userid'],
-            'stats'		=> false
-        );
-
-        $client_details = localAPI('getClientsDetails', $query_params, $whmcsAdmin);
+        $client_details = paghiper_getClientDetails($vars, $gatewayConfig);
 
         foreach($client_details["customfields"] as $key => $value){
             $clientCustomFields[$value['id']] = $value['value'];
