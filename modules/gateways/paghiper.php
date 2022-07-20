@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  *
  * @package    PagHiper para WHMCS
- * @version    2.2.1
+ * @version    2.3
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -27,7 +27,7 @@ function paghiper_config($params = null) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.2.1</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.3</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -145,17 +145,29 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
                 '0'     => 'Não',
             ],
             'Description' => 'Caso selecione não, boletos bancários e lihnas digitáveis serão selecionadas somente caso o cliente selecione "Boleto Bancário" (ou o nome que você configurar no primeiro campo de configuração) como método de pagamento padrão.',
-        ],
-        'admin' => [
-            'FriendlyName' => 'Administrador atribuído',
-            'Type' => 'text',
-            'Size' => '10',
-            'Default' => 'admin',
-            'Description' => 'Insira o nome de usuário ou ID do administrador do WHMCS que será atribuído as transações. Necessário para usar a API interna do WHMCS.',
-        ],
-        'suporte' => [
-            'FriendlyName' => "<span class='label label-primary'><i class='fa fa-question-circle'></i> Suporte</span>",
-            'Description' => '<h2>Para informações ou duvidas: </h2><br><br>
+        ),
+        "tax_id_validation" => array(
+            "FriendlyName" => "Validar campos de CPF/CNPJ no checkout?",
+            'Type' => 'dropdown',
+            'Options' => array(
+                'strict'        => 'Aceitar pedidos somente com CPF e CNPJ válidos',
+                'flexible_f'    => 'Aceitar pedidos, desde que CPF seja válido',
+                'flexible_j'    => 'Aceitar pedidos, desde que CNPJ seja válido',
+                'flexible'      => 'Aceitar pedidos com CPF ou CNPJ válidos, tanto faz',
+                '0'             => 'Não validar nenhum dos campos',
+            ),
+            'Description' => 'Caso selecione não, boletos bancários e lihnas digitáveis serão selecionadas somente caso o cliente selecione "Boleto Bancário" (ou o nome que você configurar no primeiro campo de configuração) como método de pagamento padrão.',
+        ),
+        "admin" => array(
+            "FriendlyName" => "Administrador atribuído",
+            "Type" => "text",
+            "Size" => "10",
+            "Default" => "admin",
+            "Description" => "Insira o nome de usuário ou ID do administrador do WHMCS que será atribuído as transações. Necessário para usar a API interna do WHMCS."
+        ),
+        'suporte' => array(
+            "FriendlyName" => "<span class='label label-primary'><i class='fa fa-question-circle'></i> Suporte</span>",
+            "Description" => '<h2>Para informações ou duvidas: </h2><br><br>
 <ul>
 <li>Duvidas sobre a conta <strong> PAGHIPER:</strong> <br><br>
 Devem ser resolvidas diretamente na central de atendimento: <br>
@@ -180,18 +192,8 @@ function paghiper_link($params) {
     $urlRetorno = $systemurl . '/modules/gateways/' . basename(__FILE__);
     $customFields = explode('|', $params['cpf_cnpj']); // id dos campos de acordo com configuração do whmcs
 
-    /// TRATAR DADOS CLIENTES
-    $myclientcustomfields = [];
-    foreach ($params['clientdetails']['customfields'] as $key => $value) {
-        $myclientcustomfields[$value['id']] = $value['value'];
-    }
-
-    $cpf_pessoa  =   $myclientcustomfields[$customFields[0]];
-    $cnpj_pessoa =   $myclientcustomfields[$customFields[1]];
-
-
     // Abrir o boleto automaticamente ao abrir a fatura
-    if ($params['abrirauto'] == true):
+    if($params['abrirauto'] == true):
         $target = '';
     $abrirAuto = "<script type='text/javascript'> document.paghiper.submit()</script>"; else:
         $target =  "target='_blank'";
@@ -199,7 +201,8 @@ function paghiper_link($params) {
     endif;
 
     // Checamos o CPF/CNPJ novamente, para evitar problemas no checkout
-    $taxIdFields = explode('|', $params['cpf_cnpj']);
+    $taxIdFields = explode("|", $params['cpf_cnpj']);
+    $payerNameField = $params['razao_social'];
 
     $clientCustomFields = [];
     foreach ($params['clientdetails']['customfields'] as $key => $value) {
@@ -223,22 +226,59 @@ function paghiper_link($params) {
         }
     }
 
-    if ($isValidTaxId) {
+    $code = '';
 
-        // Código do checkout
-        $code = "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
-        <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}\" method=\"post\">
-        <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/billet.jpg' title='Pagar com Boleto' alt='Pagar com Boleto' border='0' align='absbottom' width='120' height='74' /><br>
-        <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
-        <br> <br>
-        <div class='alert alert-warning' role='alert'>
-        <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
-        </div>
-        <!-- FIM DO BOLETO PAGHIPER -->
-        </form>
-        {$abrirAuto}";
+    $isValidPayerName = true;
+    $clientPayerName = $clientCustomFields[$payerNameField];
+    foreach($clientTaxIds as $clientTaxId) {
+
+        $taxid_value = preg_replace('/\D/', '', $clientTaxId);
+
+        if(strlen( $taxid_value ) > 11 && empty($params['clientdetails']['companyname']) && empty($payerNameField) && empty($clientPayerName)) {
+
+            $isValidPayerName = false;
+            $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'Razão social inválida, atualize seus dados cadastrais.');
+
+        }
+    }
+
+    if($isValidTaxId) {
+
+        $client_details = [
+            'firstname' 	=> $params['clientdetails']['firstname'],
+            'lastname'		=> $params['clientdetails']['lastname'],
+            'companyname'	=> $params['clientdetails']['companyname'],
+            'email'		    => $params['clientdetails']['email'],
+            'phonenumber'	=> $params['clientdetails']['phonenumber'],
+            'address1'		=> $params['clientdetails']['address1'],
+            'address2'		=> $params['clientdetails']['address2'],
+            'city'   		=> $params['clientdetails']['city'],
+            'state'   		=> $params['clientdetails']['state'],
+            'postcode'		=> $params['clientdetails']['postcode'],
+            'cpf_cnpj'		=> $clientTaxId,
+            'razao_social'  => $clientPayerName
+        ];
+
+        if($isValidPayerName) {
+            // Código do checkout
+            $code .= "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
+            <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}\" method=\"post\">
+                <input type=\"hidden\" name=\"client_data\" value='".json_encode($client_details)."'>
+                <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/billet.jpg' title='Pagar com Boleto' alt='Pagar com Boleto' border='0' align='absbottom' width='120' height='74' /><br>
+                <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
+                <br> <br>
+                <div class='alert alert-warning' role='alert'>
+                <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
+                </div>
+                <!-- FIM DO BOLETO PAGHIPER -->
+            </form>
+            {$abrirAuto}";
+        } else {
+            $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
+        }
+
     } else {
-        $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
+        $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
     }
 
     return $code;
@@ -246,8 +286,5 @@ function paghiper_link($params) {
 
 $is_pix = false;
 
-
-
-
-require_once 'paghiper/inc/helpers/gateway_functions.php';
-require_once 'paghiper/inc/helpers/process_payment.php';
+require_once('paghiper/inc/helpers/gateway_functions.php');
+require_once('paghiper/inc/helpers/process_payment.php');
