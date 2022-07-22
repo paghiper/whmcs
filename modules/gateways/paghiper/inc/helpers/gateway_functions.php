@@ -214,6 +214,19 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
     $invoice_id         = ($conf && array_key_exists('invoice_id', $conf)) ? $conf['invoice_id'] : null;
     $pix_emv            = ($conf && array_key_exists('pix_emv', $conf)) ? $conf['pix_emv'] : null;
     $payment_value      = ($conf && array_key_exists('payment_value', $conf)) ? $conf['payment_value'] : null;
+
+    $gateway_configs = getGatewayVariables('paghiper_pix');
+    $disconto_pix_config = $gateway_configs['disconto_pagamento_pix'] ?? '';
+
+    if ($is_pix && $disconto_pix_config !== '') {
+
+        $disconto_pix_config = str_replace(',', '.', preg_replace('/[^0-9.,]/', '', $disconto_pix_config));
+
+        $disconto_pix_porcentagem = $disconto_pix_config / 100;
+
+        $valor_original = $payment_value / (1 - $disconto_pix_porcentagem);
+    }
+
     $upper_instructions = ($conf && array_key_exists('upper_instructions', $conf)) ? $conf['upper_instructions'] : null;
     $lower_instructions = ($conf && array_key_exists('lower_instructions', $conf)) ? $conf['lower_instructions'] : null;
 
@@ -229,7 +242,18 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
 
     $upper_instructions = ($is_pix) ? (($invoice_id) ? sprintf('<h3>Fatura #%s</h3>', $invoice_id) : '') : '';
     if($is_pix) {
-        $upper_instructions .= sprintf('<p>Valor: R$ %s</p>', number_format($payment_value, 2, ',', '.'));
+        if (isset($valor_original)) {
+            $payment_value = number_format($payment_value, 2, ',', '.');
+            $payment_value_no_discount = number_format($valor_original, 2, ',', '.');
+
+            $upper_instructions .= sprintf(
+                '<p><s>De R$ %s</s></p>
+                <p>por R$ %s</p>',
+                $payment_value_no_discount, $payment_value
+            );
+        } else {
+            $upper_instructions .= sprintf('<p><s>Valor: R$ %s</s></p>', number_format($payment_value, 2, ',', '.'));
+        }
     }
 
     $lower_instructions = ($is_pix) ? sprintf('
@@ -466,6 +490,15 @@ function generate_paghiper_billet($invoice, $params) {
 
 	// Data received from the invoice
 	$total 				= $invoice['balance'];
+
+    if ($is_pix) {
+        $disconto_pix_config = $params['gateway_settings']['disconto_pagamento_pix'] ?? '0';
+        $disconto_pix_config = str_replace(',', '.', preg_replace('/[^0-9.,]/', '', $disconto_pix_config));
+        $disconto_pix_porcentagem = $disconto_pix_config / 100;
+
+        $total = $total - ($total * $disconto_pix_porcentagem);
+    }
+
 	$due_date 			= $params['due_date'];
 
 	// Data from the client
@@ -484,6 +517,7 @@ function generate_paghiper_billet($invoice, $params) {
 
 	// Data
 	$gateway_settings 	= $params['gateway_settings'];
+
 	$notification_url 	= $params['notification_url'];
 	$cpfcnpj 			= $gateway_settings['cpf_cnpj'];
     $razaosocial        = $gateway_settings['razao_social'];

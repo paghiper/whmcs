@@ -85,6 +85,12 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             'Size' => '7',
             'Description' => 'Taxa cobrada a mais do cliente por utilizar esse meio de pagamento, exemplo: 2.0 (dois reais). Obs: Use o ponto (.) como delimitador de casas decimais.<br> Recomendamos não cobrar nenhuma taxa.',
         ],
+        'disconto_pagamento_pix' => [
+            'FriendlyName' => 'Desconto por pagto. realizado via PIX',
+            'Type' => 'text',
+            'Size' => '6',
+            'Description' => 'Valor do desconto que será aplicado caso o pagamento ocorra neste gateway via PIX. Em percentual (Ex.: 10%)',
+        ],
         'fixed_description' => [
             'FriendlyName' => 'Exibe ou não a frase fixa no PIX (configurada no painel da PagHiper)',
             'Type' => 'yesno',
@@ -123,7 +129,7 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
 			<br>
 			<strong><a href="https://github.com/paghiper/whmcs" target="_blank">https://github.com/paghiper/whmcs</a></strong></li>
 			</ul><br>',
-        ],
+        ]
     ];
 
     return $config;

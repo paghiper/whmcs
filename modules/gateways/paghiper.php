@@ -145,7 +145,7 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
                 '0'     => 'Não',
             ],
             'Description' => 'Caso selecione não, boletos bancários e lihnas digitáveis serão selecionadas somente caso o cliente selecione "Boleto Bancário" (ou o nome que você configurar no primeiro campo de configuração) como método de pagamento padrão.',
-        ),
+        ],
         "tax_id_validation" => array(
             "FriendlyName" => "Validar campos de CPF/CNPJ no checkout?",
             'Type' => 'dropdown',
@@ -165,7 +165,7 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "Default" => "admin",
             "Description" => "Insira o nome de usuário ou ID do administrador do WHMCS que será atribuído as transações. Necessário para usar a API interna do WHMCS."
         ),
-        'suporte' => array(
+        'suporte' => [
             "FriendlyName" => "<span class='label label-primary'><i class='fa fa-question-circle'></i> Suporte</span>",
             "Description" => '<h2>Para informações ou duvidas: </h2><br><br>
 <ul>
