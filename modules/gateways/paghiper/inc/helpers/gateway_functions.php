@@ -216,9 +216,9 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
     $payment_value      = ($conf && array_key_exists('payment_value', $conf)) ? $conf['payment_value'] : null;
 
     $gateway_configs = getGatewayVariables('paghiper_pix');
-    $disconto_pix_config = $gateway_configs['disconto_pagamento_pix'] ?? '';
+    $disconto_pix_config = isset($gateway_configs['disconto_pagamento_pix']) ? $gateway_configs['disconto_pagamento_pix'] : '';
 
-    if ($is_pix && $disconto_pix_config !== '') {
+    if ($is_pix && !empty($disconto_pix_config)) {
 
         $disconto_pix_config = str_replace(',', '.', preg_replace('/[^0-9.,]/', '', $disconto_pix_config));
 
@@ -242,7 +242,7 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
 
     $upper_instructions = ($is_pix) ? (($invoice_id) ? sprintf('<h3>Fatura #%s</h3>', $invoice_id) : '') : '';
     if($is_pix) {
-        if (isset($valor_original)) {
+        if (isset($valor_original) && !empty($valor_original)) {
             $payment_value = number_format($payment_value, 2, ',', '.');
             $payment_value_no_discount = number_format($valor_original, 2, ',', '.');
 
