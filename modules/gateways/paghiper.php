@@ -165,7 +165,7 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             "Default" => "admin",
             "Description" => "Insira o nome de usuário ou ID do administrador do WHMCS que será atribuído as transações. Necessário para usar a API interna do WHMCS."
         ),
-        'suporte' => array(
+        'suporte' => [
             "FriendlyName" => "<span class='label label-primary'><i class='fa fa-question-circle'></i> Suporte</span>",
             "Description" => '<h2>Para informações ou duvidas: </h2><br><br>
 <ul>
@@ -178,7 +178,7 @@ Tem uma dúvida ou quer contribuir para o projeto? Acesse nosso repositório no 
 <br>
 <strong><a href="https://github.com/paghiper/whmcs" target="_blank">https://github.com/paghiper/whmcs</a></strong></li>
 </ul><br>',
-        ),
+        ],
 
     ];
 

@@ -546,7 +546,7 @@ if (!defined("WHMCS")) {
                         if($results['balance'] > $ammount_paid) {
 
                             // Conciliação: Desconto por antecipação (Valor de balanço da Invoice - Valor total pago)
-                            $desc = 'Desconto por pagamento antecipado';
+                            $desc = ($is_pix) ? 'Desconto por pagamento por PIX' : 'Desconto por pagamento antecipado';
                             paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
 
                         } else {
