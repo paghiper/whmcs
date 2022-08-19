@@ -252,7 +252,7 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
                 $payment_value_no_discount, $payment_value
             );
         } else {
-            $upper_instructions .= sprintf('<p><s>Valor: R$ %s</s></p>', number_format($payment_value, 2, ',', '.'));
+            $upper_instructions .= sprintf('<p>Valor: R$ %s</p>', number_format($payment_value, 2, ',', '.'));
         }
     }
 
