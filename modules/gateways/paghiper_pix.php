@@ -91,6 +91,22 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
             'Size' => '6',
             'Description' => 'Valor do desconto que será aplicado caso o pagamento ocorra neste gateway via PIX. Em percentual (Ex.: 10%)',
         ],
+        'discount_rule' => [
+            'FriendlyName' => 'Critério do desconto',
+            'Type' => 'dropdown',
+            'Default' => 'disabled',
+            'Options' => [
+                'disabled' => 'Desativar',
+                'new_orders' => 'Apenas para novos pedidos e serviços pendentes',
+            ],
+            'Description' => '',
+        ],
+        'discount_rule_percentage' => [
+            'FriendlyName' => 'Porcentagem do desconto por critério',
+            'Type' => 'text',
+            'Size' => '6',
+            'Description' => 'Valor do desconto que será aplicado caso o pagamento siga a algum critério abaixo.',
+        ],
         'fixed_description' => [
             'FriendlyName' => 'Exibe ou não a frase fixa no PIX (configurada no painel da PagHiper)',
             'Type' => 'yesno',
@@ -136,7 +152,6 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
 }
 
 function paghiper_pix_link($params) {
-
     // Definimos os dados para retorno e checkout.
     $systemurl = rtrim($params['systemurl'], '/');
     $urlRetorno = $systemurl . '/modules/gateways/' . basename(__FILE__);
@@ -154,13 +169,14 @@ function paghiper_pix_link($params) {
     // Envia para a tela de PIX automaticamente ao abrir a fatura
     if ($params['abrirauto'] == true):
         $target = '';
-    $abrirAuto = "<script type='text/javascript'> document.paghiper.submit()</script>"; else:
+        $abrirAuto = "<script type='text/javascript'> document.paghiper.submit()</script>";
+    else:
         $target =  "target='_blank'";
-    $abrirAuto = '';
+        $abrirAuto = '';
     endif;
 
     // Checamos o CPF/CNPJ novamente, para evitar problemas no checkout
-    $taxIdFields = explode("|", $params['cpf_cnpj']);
+    $taxIdFields = explode('|', $params['cpf_cnpj']);
     $payerNameField = $params['razao_social'];
 
     $clientCustomFields = [];
@@ -190,19 +206,15 @@ function paghiper_pix_link($params) {
     $isValidPayerName = true;
     $clientPayerName = $clientCustomFields[$payerNameField];
     foreach($clientTaxIds as $clientTaxId) {
-
         $taxid_value = preg_replace('/\D/', '', $clientTaxId);
 
-        if(strlen( $taxid_value ) > 11 && empty($params['clientdetails']['companyname']) && empty($payerNameField) && empty($clientPayerName)) {
-
+        if(strlen($taxid_value) > 11 && empty($params['clientdetails']['companyname']) && empty($payerNameField) && empty($clientPayerName)) {
             $isValidPayerName = false;
             $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'Razão social inválida, atualize seus dados cadastrais.');
-
         }
     }
 
     if($isValidTaxId) {
-
         $client_details = [
             'firstname' 	=> $params['clientdetails']['firstname'],
             'lastname'		=> $params['clientdetails']['lastname'],
@@ -222,7 +234,7 @@ function paghiper_pix_link($params) {
             // Código do checkout
             $code .= "<!-- INICIO DO FORM DO BOLETO PAGHIPER -->
             <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}&pix=true\" method=\"post\">
-                <input type=\"hidden\" name=\"client_data\" value='".json_encode($client_details)."'>
+                <input type=\"hidden\" name=\"client_data\" value='" . json_encode($client_details) . "'>
                 <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/pix.jpg' title='Pagar com Pix' alt='Pagar com Pix' border='0' align='absbottom' width='120' height='74' /><br>
                 <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Pagar usando PIX</button>
                 <br> <br>
@@ -235,7 +247,6 @@ function paghiper_pix_link($params) {
         } else {
             $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
         }
-
     } else {
         $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
     }

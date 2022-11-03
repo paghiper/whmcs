@@ -11,6 +11,8 @@
  * @link       https://www.paghiper.com/
  */
 
+use WHMCS\Database\Capsule;
+
 function paghiper_get_customfield_id() {
     $fields = mysql_query("SELECT id, fieldname FROM tblcustomfields WHERE type = 'client';");
     if (!$fields) {
@@ -213,12 +215,12 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
     $gateway_configs = getGatewayVariables('paghiper_pix');
     $disconto_pix_config = isset($gateway_configs['disconto_pagamento_pix']) ? $gateway_configs['disconto_pagamento_pix'] : '';
 
-    if ($is_pix && !empty($disconto_pix_config)) {
-        $disconto_pix_config = str_replace(',', '.', preg_replace('/[^0-9.,]/', '', $disconto_pix_config));
+    if ($is_pix) {
+        $discounts_percentage = paghiper_get_discount_percentage_for_invoice($invoice_id, $gateway_configs);
 
-        $disconto_pix_porcentagem = $disconto_pix_config / 100;
-
-        $valor_original = $payment_value / (1 - $disconto_pix_porcentagem);
+        if ($discounts_percentage !== 0.0) {
+            $valor_original = $payment_value / (1 - $discounts_percentage);
+        }
     }
 
     $upper_instructions = ($conf && array_key_exists('upper_instructions', $conf)) ? $conf['upper_instructions'] : null;
@@ -476,6 +478,71 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
     return $code;
 }
 
+/**
+ * @since 2.4.0
+ *
+ * @param string $discount_rule
+ * @param int $invoice_id
+ *
+ * @return bool
+ */
+function does_invoice_meet_discount_rule($discount_rule, $invoice_id) {
+    if ($discount_rule === 'new_orders') {
+        $hasOrderInPedingStatus = Capsule::table('tblorders')
+            ->where('invoiceid', $invoice_id)
+            ->where('status', 'Pending')
+            ->exists();
+
+        return $hasOrderInPedingStatus;
+    }
+}
+
+/**
+ * @since 1.0.0
+ *
+ * @param  string $value
+ *
+ * @return float
+ */
+function paghiper_pix_string_to_float($value) {
+    return round(floatval(str_replace(',', '.', preg_replace('/[^0-9.,]/', '', $value))), 2);
+}
+
+/**
+ * @since 1.0.0
+ * @link https://documentation.com
+ *
+ * @param  string $invoice_id
+ * @param  array $gateway_settings
+ *
+ * @return float
+ */
+function paghiper_get_discount_percentage_for_invoice($invoice_id, $gateway_settings) {
+    $total_discount_percentage = 0.0;
+
+    $discount_pix = paghiper_pix_string_to_float($gateway_settings['disconto_pagamento_pix'] ?? '');
+
+    if ($discount_pix !== 0.0) {
+        $discount_pix_percentage = $discount_pix / 100;
+        $total_discount_percentage += $discount_pix_percentage;
+    }
+
+    $discount_rule = $gateway_settings['discount_rule'] ?? 'disabled';
+    $discount_rule_percentage = paghiper_pix_string_to_float($gateway_settings['discount_rule_percentage'] ?? '');
+
+    if (
+        $discount_rule !== 'disabled' &&
+        $discount_rule_percentage !== 0.0 &&
+        does_invoice_meet_discount_rule($discount_rule, $invoice_id)
+    ) {
+        $discount_rule_percentage = $discount_rule_percentage / 100;
+
+        $total_discount_percentage += $discount_rule_percentage;
+    }
+
+    return $total_discount_percentage;
+}
+
 function generate_paghiper_billet($invoice, $params) {
     global $return_json, $is_pix;
 
@@ -483,14 +550,14 @@ function generate_paghiper_billet($invoice, $params) {
     $postData    = [];
 
     // Data received from the invoice
-    $total 				= $invoice['balance'];
+    $total = $invoice['balance'];
 
     if ($is_pix) {
-        $disconto_pix_config = $params['gateway_settings']['disconto_pagamento_pix'] ?? '0';
-        $disconto_pix_config = str_replace(',', '.', preg_replace('/[^0-9.,]/', '', $disconto_pix_config));
-        $disconto_pix_porcentagem = $disconto_pix_config / 100;
+        $discounts_percentage = paghiper_get_discount_percentage_for_invoice($invoice['invoiceid'], $params['gateway_settings']);
 
-        $total = $total - ($total * $disconto_pix_porcentagem);
+        if ($discounts_percentage !== 0.0) {
+            $total = $total - ($total * $discounts_percentage);
+        }
     }
 
     $due_date 			= $params['due_date'];
