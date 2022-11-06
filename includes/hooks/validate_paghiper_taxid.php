@@ -19,20 +19,16 @@ function paghiper_getClientDetails($vars, $gatewayConfig) {
     $backup_admin = array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins LIMIT 1")));
 
     // Se o usuário admin estiver vazio nas configurações, usamos o padrão
-    $whmcsAdmin = (
-        (empty(trim($gateway_admin))) ? 
-
-        // Caso não tenha um valor para usarmos, pegamos o primeiro admin disponível na tabela
-        $backup_admin : 
-
-            // Caso tenha, usamos o preenchido
-            (
-                empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$gateway_admin' LIMIT 1"))))) ?
-                $backup_admin :
-                trim($gatewayConfig['admin']
-            )
-
-    );
+    if(empty(trim($gateway_admin))){
+	$whmcsAdmin  = $backup_admin
+    }else{
+      if(empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$gateway_admin' LIMIT 1"))))){
+	     $whmcsAdmin = $backup_admin
+      }else{
+	    $whmcsAdmin = trim($gatewayConfig['admin']);
+      }
+    }
+    
 
     $query_params = array(
         'clientid' 	=> $vars['userid'],
