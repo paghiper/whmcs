@@ -219,7 +219,7 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
         $discounts_percentage = paghiper_get_discount_percentage_for_invoice($invoice_id, $gateway_configs);
 
         if ($discounts_percentage !== 0.0) {
-            $valor_original = $payment_value / (1 - $discounts_percentage);
+            $valor_convertido = $payment_value / (1 - $discounts_percentage);
         }
     }
 
@@ -238,9 +238,9 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
 
     $upper_instructions = ($is_pix) ? (($invoice_id) ? sprintf('<h3>Fatura #%s</h3>', $invoice_id) : '') : '';
     if ($is_pix) {
-        if (isset($valor_original) && !empty($valor_original)) {
+        if (isset($valor_convertido) && !empty($valor_convertido)) {
             $payment_value = number_format($payment_value, 2, ',', '.');
-            $payment_value_no_discount = number_format($valor_original, 2, ',', '.');
+            $payment_value_no_discount = number_format($valor_convertido, 2, ',', '.');
 
             $upper_instructions .= sprintf(
                 '<p><s>De R$ %s</s></p>
