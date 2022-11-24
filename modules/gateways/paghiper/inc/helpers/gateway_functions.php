@@ -11,11 +11,20 @@
  * @link       https://www.paghiper.com/
  */
 
+use WHMCS\Database\Capsule;
+
 function paghiper_get_customfield_id() {
-    $fields = mysql_query("SELECT id, fieldname FROM tblcustomfields WHERE type = 'client';");
+
+    $sql = "SELECT id, fieldname FROM tblcustomfields WHERE type = 'client';";
+    $query = Capsule::connection()
+            ->getPdo()
+            ->prepare($sql);
+    $query->execute();
+    $fields = $query->fetch(\PDO::FETCH_ASSOC);
+
     if (!$fields) {
         return '<br><br>Erro geral no banco de dados';
-    } elseif (mysql_num_rows($fields) >= 1) {
+    } elseif ($fields) {
         $tutorial = '<br><br>Para sua comodidade, listamos abaixo os campos que podem ser usados e seus IDs. Basta pegar o ID e preencher acima. <ul>';
         while ($field = mysql_fetch_assoc($fields)) {
             $tutorial .= '<li><strong>ID do Campo: ';
@@ -53,8 +62,14 @@ function paghiper_to_monetary($int) {
 
 function paghiper_log_status_to_db($status, $transaction_id) {
 
-    $update = mysql_query("UPDATE mod_paghiper SET status = '$status' WHERE transaction_id = '$transaction_id';");
-    if(!$update) {
+    $sql = "UPDATE mod_paghiper SET status = '$status' WHERE transaction_id = '$transaction_id';";
+    $query = Capsule::connection()
+                ->getPdo()
+                ->prepare($sql);
+    $query->execute();
+    $result = $query->fetch(\PDO::FETCH_BOTH);
+
+    if(!$result) {
         return false;
     }
     return true;
@@ -62,16 +77,28 @@ function paghiper_log_status_to_db($status, $transaction_id) {
 
 function paghiper_write_lock_id($lock_id, $transaction_id) {
 
-    $update = mysql_query("UPDATE mod_paghiper SET lock_id = '$lock_id' WHERE transaction_id = '$transaction_id';");
-    if(!$update) {
+    $sql = "UPDATE mod_paghiper SET lock_id = '$lock_id' WHERE transaction_id = '$transaction_id';";
+    $query = Capsule::connection()
+                ->getPdo()
+                ->prepare($sql);
+    $query->execute();
+    $result = $query->fetch(\PDO::FETCH_BOTH);
+
+    if(!$result) {
         return false;
     }
     return true;
 }
 
 function paghiper_get_lock_id($transaction_id) {
+    
+    $sql = "SELECT * FROM mod_paghiper WHERE transaction_id = '$transaction_id';";
+    $query = Capsule::connection()
+        ->getPdo()
+        ->prepare($sql);
+    $query->execute();
+    $result = $query->fetch(\PDO::FETCH_BOTH);
 
-    $result = mysql_fetch_array(mysql_query("SELECT * FROM mod_paghiper WHERE transaction_id = '$transaction_id';"));
     if (!$result) {
         return false;
     }
@@ -192,9 +219,12 @@ function paghiper_is_valid_cnpj( $cnpj ) {
 }
 
 function paghiper_check_if_subaccount($user_id, $email, $invoice_userid) {
-    $query = "SELECT userid, id, email, permissions, invoiceemails FROM tblcontacts WHERE userid = '$user_id' AND email = '$email' LIMIT 1"; 
-    $result = mysql_query($query);
-    $user = mysql_fetch_array($result);
+    $sql = "SELECT userid, id, email, permissions, invoiceemails FROM tblcontacts WHERE userid = '$user_id' AND email = '$email' LIMIT 1";
+    $query = Capsule::connection()
+        ->getPdo()
+        ->prepare($sql);
+    $query->execute();
+    $user = $query->fetch(\PDO::FETCH_BOTH);
 
     $allow_invoices = ((strpos($user['permissions'], 'invoices') || $user['invoiceemails'] == 1) && $invoice_userid == $user['userid'] ? TRUE : FALSE);
     if($allow_invoices) {
@@ -472,11 +502,27 @@ function paghiper_autoSelectAdminUser($gateway_config) {
 }
 
 function paghiper_getBackupAdminUser() {
-    return array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins LIMIT 1")));
+
+    $sql = "SELECT username FROM tbladmins LIMIT 1";
+    $query = Capsule::connection()
+        ->getPdo()
+        ->prepare($sql);
+    $query->execute();
+    $result = $query->fetch(\PDO::FETCH_BOTH);
+
+    return array_shift($result);
 }
 
 function paghiper_checkIfAdminUserExists($admin_user) {
-    return empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$admin_user' LIMIT 1"))));
+
+    $sql = "SELECT username FROM tbladmins WHERE username = '$admin_user' LIMIT 1";
+    $query = Capsule::connection()
+        ->getPdo()
+        ->prepare($sql);
+    $query->execute();
+    $result = $query->fetch(\PDO::FETCH_BOTH);
+
+    return empty(array_shift($result));
 }
 
 function generate_paghiper_billet($invoice, $params) {
@@ -525,7 +571,14 @@ function generate_paghiper_billet($invoice, $params) {
             $i = 0;
     
             foreach($fields as $field) {
-                $result  = mysql_fetch_array(mysql_query("SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'"));
+                
+                $sql = "SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'";
+                $query = Capsule::connection()
+                    ->getPdo()
+                    ->prepare($sql);
+                $query->execute();
+                $result = $query->fetch(\PDO::FETCH_BOTH);
+
                 ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($result["value"])) : $cnpj = paghiper_convert_to_numeric(trim($result["value"]));
                 if($i == 1) { break; }
                 $i++;
@@ -534,7 +587,14 @@ function generate_paghiper_billet($invoice, $params) {
         } else {
 
             // Se simples, pegamos somente o que temos
-            $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'")))));
+            $sql = "SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'";
+            $query = Capsule::connection()
+                ->getPdo()
+                ->prepare($sql);
+            $query->execute();
+            $result = $query->fetch(\PDO::FETCH_BOTH);
+
+            $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift($result)));
         
         }
 
@@ -605,7 +665,15 @@ function generate_paghiper_billet($invoice, $params) {
             if(empty($razaosocial_val)) {
 
                 if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
-                    $razaosocial_val = trim(array_shift(mysql_fetch_array(mysql_query("SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'"))));
+                    
+                    $sql = "SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'";
+                    $query = Capsule::connection()
+                        ->getPdo()
+                        ->prepare($sql);
+                    $query->execute();
+                    $result = $query->fetch(\PDO::FETCH_BOTH);
+
+                    $razaosocial_val = trim(array_shift($result));
                 }
 
             }
@@ -720,13 +788,14 @@ function generate_paghiper_billet($invoice, $params) {
 
         $slip_value = $total;
 
-        try {
+        $sql = "INSERT INTO mod_paghiper (transaction_type,transaction_id,order_id,due_date,status,url_slip,url_slip_pdf,digitable_line,bar_code_number_to_image,open_after_day_due,slip_value,qrcode_base64,qrcode_image_url,emv,bacen_url,pix_url) VALUES ('$transaction_type', '$transaction_id','$order_id','$due_date','$status','$url_slip','$url_slip_pdf','$digitable_line','$bar_code_number_to_image', '$open_after_day_due','$slip_value','$qrcode_base64','$qrcode_image_url','$emv','$bacen_url','$pix_url');";
+        $query = Capsule::connection()
+                    ->getPdo()
+                    ->prepare($sql);
+        $query->execute();
+        $query_insert = $query->fetch(\PDO::FETCH_BOTH);
 
-            $sql = "INSERT INTO mod_paghiper (transaction_type,transaction_id,order_id,due_date,status,url_slip,url_slip_pdf,digitable_line,bar_code_number_to_image,open_after_day_due,slip_value,qrcode_base64,qrcode_image_url,emv,bacen_url,pix_url) VALUES ('$transaction_type', '$transaction_id','$order_id','$due_date','$status','$url_slip','$url_slip_pdf','$digitable_line','$bar_code_number_to_image', '$open_after_day_due','$slip_value','$qrcode_base64','$qrcode_image_url','$emv','$bacen_url','$pix_url');";
-
-            $query = full_query($sql);
-        } catch (Exception $e) {
-
+        if(!$query_insert) {
             $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
             $title = 'Ops! Não foi possível emitir o '.(($is_pix) ? 'boleto bancário' : 'PIX').'.';
             $message = 'Por favor entre em contato com o suporte. Erro 0x004681';
@@ -764,38 +833,103 @@ function generate_paghiper_billet($invoice, $params) {
 }
 
 function paghiper_check_table() {
-    $checktable = full_query("SHOW TABLES LIKE 'mod_paghiper'");
-    $table_exists = mysql_num_rows($checktable) > 0;
+
+    $sql = "SHOW TABLES LIKE 'mod_paghiper'";
+    $query = Capsule::connection()
+        ->getPdo()
+        ->prepare($sql);
+    $query->execute();
+    $checktable = $query->fetch(\PDO::FETCH_BOTH);
+
+    $table_exists = ($checktable) ? TRUE : FALSE;
 
     if($table_exists) {
-        $table_columns = full_query("SHOW COLUMNS FROM `mod_paghiper` LIKE 'transaction_id';");
-        if(mysql_num_rows($table_columns) == 0) {
-            $delete_table = full_query("DROP TABLE mod_paghiper;");
+
+        $sql = "SHOW COLUMNS FROM `mod_paghiper` LIKE 'transaction_id';";
+        $query = Capsule::connection()
+            ->getPdo()
+            ->prepare($sql);
+        $query->execute();
+        $table_columns = $query->fetch(\PDO::FETCH_BOTH);
+
+        if(!$table_columns) {
+            $sql = "DROP TABLE mod_paghiper;";
+            $query = Capsule::connection()
+                ->getPdo()
+                ->prepare($sql);
+            $query->execute();
+            $delete_table = $query->fetch(\PDO::FETCH_BOTH);
+
             if($delete_table) {
                 create_paghiper_table();
             }
         }
 
         // TODO Checar todos os campos e modificar as tabelas a partir de uma lista dinâmica
-        $slip_value = full_query("SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'slip_value' AND `type` = 'decimal(11,2)'");
-        if(mysql_num_rows($slip_value) == 0) {
-            $alter_table = full_query("ALTER TABLE `mod_paghiper` CHANGE `slip_value` `slip_value` DECIMAL(11,2) NULL DEFAULT NULL;");
+        $sql = "SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'slip_value' AND `type` = 'decimal(11,2)'";
+        $query = Capsule::connection()
+            ->getPdo()
+            ->prepare($sql);
+        $query->execute();
+        $slip_value = $query->fetch(\PDO::FETCH_ASSOC);
+
+        if(!$slip_value) {
+
+            $sql = "ALTER TABLE `mod_paghiper` CHANGE `slip_value` `slip_value` DECIMAL(11,2) NULL DEFAULT NULL;";
+            $query = Capsule::connection()
+                ->getPdo()
+                ->prepare($sql);
+            $query->execute();
+            $alter_table = $query->fetch(\PDO::FETCH_ASSOC);
+
             if(!$alter_table) {
                 logTransaction($GATEWAY["name"],$_POST,"Não foi possível alterar o formato de dados da coluna slip_value. Por favor altere manualmente para decimal(11,2).");
             }
         }
+            
+        $sql = "SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'transaction_type'";
+        $query = Capsule::connection()
+            ->getPdo()
+            ->prepare($sql);
+        $query->execute();
+        $transaction_type = $query->fetch(\PDO::FETCH_ASSOC);
 
-        $transaction_type = full_query("SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'transaction_type'");
-        if(mysql_num_rows($transaction_type) == 0) {
-            $alter_table = full_query("ALTER TABLE `mod_paghiper` ADD COLUMN transaction_type varchar(45) DEFAULT NULL AFTER id, ADD COLUMN bar_code_number_to_image varchar(54) AFTER digitable_line, ADD COLUMN qrcode_base64 varchar(255) DEFAULT NULL, ADD COLUMN qrcode_image_url varchar(255) DEFAULT NULL, ADD COLUMN emv varchar(255) DEFAULT NULL, ADD COLUMN pix_url varchar(255) DEFAULT NULL, ADD COLUMN bacen_url varchar(255) DEFAULT NULL;");
+        if(!$transaction_type) {
+
+            $sql = "ALTER TABLE `mod_paghiper` ADD COLUMN transaction_type varchar(45) DEFAULT NULL AFTER id,
+                                                ADD COLUMN bar_code_number_to_image varchar(54) AFTER digitable_line, 
+                                                ADD COLUMN qrcode_base64 varchar(255) DEFAULT NULL, 
+                                                ADD COLUMN qrcode_image_url varchar(255) DEFAULT NULL, 
+                                                ADD COLUMN emv varchar(255) DEFAULT NULL, 
+                                                ADD COLUMN pix_url varchar(255) DEFAULT NULL, 
+                                                ADD COLUMN bacen_url varchar(255) DEFAULT NULL;";
+            $query = Capsule::connection()
+                ->getPdo()
+                ->prepare($sql);
+            $query->execute();
+            $delete_table = $query->fetch(\PDO::FETCH_BOTH);
+
             if(!$alter_table) {
                 logTransaction($GATEWAY["name"],$_POST,"Não foi possível adicionar os campos para suporte ao PIX. Por favor cheque se o usuário MySQL tem permissões para alterar a tabela mod_paghiper");
             }
         }
 
-        $lock_id = full_query("SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'lock_id'");
-        if(mysql_num_rows($lock_id) == 0) {
-            $alter_table = full_query("ALTER TABLE `mod_paghiper` ADD COLUMN lock_id varchar(64) DEFAULT NULL AFTER bacen_url;");
+        $sql = "SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'lock_id'";
+        $query = Capsule::connection()
+                    ->getPdo()
+                    ->prepare($sql);
+        $query->execute();
+        $lock_id = $query->fetch(\PDO::FETCH_ASSOC);
+
+        if(!$lock_id) {
+
+            $sql = "ALTER TABLE `mod_paghiper` ADD COLUMN lock_id varchar(64) DEFAULT NULL AFTER bacen_url;";
+            $query = Capsule::connection()
+                        ->getPdo()
+                        ->prepare($sql);
+            $query->execute();
+            $alter_table = $query->fetch(\PDO::FETCH_BOTH);
+
             if(!$alter_table) {
                 logTransaction($GATEWAY["name"],$_POST,"Não foi possível atualizar o banco de dados da Paghiper para a versão 1.4. Por favor cheque se o usuário MySQL tem permissões para alterar a tabela mod_paghiper");
             }
@@ -806,11 +940,15 @@ function paghiper_check_table() {
         create_paghiper_table();
     }
 
+    $sql = "SHOW TABLES LIKE 'mod_paghiper'";
+    $query = Capsule::connection()
+        ->getPdo()
+        ->prepare($sql);
+    $query->execute();
+    $result = $query->fetch(\PDO::FETCH_BOTH);
 
-    if ($result = full_query("SHOW TABLES LIKE 'mod_paghiper'")) {
-        if($result->num_rows == 1) {
-            echo "Table exists";
-        }
+    if ($result) {
+        echo "Table exists";
     }
     else {
         echo "Table does not exist";
@@ -818,7 +956,7 @@ function paghiper_check_table() {
 }
 
 function create_paghiper_table() {
-    $table_create = full_query("CREATE TABLE IF NOT EXISTS `mod_paghiper` (
+    $sql = "CREATE TABLE IF NOT EXISTS `mod_paghiper` (
           `id` int(11) NOT NULL AUTO_INCREMENT,
 		  `transaction_type` varchar(45) DEFAULT NULL,
           `transaction_id` varchar(16) NOT NULL,
@@ -839,7 +977,13 @@ function create_paghiper_table() {
 		  `lock_id` varchar(64) DEFAULT NULL,
           PRIMARY KEY (`id`),
           KEY `transaction_id` (`transaction_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
+        ) ENGINE=InnoDB DEFAULT CHARSET=latin1;";
+    
+    $query = Capsule::connection()
+        ->getPdo()
+        ->prepare($sql);
+    $query->execute();
+    $table_create = $query->fetch(\PDO::FETCH_BOTH);
 
     if(!$table_create) {
         logTransaction($GATEWAY["name"],$_POST,"Não foi possível criar o banco de dados para armazenamento das faturas.");

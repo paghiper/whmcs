@@ -11,10 +11,14 @@
  * @link       https://www.paghiper.com/
  */
 
+use WHMCS\Database\Capsule;
 use setasign\Fpdi;
 
-$query = mysql_query("SELECT paymentmethod, total FROM tblinvoices WHERE id = {$invoiceid};");
-$result = mysql_fetch_assoc($query);
+$query = Capsule::connection()
+        ->getPdo()
+        ->prepare($sql);
+$query->execute();
+$result = $query->fetch(\PDO::FETCH_ASSOC);
 
 $invoice_total = $result['total'];
 $payment_method_slug = $result['paymentmethod'];
