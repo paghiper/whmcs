@@ -104,7 +104,7 @@ function paghiper_query_scape_string($string) {
 }
 
 function paghiper_apply_custom_taxes($amount, $GATEWAY, $params = NULL){
-    if(array_key_exists('amount', $params)) {
+    if($params && array_key_exists('amount', $params)) {
         $amount     = $params['amount'];
         $porcento   = $params['porcento'];
         $taxa       = $params['taxa'];
