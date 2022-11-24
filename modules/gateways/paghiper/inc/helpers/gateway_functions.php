@@ -132,13 +132,14 @@ function paghiper_query_scape_string($string) {
 
 function paghiper_apply_custom_taxes($amount, $GATEWAY, $params = NULL){
     if($params && array_key_exists('amount', $params)) {
-        $amount     = $params['amount'];
-        $porcento   = $params['porcento'];
-        $taxa       = $params['taxa'];
+        $amount     = (float) $params['amount'];
+        $porcento   = (float) $params['porcento'];
+        $taxa       = (float) $params['taxa'];
     } else {
-        $porcento   = $GATEWAY['porcento'];
-        $taxa       = $GATEWAY['taxa'];
+        $porcento   = (float) $GATEWAY['porcento'];
+        $taxa       = (float) $GATEWAY['taxa'];
     }
+
     return number_format(($amount+((($amount / 100) * $porcento) + $taxa)), 2, '.', ''); # Formato: ##.##
 }
 
@@ -715,7 +716,7 @@ function generate_paghiper_billet($invoice, $params) {
     $discount_value = (!empty($discount_config)) ? $total * (($discount_config > 99) ? 99 / 100 : $discount_config / 100) : '';
     $discount_cents = (!empty($discount_value)) ? paghiper_convert_to_numeric(number_format($discount_value, 2, '.', '' )) : 0;
 
-    if(($total - $discount_value) < 3) {
+    if((floatval($total) - floatval($discount_value)) < 3) {
 
         // Mostrar tela de boleto cancelado
         $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
@@ -804,7 +805,6 @@ function generate_paghiper_billet($invoice, $params) {
             logTransaction($GATEWAY["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
             exit();
         }
-
 
         if($return_json) {
             header('Content-Type: application/json');
