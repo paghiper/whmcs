@@ -11,6 +11,8 @@
  * @link       https://www.paghiper.com/
  */
 
+use WHMCS\Database\Capsule;
+
 // Nenhuma das funções foi executada, então o script foi acessado diretamente.
 if (!defined("WHMCS")) {
     
@@ -79,10 +81,15 @@ if (!defined("WHMCS")) {
 
                 exit();
             } else {
-                $query = "SELECT email FROM tblclients WHERE id = '$user_id' LIMIT 1"; 
-                $result = mysql_query($query);
-                $data = mysql_fetch_array($result);
-                $email = $data[0]; 
+
+                $sql = "SELECT email FROM tblclients WHERE id = '$user_id' LIMIT 1";
+                $query = Capsule::connection()
+                    ->getPdo()
+                    ->prepare($sql);
+                $query->execute();
+                $user = $query->fetch(\PDO::FETCH_BOTH);
+                $email = array_shift($user); 
+
                 if($email !== $user_email) {
 
                     // Mostrar tela de boleto indisponível
@@ -171,7 +178,12 @@ if (!defined("WHMCS")) {
         $sql = (!$is_pix) ? 
             "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') AND ('{$dataHoje}' <= due_date OR '{$dataHoje}' <= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY)) ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1" : 
             "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') AND '{$dataHoje}' <= due_date ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
-        $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
+
+        $query = Capsule::connection()
+                    ->getPdo()
+                    ->prepare($sql);
+        $query->execute();
+        $billet = $query->fetch(\PDO::FETCH_ASSOC);
 
         if(!empty($billet)) {
             $due_date           = $billet['due_date'];
@@ -196,7 +208,12 @@ if (!defined("WHMCS")) {
         ) {
 
             $sql = "SELECT * FROM mod_paghiper WHERE order_id = '{$order_id}' AND status = 'reserved' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') ORDER BY due_date DESC LIMIT 1;";
-            $reserved_billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
+            $query = Capsule::connection()
+                    ->getPdo()
+                    ->prepare($sql);
+            $query->execute();
+            $reserved_billet = $query->fetch(\PDO::FETCH_ASSOC);
+            
             if(!empty($reserved_billet)) {
 
                 $ico = ($is_pix) ? 'pix-reserved.png' : 'billet-reserved.png';
@@ -290,8 +307,16 @@ if (!defined("WHMCS")) {
                         $client_query = localAPI('getClientsDetails', $query_params, $whmcs_admin);
                         $client_details = $client_query['client'];
                     }
+
+                    // Get used currency
+                    $default_currency_code = getCurrency()['code'];
+                    if(is_array($client_details) && array_key_exists('client', $client_details) && array_key_exists('currency_code', $client_details['client'])) {
+                        $currency = $client_details['client']['currency_code'];
+                    } else {
+                        $currency = $default_currency_code;
+                    }
                     
-                    if(array_key_exists('currency_code', $client_details['client']) && ($client_details['client']['currency_code'] !== 'BRL' && $client_details['client']['currency_code'] !== 'R$')) {
+                    if($currency !== 'BRL' && $currency !== 'R$') {
                         $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                         $title = 'Método de pagamento indisponível para a moeda selecionada';
                         $message = 'Este método de pagamento só pode ser utilizado para pagamentos em R$ (BRL)<br>Caso creia que isso seja um erro, entre em contato com o suporte.';
@@ -350,7 +375,13 @@ if (!defined("WHMCS")) {
             'notification_id'   => $notification_id
         );
 
-        $billet = mysql_fetch_array(mysql_query("SELECT * FROM mod_paghiper WHERE transaction_id = '$transaction_id' ORDER BY due_date DESC LIMIT 1;"), MYSQL_ASSOC);
+        $sql = "SELECT * FROM mod_paghiper WHERE transaction_id = '$transaction_id' ORDER BY due_date DESC LIMIT 1;";
+        $query = Capsule::connection()
+            ->getPdo()
+            ->prepare($sql);
+        $query->execute();
+        $billet = $query->fetch(\PDO::FETCH_ASSOC);
+
         $order_id = (empty($billet)) ? $_POST['idPlataforma'] : $billet['order_id'];
 
         if (!empty($_POST)) {
@@ -504,15 +535,6 @@ if (!defined("WHMCS")) {
 
                     // Essa função checa se a transação ja foi registrada no banco de dados. 
                     $checkTransId = checkCbTransID($transaction_id);
-
-                    /**
-                     * Infelizmente a função checkCbTransID não é totalmente confiável na versão 7 do WHMCS.
-                     * Por conta disso, precisamos checar se a transação ja sofreu baixa no banco
-                     */ 
-                    $unpaid_transactions = mysql_query("SELECT transaction_id, status FROM mod_paghiper WHERE transaction_id = '{$transaction_id}' AND status = 'paid'");
-                    if(mysql_num_rows($unpaid_transactions) >= 1) {
-                        die('Notificação ja foi processada');
-                    }
 
                     // Calcula a taxa cobrada pela PagHiper de maneira dinâmica e registra para uso no painel.
                     $fee = $transaction_fee;
