@@ -13,42 +13,28 @@
 
 require_once(dirname(__FILE__) . '/../../modules/gateways/paghiper/inc/helpers/gateway_functions.php');
 
-function paghiper_getClientDetails($vars, $gatewayConfig) {
+function paghiper_getClientDetails($vars, $gateway_config) {
 
-    $gateway_admin = $gatewayConfig['admin'];
+    $gateway_admin = $gateway_config['admin'];
     $backup_admin = array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins LIMIT 1")));
 
-    // Se o usuário admin estiver vazio nas configurações, usamos o padrão
-    $whmcsAdmin = (
-        (empty(trim($gateway_admin))) ? 
-
-        // Caso não tenha um valor para usarmos, pegamos o primeiro admin disponível na tabela
-        $backup_admin : 
-
-            // Caso tenha, usamos o preenchido
-            (
-                empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$gateway_admin' LIMIT 1"))))) ?
-                $backup_admin :
-                trim($gatewayConfig['admin']
-            )
-
-    );
+    $whmcs_admin = paghiper_autoSelectAdminUser($gateway_config);
 
     $query_params = array(
         'clientid' 	=> $vars['userid'],
         'stats'		=> false
     );
 
-    return localAPI('getClientsDetails', $query_params, $whmcsAdmin);
+    return localAPI('getClientsDetails', $query_params, $whmcs_admin);
 }
 
-function paghiper_getClientCustomFields($vars, $gatewayConfig) {
+function paghiper_getClientCustomFields($vars, $gateway_config) {
 
     $clientCustomFields = [];
 
     if(array_key_exists('custtype', $vars) && $vars['custtype'] == 'existing') {
 
-        $client_details = paghiper_getClientDetails($vars, $gatewayConfig);
+        $client_details = paghiper_getClientDetails($vars, $gateway_config);
 
         foreach($client_details["customfields"] as $key => $value){
             $clientCustomFields[$value['id']] = $value['value'];

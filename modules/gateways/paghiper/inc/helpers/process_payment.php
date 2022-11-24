@@ -34,19 +34,7 @@ if (!defined("WHMCS")) {
     // Vamos precisar pegar a URL do sistema usando métodos alternativos. A variável $params não está disponível nesse momento.
     $systemurl = rtrim(\App::getSystemUrl(),"/");
 
-    $gateway_admin = $GATEWAY['admin'];
-	$backup_admin = array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins LIMIT 1")));
-
-    // Se o usuário admin estiver vazio nas configurações, usamos o padrão
-    $whmcsAdmin = (empty(trim($gateway_admin))) ? 
-
-        // Caso não tenha um valor para usarmos, pegamos o primeiro admin disponível na tabela
-        $backup_admin : 
-
-        // Caso tenha, usamos o preenchido
-        ( empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$gateway_admin' LIMIT 1"))))) ?
-            $backup_admin :
-            trim($GATEWAY['admin'] );
+    $whmcs_admin = paghiper_autoSelectAdminUser($GATEWAY);
 
     // Checamos se a tabela da PagHiper está pronta pra uso
     $custom_table = paghiper_check_table();
@@ -62,7 +50,7 @@ if (!defined("WHMCS")) {
         // Pegamos a fatura no banco de dados
         $getinvoice = 'getinvoice';
         $getinvoiceid['invoiceid'] = intval($_GET["invoiceid"]);
-        $invoice = localAPI($getinvoice,$getinvoiceid,$whmcsAdmin);
+        $invoice = localAPI($getinvoice, $getinvoiceid, $whmcs_admin);
 
         $issue_all_config = (int) $GATEWAY['issue_all'];
 
@@ -299,7 +287,7 @@ if (!defined("WHMCS")) {
                             'clientid' 	=> $invoice['userid'],
                             'stats'		=> false
                         );
-                        $client_query = localAPI('getClientsDetails', $query_params, $whmcsAdmin);
+                        $client_query = localAPI('getClientsDetails', $query_params, $whmcs_admin);
                         $client_details = $client_query['client'];
                     }
                     
@@ -401,7 +389,7 @@ if (!defined("WHMCS")) {
                 $addtransvalues['paymentmethod'] = $gateway_code;
                 $addtransvalues['transid'] = $transaction_id . $transaction_suffix;
                 $addtransvalues['date'] = date('d/m/Y');
-                $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);*/
+                $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcs_admin);*/
     
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Ops! Ação não permitida.';
@@ -465,7 +453,7 @@ if (!defined("WHMCS")) {
             // Pegamos a fatura como array e armazenamos na variável para uso posterior
             $command = "getinvoice";
             $values["invoiceid"] = $order_id;
-            $results = localAPI($command,$values,$whmcsAdmin);
+            $results = localAPI($command, $values, $whmcs_admin);
             
                 // Função que vamos usar na localAPI
 				$addtransaction = "addtransaction";
@@ -482,7 +470,7 @@ if (!defined("WHMCS")) {
                     $addtransvalues['paymentmethod'] = $gateway_code;
                     $addtransvalues['transid'] = $transaction_id . $transaction_suffix;
                     $addtransvalues['date'] = date('d/m/Y');
-                    $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
+                    $addtransresults = localAPI($addtransaction, $addtransvalues, $whmcs_admin);
 
                     // Salvamos as informações no log de transações do WHMCS
                     logTransaction($GATEWAY["name"],$_POST,"Aguardando o Pagamento");
@@ -501,7 +489,7 @@ if (!defined("WHMCS")) {
                     $addtransvalues['paymentmethod'] = $gateway_code;
                     $addtransvalues['transid'] = $transaction_id.'-Pagto-Reservado';
                     $addtransvalues['date'] = date('d/m/Y');
-                    $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
+                    $addtransresults = localAPI($addtransaction, $addtransvalues, $whmcs_admin);
 
                     // Salvamos as informações no log de transações do WHMCS
                     logTransaction($GATEWAY["name"],$_POST,"Pagamento pré-confirmado");
@@ -547,13 +535,13 @@ if (!defined("WHMCS")) {
 
                             // Conciliação: Desconto por antecipação (Valor de balanço da Invoice - Valor total pago)
                             $desc = 'Desconto por pagamento antecipado';
-                            paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
+                            paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcs_admin);
 
                         } else {
 
                             // Conciliação: Juros e Multas = (Valor total pago - Valor contido na Invoice)
                             $desc = 'Juros e multa por atraso';
-                            paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
+                            paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcs_admin);
 
                             // TODO: Implementar mensagem alternativa, caso valor adicional venha de taxas
 

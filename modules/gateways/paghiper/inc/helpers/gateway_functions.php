@@ -34,7 +34,7 @@ function paghiper_get_customfield_id() {
     
 }
 
-function paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin) {
+function paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcs_admin) {
 
     $postData = array(
         'invoiceid'             => (int) $invoice_id,
@@ -43,7 +43,7 @@ function paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin) {
     );
 
     // Atualizamos a invoice com os valores novos
-    $results = localAPI('UpdateInvoice',$postData,$whmcsAdmin);
+    $results = localAPI('UpdateInvoice', $postData, $whmcs_admin);
 
 }
 
@@ -455,6 +455,28 @@ function paghiper_print_screen($ico, $title, $message, $conf = null) {
         </html>";
 return $code;
 
+}
+
+function paghiper_autoSelectAdminUser($gateway_config) {
+
+    $gateway_admin  = trim($gateway_config['admin']);
+    $backup_admin   = paghiper_getBackupAdminUser();
+
+    // Se o usuário admin não estiver vazio nas configurações, e for um user válido, usamos este
+    if(!empty($gateway_admin) && paghiper_checkIfAdminUserExists($gateway_admin)) {
+        return $gateway_admin;
+    }
+
+    // Caso não tenha um valor para usarmos, pegamos o primeiro admin disponível na tabela
+    return $backup_admin;
+}
+
+function paghiper_getBackupAdminUser() {
+    return array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins LIMIT 1")));
+}
+
+function paghiper_checkIfAdminUserExists($admin_user) {
+    return empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$admin_user' LIMIT 1"))));
 }
 
 function generate_paghiper_billet($invoice, $params) {
