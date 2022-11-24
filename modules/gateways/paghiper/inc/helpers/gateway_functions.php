@@ -15,23 +15,31 @@ use WHMCS\Database\Capsule;
 
 function paghiper_get_customfield_id() {
 
+    //$fields = $query->fetch(\PDO::FETCH_ASSOC);
+
+
     $sql = "SELECT id, fieldname FROM tblcustomfields WHERE type = 'client';";
     $query = Capsule::connection()
             ->getPdo()
             ->prepare($sql);
-    $query->execute();
-    $fields = $query->fetch(\PDO::FETCH_ASSOC);
+    ;
 
-    if (!$fields) {
+    if(!$query->execute()) {
+        var_dump($e->getMessage());
         return '<br><br>Erro geral no banco de dados';
-    } elseif ($fields) {
+
+    }
+
+    if ($query->rowCount() > 0) {
         $tutorial = '<br><br>Para sua comodidade, listamos abaixo os campos que podem ser usados e seus IDs. Basta pegar o ID e preencher acima. <ul>';
-        while ($field = mysql_fetch_assoc($fields)) {
+        while ($field = $query->fetch(\PDO::FETCH_ASSOC)) {
+
             $tutorial .= '<li><strong>ID do Campo: ';
             $tutorial .= $field['id'];
             $tutorial .= '</strong> | Nome: ';
             $tutorial .= htmlentities($field['fieldname']);
             $tutorial .= '</li>';
+            
         }
         $tutorial .= '</ul>';
         $tutorial .= '<br>Caso use campos separados para CPF e CNPJ, coloque o campo CPF seguido pelo de CNPJ separado por uma barra vertical.<br>(ex.: 15|42)';
