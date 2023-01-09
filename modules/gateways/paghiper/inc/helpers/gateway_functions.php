@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.4
+ * @version    2.4.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -531,7 +531,7 @@ function paghiper_checkIfAdminUserExists($admin_user) {
     $query->execute();
     $result = $query->fetch(\PDO::FETCH_BOTH);
 
-    return empty(array_shift($result));
+    return !empty(array_shift($result));
 }
 
 function generate_paghiper_billet($invoice, $params) {
@@ -956,10 +956,10 @@ function paghiper_check_table() {
     $result = $query->fetch(\PDO::FETCH_BOTH);
 
     if ($result) {
-        echo "Table exists";
+        return true;
     }
     else {
-        echo "Table does not exist";
+        return false;
     }
 }
 
