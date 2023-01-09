@@ -531,7 +531,7 @@ function paghiper_checkIfAdminUserExists($admin_user) {
     $query->execute();
     $result = $query->fetch(\PDO::FETCH_BOTH);
 
-    return empty(array_shift($result));
+    return !empty(array_shift($result));
 }
 
 function generate_paghiper_billet($invoice, $params) {
