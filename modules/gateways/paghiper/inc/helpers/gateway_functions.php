@@ -956,10 +956,10 @@ function paghiper_check_table() {
     $result = $query->fetch(\PDO::FETCH_BOTH);
 
     if ($result) {
-        echo "Table exists";
+        return true;
     }
     else {
-        echo "Table does not exist";
+        return false;
     }
 }
 
