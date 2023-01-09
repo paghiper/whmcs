@@ -51,6 +51,18 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Disponibilização de linha digitável no painel
 
+## 2.4 - 2023/01/09
+
+`Bugs resolvidos`
+
+* Operadores ternários mostravam erros, dependendo da configuração do PHP
+
+`Melhorias`
+
+* Compatibilidade com PHP 8.1
+* Queries convertidas para uso da classe Capsule (ao invés de mysqli)
+
+
 ## 2.3 - 2022/06/20
 
 `Bugs resolvidos`
