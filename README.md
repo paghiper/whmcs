@@ -8,7 +8,7 @@ Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos au
 
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 2.4.1
+* **Versão mais Recente:** 2.4.2
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.2.0, cURL e JSON ativado.
 * **Compatibilidade:** WHMCS 8.X, PHP 7.x. Mod_rewrite opcional
@@ -50,6 +50,18 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 ## Disponíveis em alguns dias:
 
 * Disponibilização de linha digitável no painel
+
+## 2.4.2 - 2023/01/10
+
+`Bugs resolvidos`
+
+* Label de transação (PIX/boleto) aparecendo trocado em algumas telas de erro
+* Erro 0x004681 aparecendo sem motivo em alguns casos
+* Problemas intermitentes com a atualização de status das faturas
+
+`Melhorias`
+
+* Mais dados para debug nos Logs de Portais de Pagamento
 
 ## 2.4.1 - 2023/01/09
 
