@@ -103,13 +103,13 @@ function paghiper_get_lock_id($transaction_id) {
         ->getPdo()
         ->prepare($sql);
     $query->execute();
-    $result = $query->fetch(\PDO::FETCH_BOTH);
+    $transaction = $query->fetch(\PDO::FETCH_ASSOC);
 
-    if (!$result) {
+    if (!$transaction) {
         return false;
     }
 
-    return $result['lock_id'];
+    return $transaction['lock_id'];
 }
 
 function paghiper_fetch_remote_url($url) {

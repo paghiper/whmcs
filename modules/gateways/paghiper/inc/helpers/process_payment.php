@@ -470,7 +470,7 @@ if (!defined("WHMCS")) {
         if($request['result'] == 'reject') {
 
             // Logamos um erro pra controle
-            logTransaction($GATEWAY["name"],array('post' => $_POST, 'json' => $json), "Notificação Inválida."); 
+            logTransaction($GATEWAY["name"],array('request' => $paghiper_data, 'post' => $_POST, 'json' => $json), "Notificação Inválida."); 
 
         } elseif($request['result'] == 'success') {
 
