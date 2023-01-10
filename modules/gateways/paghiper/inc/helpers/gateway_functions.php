@@ -74,10 +74,9 @@ function paghiper_log_status_to_db($status, $transaction_id) {
     $query = Capsule::connection()
                 ->getPdo()
                 ->prepare($sql);
-    $query->execute();
-    $result = $query->fetch(\PDO::FETCH_BOTH);
+    $status_log = $query->execute();
 
-    if(!$result) {
+    if(!$status_log) {
         return false;
     }
     return true;
@@ -89,10 +88,9 @@ function paghiper_write_lock_id($lock_id, $transaction_id) {
     $query = Capsule::connection()
                 ->getPdo()
                 ->prepare($sql);
-    $query->execute();
-    $result = $query->fetch(\PDO::FETCH_BOTH);
+    $write_lock_id = $query->execute();
 
-    if(!$result) {
+    if(!$write_lock_id) {
         return false;
     }
     return true;
