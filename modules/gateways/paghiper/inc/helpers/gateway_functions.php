@@ -74,10 +74,9 @@ function paghiper_log_status_to_db($status, $transaction_id) {
     $query = Capsule::connection()
                 ->getPdo()
                 ->prepare($sql);
-    $query->execute();
-    $result = $query->fetch(\PDO::FETCH_BOTH);
+    $status_log = $query->execute();
 
-    if(!$result) {
+    if(!$status_log) {
         return false;
     }
     return true;
@@ -89,10 +88,9 @@ function paghiper_write_lock_id($lock_id, $transaction_id) {
     $query = Capsule::connection()
                 ->getPdo()
                 ->prepare($sql);
-    $query->execute();
-    $result = $query->fetch(\PDO::FETCH_BOTH);
+    $write_lock_id = $query->execute();
 
-    if(!$result) {
+    if(!$write_lock_id) {
         return false;
     }
     return true;
@@ -801,12 +799,11 @@ function generate_paghiper_billet($invoice, $params) {
         $query = Capsule::connection()
                     ->getPdo()
                     ->prepare($sql);
-        $query->execute();
-        $query_insert = $query->fetch(\PDO::FETCH_BOTH);
+        $query_insert = $query->execute();
 
         if(!$query_insert) {
             $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Ops! Não foi possível emitir o '.(($is_pix) ? 'boleto bancário' : 'PIX').'.';
+            $title = 'Ops! Não foi possível emitir o '.(($is_pix) ? 'PIX' : 'boleto bancário').'.';
             $message = 'Por favor entre em contato com o suporte. Erro 0x004681';
             
             echo paghiper_print_screen($ico, $title, $message);
