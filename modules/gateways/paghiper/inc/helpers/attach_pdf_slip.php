@@ -7,13 +7,14 @@
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
- * @copyright  (c) 2017-2020, PagHiper
+ * @copyright  (c) 2017-2023, PagHiper
  * @link       https://www.paghiper.com/
  */
 
 use WHMCS\Database\Capsule;
 use setasign\Fpdi;
 
+$sql = "SELECT paymentmethod, total FROM tblinvoices WHERE id = '$invoiceid';";
 $query = Capsule::connection()
         ->getPdo()
         ->prepare($sql);
