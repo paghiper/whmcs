@@ -7,7 +7,7 @@
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
- * @copyright  (c) 2017-2021, PagHiper
+ * @copyright  (c) 2017-2023, PagHiper
  * @link       https://www.paghiper.com/
  */
 
@@ -427,7 +427,7 @@ if (!defined("WHMCS")) {
                 $message = 'O thread ID desta notificação não está autorizado a ser processado.';
                 
                 echo paghiper_print_screen($ico, $title, $message);
-                logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'Thread ID error (0x004682)'), sprintf("O ID de requesição associado %s não é desta sessão. Erro 0x004682 \n\nThread ID: %s\nLock: %s", (($is_pix) ? 'PIX' : 'boleto'), $request_id, $current_lock_id));
+                logTransaction($gateway_settings["name"],array('invoice_id' => $order_id, 'exception' => 'Thread ID error (0x004682)'), sprintf("O ID de requosição associado %s não é desta sessão. Erro 0x004682 \n\nThread ID: %s\nLock: %s", (($is_pix) ? 'PIX' : 'boleto'), $request_id, $current_lock_id));
                 exit();
             } else {
                 paghiper_write_lock_id(NULL, $transaction_id);
