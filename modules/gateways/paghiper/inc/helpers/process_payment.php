@@ -1,19 +1,21 @@
 <?php
 /**
  * PagHiper - Módulo oficial para integração com WHMCS
- * 
+ *
  * @package    PagHiper para WHMCS
- * @version    2.3
+ * @version    2.4.2
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
- * @copyright  (c) 2017-2021, PagHiper
+ * @copyright  (c) 2017-2023, PagHiper
  * @link       https://www.paghiper.com/
  */
 
+use WHMCS\Database\Capsule;
+
 // Nenhuma das funções foi executada, então o script foi acessado diretamente.
 if (!defined("WHMCS")) {
-    
+
     header("access-control-allow-origin: *");
 
     // Inicializar WHMCS, carregar o gateway e a fatura.
@@ -22,7 +24,7 @@ if (!defined("WHMCS")) {
     $whmcs->load_function("invoice");
 
     // Initialize module settings
-	$gateway_code = ($is_pix) ? "paghiper_pix" : "paghiper"; 
+	$gateway_code = ($is_pix) ? "paghiper_pix" : "paghiper";
     $GATEWAY = getGatewayVariables($gateway_code);
 
     // Define variáveis para configurações do gateway
@@ -34,26 +36,14 @@ if (!defined("WHMCS")) {
     // Vamos precisar pegar a URL do sistema usando métodos alternativos. A variável $params não está disponível nesse momento.
     $systemurl = rtrim(\App::getSystemUrl(),"/");
 
-    $gateway_admin = $GATEWAY['admin'];
-	$backup_admin = array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins LIMIT 1")));
-
-    // Se o usuário admin estiver vazio nas configurações, usamos o padrão
-    $whmcsAdmin = (empty(trim($gateway_admin))) ? 
-
-        // Caso não tenha um valor para usarmos, pegamos o primeiro admin disponível na tabela
-        $backup_admin : 
-
-        // Caso tenha, usamos o preenchido
-        ( empty(array_shift(mysql_fetch_array(mysql_query("SELECT username FROM tbladmins WHERE username = '$gateway_admin' LIMIT 1"))))) ?
-            $backup_admin :
-            trim($GATEWAY['admin'] );
+    $whmcs_admin = paghiper_autoSelectAdminUser($GATEWAY);
 
     // Checamos se a tabela da PagHiper está pronta pra uso
     $custom_table = paghiper_check_table();
 
     // Se as condições baterem, estamos lidando com um post do checkout transparente.
     if(isset($_GET["invoiceid"])) {
-        
+
         $user_id = intval($_GET["uuid"]);
 		$user_email = paghiper_query_scape_string($_GET["mail"]);
 
@@ -62,7 +52,7 @@ if (!defined("WHMCS")) {
         // Pegamos a fatura no banco de dados
         $getinvoice = 'getinvoice';
         $getinvoiceid['invoiceid'] = intval($_GET["invoiceid"]);
-        $invoice = localAPI($getinvoice,$getinvoiceid,$whmcsAdmin);
+        $invoice = localAPI($getinvoice, $getinvoiceid, $whmcs_admin);
 
         $issue_all_config = (int) $GATEWAY['issue_all'];
 
@@ -91,10 +81,15 @@ if (!defined("WHMCS")) {
 
                 exit();
             } else {
-                $query = "SELECT email FROM tblclients WHERE id = '$user_id' LIMIT 1"; 
-                $result = mysql_query($query);
-                $data = mysql_fetch_array($result);
-                $email = $data[0]; 
+
+                $sql = "SELECT email FROM tblclients WHERE id = '$user_id' LIMIT 1";
+                $query = Capsule::connection()
+                    ->getPdo()
+                    ->prepare($sql);
+                $query->execute();
+                $user = $query->fetch(\PDO::FETCH_BOTH);
+                $email = array_shift($user);
+
                 if($email !== $user_email) {
 
                     // Mostrar tela de boleto indisponível
@@ -161,7 +156,7 @@ if (!defined("WHMCS")) {
             case "Collections":
                 break;
         }
-  
+
         // Pegamos a data de vencimento e a data de hoje
         $invoiceDuedate = $invoice['duedate']; // Data de vencimento da fatura
         $dataHoje = date('Y-m-d'); // Data de Hoje
@@ -180,10 +175,15 @@ if (!defined("WHMCS")) {
         }
 
         $transaction_type = ($is_pix) ? 'pix' : 'billet';
-        $sql = (!$is_pix) ? 
-            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') AND ('{$dataHoje}' <= due_date OR '{$dataHoje}' <= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY)) ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1" : 
+        $sql = (!$is_pix) ?
+            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') AND ('{$dataHoje}' <= due_date OR '{$dataHoje}' <= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY)) ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1" :
             "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$order_id}' AND status = 'pending' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') AND '{$dataHoje}' <= due_date ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
-        $billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
+
+        $query = Capsule::connection()
+                    ->getPdo()
+                    ->prepare($sql);
+        $query->execute();
+        $billet = $query->fetch(\PDO::FETCH_ASSOC);
 
         if(!empty($billet)) {
             $due_date           = $billet['due_date'];
@@ -195,20 +195,25 @@ if (!defined("WHMCS")) {
         }
 
         // Só re-emitimos a fatura se os valores forem diferentes, se limite para pagamento ja tiver expirado (somando os dias de tolerência) e se o status for não-pago.
-        if( 
+        if(
             (
                 // Caso nenhum boleto tenha sido emitido
-                empty($billet) || 
+                empty($billet) ||
                 // Caso não haja URL de boleto disponível no banco
                 (empty($billet_url) && empty($qrcode_image_url)) ||
                 // Caso o vencimento esteja no futuro mas for diferente do definido na fatura
                 (strtotime($invoiceDuedate) > strtotime(date('Y-m-d')) && $due_date !== $invoiceDuedate)
-            ) 
+            )
             && $invoice['status'] == 'Unpaid'
         ) {
 
             $sql = "SELECT * FROM mod_paghiper WHERE order_id = '{$order_id}' AND status = 'reserved' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') ORDER BY due_date DESC LIMIT 1;";
-            $reserved_billet = mysql_fetch_array(mysql_query($sql), MYSQL_ASSOC);
+            $query = Capsule::connection()
+                    ->getPdo()
+                    ->prepare($sql);
+            $query->execute();
+            $reserved_billet = $query->fetch(\PDO::FETCH_ASSOC);
+
             if(!empty($reserved_billet)) {
 
                 $ico = ($is_pix) ? 'pix-reserved.png' : 'billet-reserved.png';
@@ -219,7 +224,7 @@ if (!defined("WHMCS")) {
 
             }
 
-            if(empty($billet) && empty($reserved_billet)) { 
+            if(empty($billet) && empty($reserved_billet)) {
                 $reissue = TRUE;
             }
         }
@@ -252,13 +257,13 @@ if (!defined("WHMCS")) {
                 exit();
 
             }
-        
+
             // Pegamos as datas que definimos anteriormente e transformamos em objeto Date do PHP
             $data1 = new DateTime($invoiceDuedate);
             $data2 = new DateTime($dataHoje);
 
             // Comparamos as datas para enviar o resultado a PagHiper. Isso é necessário pois o gateway pede o vencimento em número de dias no futuro, não como data.
-            $intervalo = $data2->diff($data1); 
+            $intervalo = $data2->diff($data1);
             $vencimentoBoleto = $intervalo->format('%R%a');
 
             if($vencimentoBoleto < 0) {
@@ -270,7 +275,7 @@ if (!defined("WHMCS")) {
             // Calculamos a diferença de dias entre o dia de vencimento e os dias para aplicação de desconto.
             $discount_period = (int) $GATEWAY['early_payment_discounts_days'];
             if(!empty($discount_period) && $discount_period > 0) {
-                
+
                 if($vencimentoBoleto <= $discount_period || $vencimentoBoleto == 0) {
                     unset($GATEWAY['early_payment_discounts_days']);
                     unset($GATEWAY['early_payment_discounts_cents']);
@@ -299,11 +304,19 @@ if (!defined("WHMCS")) {
                             'clientid' 	=> $invoice['userid'],
                             'stats'		=> false
                         );
-                        $client_query = localAPI('getClientsDetails', $query_params, $whmcsAdmin);
+                        $client_query = localAPI('getClientsDetails', $query_params, $whmcs_admin);
                         $client_details = $client_query['client'];
                     }
-                    
-                    if(array_key_exists('currency_code', $client_details['client']) && ($client_details['client']['currency_code'] !== 'BRL' && $client_details['client']['currency_code'] !== 'R$')) {
+
+                    // Get used currency
+                    $default_currency_code = getCurrency()['code'];
+                    if(is_array($client_details) && array_key_exists('client', $client_details) && array_key_exists('currency_code', $client_details['client'])) {
+                        $currency = $client_details['client']['currency_code'];
+                    } else {
+                        $currency = $default_currency_code;
+                    }
+
+                    if($currency !== 'BRL' && $currency !== 'R$') {
                         $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                         $title = 'Método de pagamento indisponível para a moeda selecionada';
                         $message = 'Este método de pagamento só pode ser utilizado para pagamentos em R$ (BRL)<br>Caso creia que isso seja um erro, entre em contato com o suporte.';
@@ -318,14 +331,14 @@ if (!defined("WHMCS")) {
                     	'due_date'			=> $vencimentoBoleto,
                         'format'			=> (($return_json) ? 'json' : 'html')
                     );
-                    
+
                     //echo generate_paghiper_billet($params,$GATEWAY,$invoiceid,$urlRetorno,$vencimentoBoleto,$return_json);
                     echo generate_paghiper_billet($invoice, $params);
 
                 } catch (Exception $e) {
                     echo 'Erro ao solicitar boleto: ',  $e->getMessage(), "\n";
                 }
-                
+
                 exit;
             }
 
@@ -342,10 +355,10 @@ if (!defined("WHMCS")) {
                     echo paghiper_fetch_remote_url($billet_url);
                 }
             }
-            
+
 
         }
-        
+
     // Caso contrário, é um post do PagHiper.
     } else {
 
@@ -362,7 +375,13 @@ if (!defined("WHMCS")) {
             'notification_id'   => $notification_id
         );
 
-        $billet = mysql_fetch_array(mysql_query("SELECT * FROM mod_paghiper WHERE transaction_id = '$transaction_id' ORDER BY due_date DESC LIMIT 1;"), MYSQL_ASSOC);
+        $sql = "SELECT * FROM mod_paghiper WHERE transaction_id = '$transaction_id' ORDER BY due_date DESC LIMIT 1;";
+        $query = Capsule::connection()
+            ->getPdo()
+            ->prepare($sql);
+        $query->execute();
+        $billet = $query->fetch(\PDO::FETCH_ASSOC);
+
         $order_id = (empty($billet)) ? $_POST['idPlataforma'] : $billet['order_id'];
 
         if (!empty($_POST)) {
@@ -370,28 +389,28 @@ if (!defined("WHMCS")) {
             // Resolvemos disputas entre notifications enviadas simultaneamente
             $request_bytes  = openssl_random_pseudo_bytes(16, $is_strong);
             $request_id     = bin2hex($request_bytes);
-    
+
             $lock_id = paghiper_write_lock_id($request_id, $transaction_id);
             if(!$lock_id || !$is_strong) {
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Ops! Não foi possível processar a baixa do '.((!$is_pix) ? 'boleto bancário' : 'PIX').'.';
                 $message = 'Não foi possível associar o Request ID a transação sendo processada.';
-                
+
                 echo paghiper_print_screen($ico, $title, $message);
                 logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'Failed to write Paghiper LockID'), sprintf("Não foi possível associar o ID de requisição ao %s.", ($is_pix) ? 'PIX' : 'boleto'));
                 exit();
             }
-    
+
             sleep(3);
-    
+
             $current_lock_id = paghiper_get_lock_id($transaction_id);
-    
+
             if(!$current_lock_id || ($current_lock_id !== $request_id)) {
-    
+
                 // Função que vamos usar na localAPI
                 /*$addtransaction = "addtransaction";
                 $transaction_suffix = '-Baixa-Duplicada-Evitada';
-    
+
                 // Log transaction
                 $addtransvalues['userid'] = $results['userid'];
                 $addtransvalues['invoiceid'] = $order_id;
@@ -401,14 +420,14 @@ if (!defined("WHMCS")) {
                 $addtransvalues['paymentmethod'] = $gateway_code;
                 $addtransvalues['transid'] = $transaction_id . $transaction_suffix;
                 $addtransvalues['date'] = date('d/m/Y');
-                $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);*/
-    
+                $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcs_admin);*/
+
                 $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
                 $title = 'Ops! Ação não permitida.';
                 $message = 'O thread ID desta notificação não está autorizado a ser processado.';
-                
+
                 echo paghiper_print_screen($ico, $title, $message);
-                logTransaction($gateway_settings["name"],array('invoice_id' => $invoice_id, 'exception' => 'Thread ID error (0x004682)'), sprintf("O ID de requesição associado %s não é desta sessão. Erro 0x004682 \n\nThread ID: %s\nLock: %s", (($is_pix) ? 'PIX' : 'boleto'), $request_id, $current_lock_id));
+                logTransaction($gateway_settings["name"],array('invoice_id' => $order_id, 'exception' => 'Thread ID error (0x004682)'), sprintf("O ID de requosição associado %s não é desta sessão. Erro 0x004682 \n\nThread ID: %s\nLock: %s", (($is_pix) ? 'PIX' : 'boleto'), $request_id, $current_lock_id));
                 exit();
             } else {
                 paghiper_write_lock_id(NULL, $transaction_id);
@@ -451,7 +470,7 @@ if (!defined("WHMCS")) {
         if($request['result'] == 'reject') {
 
             // Logamos um erro pra controle
-            logTransaction($GATEWAY["name"],array('post' => $_POST, 'json' => $json), "Notificação Inválida."); 
+            logTransaction($GATEWAY["name"],array('request' => $paghiper_data, 'post' => $_POST, 'json' => $json), "Notificação Inválida.");
 
         } elseif($request['result'] == 'success') {
 
@@ -465,13 +484,13 @@ if (!defined("WHMCS")) {
             // Pegamos a fatura como array e armazenamos na variável para uso posterior
             $command = "getinvoice";
             $values["invoiceid"] = $order_id;
-            $results = localAPI($command,$values,$whmcsAdmin);
-            
+            $results = localAPI($command, $values, $whmcs_admin);
+
                 // Função que vamos usar na localAPI
 				$addtransaction = "addtransaction";
-				
+
 				$transaction_suffix = ($gateway_code == 'paghiper_pix') ? '-Transacao-Pix-Criada' : '-Boleto-Gerado';
-                
+
                 // Cliente fez emissão do boleto, logamos apenas como memorando
                 if ($status == "pending" || $status == "Aguardando") {
                     $addtransvalues['userid'] = $results['userid'];
@@ -482,7 +501,7 @@ if (!defined("WHMCS")) {
                     $addtransvalues['paymentmethod'] = $gateway_code;
                     $addtransvalues['transid'] = $transaction_id . $transaction_suffix;
                     $addtransvalues['date'] = date('d/m/Y');
-                    $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
+                    $addtransresults = localAPI($addtransaction, $addtransvalues, $whmcs_admin);
 
                     // Salvamos as informações no log de transações do WHMCS
                     logTransaction($GATEWAY["name"],$_POST,"Aguardando o Pagamento");
@@ -501,7 +520,7 @@ if (!defined("WHMCS")) {
                     $addtransvalues['paymentmethod'] = $gateway_code;
                     $addtransvalues['transid'] = $transaction_id.'-Pagto-Reservado';
                     $addtransvalues['date'] = date('d/m/Y');
-                    $addtransresults = localAPI($addtransaction,$addtransvalues,$whmcsAdmin);
+                    $addtransresults = localAPI($addtransaction, $addtransvalues, $whmcs_admin);
 
                     // Salvamos as informações no log de transações do WHMCS
                     logTransaction($GATEWAY["name"],$_POST,"Pagamento pré-confirmado");
@@ -510,21 +529,12 @@ if (!defined("WHMCS")) {
 
                     // Logamos status no banco
                     paghiper_log_status_to_db($status, $transaction_id);
-                    
+
                 // Transação foi aprovada
                 } elseif ($status == "paid" || $status == "Aprovado") {
 
-                    // Essa função checa se a transação ja foi registrada no banco de dados. 
+                    // Essa função checa se a transação ja foi registrada no banco de dados.
                     $checkTransId = checkCbTransID($transaction_id);
-
-                    /**
-                     * Infelizmente a função checkCbTransID não é totalmente confiável na versão 7 do WHMCS.
-                     * Por conta disso, precisamos checar se a transação ja sofreu baixa no banco
-                     */ 
-                    $unpaid_transactions = mysql_query("SELECT transaction_id, status FROM mod_paghiper WHERE transaction_id = '{$transaction_id}' AND status = 'paid'");
-                    if(mysql_num_rows($unpaid_transactions) >= 1) {
-                        die('Notificação ja foi processada');
-                    }
 
                     // Calcula a taxa cobrada pela PagHiper de maneira dinâmica e registra para uso no painel.
                     $fee = $transaction_fee;
@@ -553,7 +563,7 @@ if (!defined("WHMCS")) {
 
                             // Conciliação: Juros e Multas = (Valor total pago - Valor contido na Invoice)
                             $desc = 'Juros e multa por atraso';
-                            paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcsAdmin);
+                            paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcs_admin);
 
                             // TODO: Implementar mensagem alternativa, caso valor adicional venha de taxas
 
@@ -563,7 +573,7 @@ if (!defined("WHMCS")) {
                     // Registramos o pagamento e damos baixa na fatura
                     addInvoicePayment($invoice_id,$transaction_id,$ammount_paid,$fee,$gateway_code);
 
-                // Transação Cancelada. 
+                // Transação Cancelada.
                 } else if ($status == "canceled" || $status == "Cancelado") {
                     // Boleto não foi pago, logamos apenas como memorando
                     logTransaction($GATEWAY["name"],$request,"Transação Cancelada");
@@ -577,7 +587,7 @@ if (!defined("WHMCS")) {
         } else {
 
             // Logamos um erro pra controle
-            logTransaction($GATEWAY["name"],$json,"Falha ao buscar ID da transação no banco."); 
+            logTransaction($GATEWAY["name"],$json,"Falha ao buscar ID da transação no banco.");
 
         }
 
