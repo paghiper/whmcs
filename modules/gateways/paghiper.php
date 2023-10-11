@@ -273,7 +273,7 @@ function paghiper_link($params) {
             </form>
             {$abrirAuto}";
         } else {
-            $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
+            $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'Nome do pagador inválido, atualize seus dados cadastrais.');
         }
 
     } else {
