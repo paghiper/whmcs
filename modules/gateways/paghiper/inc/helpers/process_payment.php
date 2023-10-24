@@ -310,8 +310,8 @@ if (!defined("WHMCS")) {
 
                     // Get used currency
                     $default_currency_code = getCurrency()['code'];
-                    if(is_array($client_details) && array_key_exists('client', $client_details) && array_key_exists('currency_code', $client_details['client'])) {
-                        $currency = $client_details['client']['currency_code'];
+                    if(is_array($client_details) && array_key_exists('currency_code', $client_details)) {
+                        $currency = $client_details['currency_code'];
                     } else {
                         $currency = $default_currency_code;
                     }
