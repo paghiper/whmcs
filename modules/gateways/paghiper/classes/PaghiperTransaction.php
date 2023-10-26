@@ -486,8 +486,8 @@ class PaghiperTransaction {
             }
         }
 
-        if(!empty($gateway_settings['early_payment_discounts_cents'])) {
-            $discountDbConf     = preg_replace('#[^0-9\.,]#', '', $gateway_settings['early_payment_discounts_cents']);
+        if(!empty($this->gatewayConf['early_payment_discounts_cents'])) {
+            $discountDbConf     = preg_replace('#[^0-9\.,]#', '', $this->gatewayConf['early_payment_discounts_cents']);
             $discountConf       = (float) str_replace(',', '.',  $discountDbConf);
         } else {
             $discountConf = NULL;
