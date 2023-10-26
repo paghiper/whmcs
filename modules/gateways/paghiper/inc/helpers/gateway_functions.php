@@ -728,8 +728,6 @@ function generate_paghiper_billet($invoice, $params) {
     $discount_value = (!empty($discountConf)) ? $total * (($discountConf > 99) ? 99 / 100 : $discountConf / 100) : '';
     $discount_cents = (!empty($discount_value)) ? paghiper_convert_to_numeric(number_format($discount_value, 2, '.', '' )) : 0;
 
-    echo sprintf('<pre>%s</pre>', var_export($discountConf, TRUE));
-
     if((floatval($total) - floatval($discount_value)) < 3) {
 
         // Mostrar tela de boleto cancelado
@@ -754,9 +752,6 @@ function generate_paghiper_billet($invoice, $params) {
             $paghiper_data[$k] = paghiper_convert_to_numeric($v);
         }
     }
-
-    echo sprintf('<pre>%s</pre>', var_export($additional_config_text, TRUE));
-    exit();
 
 	$data_post = json_encode( $paghiper_data );
 
