@@ -152,9 +152,9 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($assets_di
 
             $pdf->SetFont('dejavusans', '', 8);
             $pdf->SetY(240);
-            $pdf->SetFont('dejavusans', '', 14);
+            $pdf->SetFont('dejavusans', '', 13);
             $html = '<form method="post" action="'.$invoice_url.'" enctype="multipart/form-data">
-            <textarea cols="66" rows="3" name="text">'.$emv.'</textarea><br />
+            <textarea cols="62" rows="3" name="text">'.$emv.'</textarea><br />
             </form>';
             $pdf->writeHTML($html, true, 0, true, 0);
             
