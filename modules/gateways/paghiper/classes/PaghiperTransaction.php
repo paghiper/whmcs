@@ -499,8 +499,8 @@ class PaghiperTransaction {
         if((floatval($total) - floatval($discount_value)) < 3) {
     
             // Mostrar tela de boleto cancelado
-            $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Não foi possível gerar o '.(($is_pix) ? 'PIX' : 'boleto').'!';
+            $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+            $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
             $message = 'O valor com desconto por pagto. antecipado é inferior a R$3,00! Por favor, revise a configuração.';
             echo paghiper_print_screen($ico, $title, $message);
             exit();
