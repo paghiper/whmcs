@@ -3,13 +3,15 @@
  * PagHiper PIX - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.4.2
+ * @version    2.4.3
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
  * @copyright  (c) 2017-2023, PagHiper
  * @link       https://www.paghiper.com/
  */
+
+use WHMCS\User\Client; 
 
 // Opções padrão do Gateway
 function paghiper_pix_config($params = NULL) {
@@ -149,6 +151,25 @@ function paghiper_pix_link($params) {
     $taxIdFields = explode("|", $params['cpf_cnpj']);
     $payerNameField = $params['razao_social'];
 
+    if(!is_numeric($params['clientdetails']['owner_user_id'])) {
+        $client = $params['clientdetails'];
+    } else {
+        $clientData = Client::find($params['clientdetails']['owner_user_id']);
+
+        $client = [
+            'firstname' 	=> $clientData->firstname,
+            'lastname'		=> $clientData->lastname,
+            'companyname'	=> $clientData->companyname,
+            'email'		    => $clientData->email,
+            'phonenumber'	=> $clientData->phonenumber,
+            'address1'		=> $clientData->address1,
+            'address2'		=> $clientData->address2,
+            'city'   		=> $clientData->city,
+            'state'   		=> $clientData->state,
+            'postcode'		=> $clientData->postcode
+        ];
+    }
+
     $clientCustomFields = [];
     foreach($params["clientdetails"]["customfields"] as $key => $value){
         $clientCustomFields[$value['id']] = $value['value'];
@@ -178,7 +199,7 @@ function paghiper_pix_link($params) {
 
         $taxid_value = preg_replace('/\D/', '', $clientTaxId);
 
-        if(strlen( $taxid_value ) > 11 && empty($params['clientdetails']['companyname']) && empty($payerNameField) && empty($clientPayerName)) {
+        if(strlen( $taxid_value ) > 11 && empty($client['companyname']) && empty($payerNameField) && empty($clientPayerName)) {
             
             $isValidPayerName = false;
             $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'Razão social inválida, atualize seus dados cadastrais.');
@@ -189,16 +210,16 @@ function paghiper_pix_link($params) {
     if($isValidTaxId) {
 
         $client_details = [
-            'firstname' 	=> $params['clientdetails']['firstname'],
-            'lastname'		=> $params['clientdetails']['lastname'],
-            'companyname'	=> $params['clientdetails']['companyname'],
-            'email'		    => $params['clientdetails']['email'],
-            'phonenumber'	=> $params['clientdetails']['phonenumber'],
-            'address1'		=> $params['clientdetails']['address1'],
-            'address2'		=> $params['clientdetails']['address2'],
-            'city'   		=> $params['clientdetails']['city'],
-            'state'   		=> $params['clientdetails']['state'],
-            'postcode'		=> $params['clientdetails']['postcode'],
+            'firstname' 	=> $client['firstname'],
+            'lastname'		=> $client['lastname'],
+            'companyname'	=> $client['companyname'],
+            'email'		    => $client['email'],
+            'phonenumber'	=> $client['phonenumber'],
+            'address1'		=> $client['address1'],
+            'address2'		=> $client['address2'],
+            'city'   		=> $client['city'],
+            'state'   		=> $client['state'],
+            'postcode'		=> $client['postcode'],
             'cpf_cnpj'		=> $clientTaxId,
             'razao_social'  => $clientPayerName
         ];
