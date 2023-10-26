@@ -485,16 +485,22 @@ class PaghiperTransaction {
                 $paghiper_data[$k] = FALSE;
             }
         }
+
+        if(!empty($gateway_settings['early_payment_discounts_cents'])) {
+            $discountDbConf     = preg_replace('#[^0-9\.,]#', '', $gateway_settings['early_payment_discounts_cents']);
+            $discountConf       = (float) str_replace(',', '.',  $discountDbConf);
+        } else {
+            $discountConf = NULL;
+        }
         
-        $discount_config = (!empty($this->gatewayConf['early_payment_discounts_cents'])) ? (float) trim(str_replace(['%', ','], ['', '.'], $this->gatewayConf['early_payment_discounts_cents']), 0) : '';
-        $discount_value = (!empty($discount_config)) ? $total * (($discount_config > 99) ? 99 / 100 : $discount_config / 100) : '';
+        $discount_value = (!empty($discountConf)) ? $total * (($discountConf > 99) ? 99 / 100 : $discountConf / 100) : '';
         $discount_cents = (!empty($discount_value)) ? paghiper_convert_to_numeric(number_format($discount_value, 2, '.', '' )) : 0;
     
         if((floatval($total) - floatval($discount_value)) < 3) {
     
             // Mostrar tela de boleto cancelado
-            $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
+            $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+            $title = 'Não foi possível gerar o '.(($is_pix) ? 'PIX' : 'boleto').'!';
             $message = 'O valor com desconto por pagto. antecipado é inferior a R$3,00! Por favor, revise a configuração.';
             echo paghiper_print_screen($ico, $title, $message);
             exit();
@@ -579,7 +585,7 @@ class PaghiperTransaction {
                 exit();
             }
 
-            $this->transactionData = ($this->isPIX) ? $json['pix_create_request'] : $json['create_request'];
+            $this->transactionData = ($this->isPIX) ? $json['pix_create_request']['pix_code'] : $json['create_request']['bank_slip'];
     
         } else {
     
