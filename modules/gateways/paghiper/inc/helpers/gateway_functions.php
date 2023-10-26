@@ -937,12 +937,15 @@ function paghiper_check_table() {
 
             if(!$alter_table) {
                 logTransaction($GATEWAY["name"],$_POST,"Não foi possível atualizar o banco de dados da Paghiper para a versão 1.4. Por favor cheque se o usuário MySQL tem permissões para alterar a tabela mod_paghiper");
+                return false;
             }
         }
 
 
     } else {
-        create_paghiper_table();
+        if(!create_paghiper_table()) {
+            return false;
+        }
     }
 
     $sql = "SHOW TABLES LIKE 'mod_paghiper'";
@@ -954,8 +957,7 @@ function paghiper_check_table() {
 
     if ($result) {
         return true;
-    }
-    else {
+    } else {
         return false;
     }
 }

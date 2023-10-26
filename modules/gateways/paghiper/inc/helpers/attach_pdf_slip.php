@@ -3,7 +3,7 @@
  * Adiciona boleto bancário como página adicional na fatura anexa no WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.4.2
+ * @version    2.4.3
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -14,42 +14,24 @@
 use WHMCS\Database\Capsule;
 use setasign\Fpdi;
 
-$sql = "SELECT paymentmethod, total FROM tblinvoices WHERE id = '$invoiceid';";
-$query = Capsule::connection()
-        ->getPdo()
-        ->prepare($sql);
-$query->execute();
-$result = $query->fetch(\PDO::FETCH_ASSOC);
+$basedir = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
+require_once($basedir.'/classes/PaghiperTransaction.php');
 
-$invoice_total = $result['total'];
-$payment_method_slug = $result['paymentmethod'];
+$transactionData = [
+    'invoiceId'     => $invoiceid,
+    'format'        => 'json'
+];
+$invoiceTransaction = new PaghiperTransaction($transactionData);
+$is_pix = array_key_exists('pix_code', $invoiceTransaction) ? TRUE : FALSE;
 
-$is_pix = ($payment_method_slug == 'paghiper_pix');
-
-$whmcs_url = rtrim(\App::getSystemUrl(),"/");
-$assets_url = "{$whmcs_url}/modules/gateways/paghiper/assets/img";
-$json_url = "{$whmcs_url}/modules/gateways/";
-$json_url .= ($is_pix) ? 'paghiper_pix.php' : 'paghiper.php';
-$json_url .= "?invoiceid=".$invoiceid."&uuid=".$clientsdetails['userid']."&mail=".$clientsdetails['email']."&json=1";
-
-$invoice_url = str_replace('&json=1', '', $json_url);
-
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $json_url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-$json = curl_exec($ch);
-$result = json_decode($json);
-
-$transaction_id = (isset($result->transaction_id)) ? $result->transaction_id : '';
+$transaction_id = (isset($invoiceTransaction['transaction_id'])) ? $invoiceTransaction['transaction_id'] : '';
 $asset_url = (!$is_pix) ? 
-    ((property_exists($result, 'bank_slip') && !is_null($result->bank_slip)) ? $result->bank_slip->url_slip_pdf : $result->url_slip_pdf) : 
-    ((property_exists($result, 'pix_code') && !is_null($result->pix_code)) ? $result->pix_code->qrcode_image_url : $result->qrcode_image_url);
+    ((property_exists($result, 'bank_slip') && !is_null($invoiceTransaction->bank_slip)) ? $invoiceTransaction->bank_slip->url_slip_pdf : $invoiceTransaction->url_slip_pdf) : 
+    ((property_exists($result, 'pix_code') && !is_null($invoiceTransaction->pix_code)) ? $invoiceTransaction->pix_code->qrcode_image_url : $invoiceTransaction->qrcode_image_url);
 
 if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url) && !empty($asset_url)) && (isset($transaction_id) && !empty($transaction_id))){
 
-    $basedir    = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
-    $assetdir   = $basedir.'/tmp/'.( (!$is_pix) ? 'billets' : 'pix');
+    $assetdir   = $basedir.'\/tmp\/'.( (!$is_pix) ? 'billets' : 'pix');
     $filename   = $assetdir.'/'.$transaction_id.( (!$is_pix) ? '.pdf' : '.png');
 
     $print_paghiper_page = FALSE;
@@ -101,9 +83,9 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
         // Caso não seja, tentamos printar os dados do PIX
         } else {
 
-            $emv        = ($result->pix_code) ? $result->pix_code->emv : $result->emv;
-            $pix_url    = ($result->pix_code) ? $result->pix_code->pix_url : $result->pix_url;
-            $bacen_url  = ($result->pix_code) ? $result->pix_code->bacen_url : $result->bacen_url;
+            $emv        = ($invoiceTransactionpix_code) ? $invoiceTransactionpix_code->emv : $invoiceTransactionemv;
+            $pix_url    = ($invoiceTransactionpix_code) ? $invoiceTransactionpix_code->pix_url : $invoiceTransactionpix_url;
+            $bacen_url  = ($invoiceTransactionpix_code) ? $invoiceTransactionpix_code->bacen_url : $invoiceTransactionbacen_url;
 
             $pdf->Image($whmcs_url.'/modules/gateways/paghiper/assets/img/pix.jpg', 10, 10, 25, '', 'JPEG');
 
