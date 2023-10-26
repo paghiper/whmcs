@@ -117,7 +117,7 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url
             $pdf->Multicell(120, 0, 'Confirme as informações e finalize o pagamento.', 0, 'L');
 
 
-            $pdf->Image($filename, 'C', 130, '', '', 'PNG', false, 'C', false, 300, 'C', false, false, 0, false, false, false);
+            $pdf->Image($filename, 0, 130, '', '', 'PNG', false, 'C', false, 300, 'C', false, false, 0, false, false, false);
 
             $pdf->SetY(215);
             $pdf->SetFont('dejavusans', 'B', 12);
