@@ -289,8 +289,8 @@ if (!defined("WHMCS")) {
                 $invoiceid = intval($_GET["invoiceid"]);
 				$urlRetorno = $systemurl.'/modules/gateways/';
 				$urlRetorno .= ($is_pix) ? 'paghiper_pix.php' : 'paghiper.php';
+                
                 // Executamos o checkout transparente e printamos o resultado
-
                 try {
 
                     $client_data = json_decode(html_entity_decode($_POST['client_data']), TRUE);
