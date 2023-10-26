@@ -22,25 +22,26 @@ class PaghiperTransaction {
             $isPIX,
             $outputFormat,
             $gatewayConfConf,
+            $reissueUnpaid,
             $whmcsAdminUser,
             $systemURL,
             $transactionData,
             $transactionTotal;
 
-    public function __construct( $transactionParams ) {
+    function __construct( $transactionParams ) {
 
         $this->invoiceID    = $transactionParams['invoiceID'];
         $this->outputFormat = array_key_exists('format', $transactionParams) ? $transactionParams['format'] : 'html';
-
-        // Pegamos as configurações do gateway e de sistema necessárias
-        $this->gatewayConf      = getGatewayVariables($this->gatewayName);
-        $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
-        $this->whmcsAdminUser   = paghiper_autoSelectAdminUser($this->gatewayConf);
 
         // Pegamos a fatura no banco de dados
         $this->invoiceData = localAPI('getinvoice', ['invoiceid' => intval($this->invoiceID)], $this->whmcsAdminUser);
         $this->gatewayName = $this->invoiceData['paymentmethod'];
         $this->isPIX       = ($this->gatewayName == 'paghiper_pix');
+
+        // Pegamos as configurações do gateway e de sistema necessárias
+        $this->gatewayConf      = getGatewayVariables($this->gatewayName);
+        $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
+        $this->whmcsAdminUser   = paghiper_autoSelectAdminUser($this->gatewayConf);
 
         // Define variáveis para configurações do gateway
         $account_email      = trim($this->gatewayConf["email"]);
@@ -71,15 +72,6 @@ class PaghiperTransaction {
                     
             return false;
         }
-
-        if($this->hasPayableStatus()) {
-            if($this->hasPayableTransaction()) {
-                $this->getTransaction();
-            } else {
-                $this->createTransaction();
-                $this->getTransaction();
-            }
-        }
     }
 
     private function hasPayableStatus() {
@@ -108,11 +100,11 @@ class PaghiperTransaction {
 
                 break;
             case "Unpaid":
-                //
+                return true;
 
                 break;
             case "Overdue":
-                //
+                return true;
 
                 break;
             case "Cancelled":
@@ -150,7 +142,7 @@ class PaghiperTransaction {
         $invoice_total = paghiper_apply_custom_taxes((float) $this->invoiceData['balance'], $this->gatewayConf);
         $invoice_balance = $invoice_total;
 
-        foreach($this->invoiceDatainvoice['items']['item'] as $invoice_key => $invoice_item) {
+        foreach($this->invoiceData['items']['item'] as $invoice_key => $invoice_item) {
 
             if($invoice_item['type'] == 'LateFee') {
                 $invoice_balance -= (float) $invoice_item['amount'];
@@ -160,8 +152,8 @@ class PaghiperTransaction {
 
         $transaction_type = ($this->isPIX) ? 'pix' : 'billet';
         $sql = (!$this->isPIX) ? 
-            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$this->$invoiceID}' AND status = 'pending' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') AND ('{$dataHoje}' <= due_date OR '{$dataHoje}' <= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY)) ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1" : 
-            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$this->$invoiceID}' AND status = 'pending' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') AND '{$dataHoje}' <= due_date ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
+            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$this->invoiceID}' AND status = 'pending' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') AND ('{$dataHoje}' <= due_date OR '{$dataHoje}' <= DATE_ADD('{$invoiceDuedate}', INTERVAL (open_after_day_due) DAY)) ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1" : 
+            "SELECT * FROM mod_paghiper WHERE (transaction_type = '{$transaction_type}' OR transaction_type IS NULL) AND order_id = '{$this->invoiceID}' AND status = 'pending' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') AND '{$dataHoje}' <= due_date ORDER BY ABS( DATEDIFF( due_date, '{$dataHoje}' ) ) ASC LIMIT 1";
 
         $query = Capsule::connection()
                     ->getPdo()
@@ -191,7 +183,7 @@ class PaghiperTransaction {
             && $this->invoiceData['status'] == 'Unpaid'
         ) {
 
-            $sql = "SELECT * FROM mod_paghiper WHERE order_id = '{$this->$invoiceID}' AND status = 'reserved' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') ORDER BY due_date DESC LIMIT 1;";
+            $sql = "SELECT * FROM mod_paghiper WHERE order_id = '{$this->invoiceID}' AND status = 'reserved' AND (slip_value = '{$invoice_total}' OR slip_value = '{$invoice_balance}') ORDER BY due_date DESC LIMIT 1;";
             $query = Capsule::connection()
                     ->getPdo()
                     ->prepare($sql);
@@ -218,8 +210,8 @@ class PaghiperTransaction {
                 if($reissue_unpaid == -1 && $dataHoje > $invoiceDuedate) {
 
                     // Mostrar tela de boleto cancelado
-                    $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                    $title = 'Este '.(($is_pix) ? 'PIX' : 'boleto').' venceu!';
+                    $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                    $title = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' venceu!';
                     $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
                     echo paghiper_print_screen($ico, $title, $message);
                     exit();
@@ -227,12 +219,12 @@ class PaghiperTransaction {
                 }
 
                 // Abortamos a exibição, caso valor seja menor que R$ 3
-                if((int) $invoice['total'] < 3) {
+                if((int) $this->invoiceData['total'] < 3) {
 
                     // Mostrar tela de boleto cancelado
-                    $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                    $title = 'Não foi possível gerar o '.(($is_pix) ? 'PIX' : 'boleto').'!';
-                    $message = 'Este '.(($is_pix) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.';
+                    $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                    $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
+                    $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.';
                     echo paghiper_print_screen($ico, $title, $message);
                     exit();
 
@@ -250,39 +242,38 @@ class PaghiperTransaction {
     private function prepareTransactionData() {
 
         // Pegamos as datas que definimos anteriormente e transformamos em objeto Date do PHP
-        $data1 = new DateTime($invoiceDuedate);
-        $data2 = new DateTime($dataHoje);
+        $data1 = new DateTime($this->invoiceData['duedate']);
+        $data2 = new DateTime(date('Y-m-d'));
 
         // Comparamos as datas para enviar o resultado a PagHiper. Isso é necessário pois o gateway pede o vencimento em número de dias no futuro, não como data.
         $intervalo = $data2->diff($data1); 
         $vencimentoBoleto = $intervalo->format('%R%a');
 
         if($vencimentoBoleto < 0) {
-            $vencimentoBoleto = $reissue_unpaid;
+            $vencimentoBoleto = $this->reissueUnpaid;
         } else {
             $vencimentoBoleto = $intervalo->days;
         }
 
         // Calculamos a diferença de dias entre o dia de vencimento e os dias para aplicação de desconto.
-        $discount_period = (int) $GATEWAY['early_payment_discounts_days'];
+        $discount_period = (int) $this->gatewayConf['early_payment_discounts_days'];
         if(!empty($discount_period) && $discount_period > 0) {
             
             if($vencimentoBoleto <= $discount_period || $vencimentoBoleto == 0) {
-                unset($GATEWAY['early_payment_discounts_days']);
-                unset($GATEWAY['early_payment_discounts_cents']);
+                unset($this->gatewayConf['early_payment_discounts_days']);
+                unset($this->gatewayConf['early_payment_discounts_cents']);
             }
         }
 
-        $invoiceid = intval($_GET["invoiceid"]);
-		$urlRetorno = $systemurl.'/modules/gateways/';
-		$urlRetorno .= ($is_pix) ? 'paghiper_pix.php' : 'paghiper.php';
+		$urlRetorno = $this->systemURL.'/modules/gateways/';
+		$urlRetorno .= ($this->isPIX) ? 'paghiper_pix.php' : 'paghiper.php';
 
         // Checamos se os dados do cliente vem de um checkout ou do perfil do cliente.
         $client_data = json_decode(html_entity_decode($_POST['client_data']), TRUE);
         if( !empty($_POST) && is_array($client_data) && !empty($client_data) ) {
             $client_details = $client_data;
         } else {
-            $client_query = localAPI('getClientsDetails', ['clientid' => $invoice['userid'], 'stats' => false], $this->whmcsAdminUser);
+            $client_query = localAPI('getClientsDetails', ['clientid' => $this->invoiceData['userid'], 'stats' => false], $this->whmcsAdminUser);
             $client_details = $client_query['client'];
         }
 
@@ -295,16 +286,12 @@ class PaghiperTransaction {
         }
         
         if($currency !== 'BRL' && $currency !== 'R$') {
-            $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+            $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
             $title = 'Método de pagamento indisponível para a moeda selecionada';
             $message = 'Este método de pagamento só pode ser utilizado para pagamentos em R$ (BRL)<br>Caso creia que isso seja um erro, entre em contato com o suporte.';
             echo paghiper_print_screen($ico, $title, $message);
             exit();
         }
-
-        $params = array(
-            'format'			=> (($this->outputFormat == 'json') ? 'json' : 'html')
-        );
 
         return [
             'client_data'		=> $client_details,
@@ -559,7 +546,7 @@ class PaghiperTransaction {
             // Exemplo de como capturar a resposta json
             $transaction_type 	        = ($this->isPIX) ? 'pix' : 'billet';
             $transaction_id 	        = ($this->isPIX) ? $json['pix_create_request']['transaction_id'] : $json['create_request']['transaction_id'];
-            $this->$invoiceID 			        = ($this->isPIX) ? $json['pix_create_request']['order_id'] : $json['create_request']['order_id'];
+            $invoice_id 			    = ($this->isPIX) ? $json['pix_create_request']['order_id'] : $json['create_request']['order_id'];
             $due_date 			        = ($this->isPIX) ? $json['pix_create_request']['due_date'] : $json['create_request']['due_date'];
             $status 			        = ($this->isPIX) ? $json['pix_create_request']['status'] : $json['create_request']['status'];
             $url_slip 			        = ($this->isPIX) ? null : $json['create_request']['bank_slip']['url_slip'];
@@ -576,7 +563,7 @@ class PaghiperTransaction {
     
             $this->transactionTotal = $total;
     
-            $sql = "INSERT INTO mod_paghiper (transaction_type,transaction_id,order_id,due_date,status,url_slip,url_slip_pdf,digitable_line,bar_code_number_to_image,open_after_day_due,slip_value,qrcode_base64,qrcode_image_url,emv,bacen_url,pix_url) VALUES ('$transaction_type', '$transaction_id','$this->$invoiceID','$due_date','$status','$url_slip','$url_slip_pdf','$digitable_line','$bar_code_number_to_image', '$open_after_day_due','$this->transactionTotal','$qrcode_base64','$qrcode_image_url','$emv','$bacen_url','$pix_url');";
+            $sql = "INSERT INTO mod_paghiper (transaction_type,transaction_id,order_id,due_date,status,url_slip,url_slip_pdf,digitable_line,bar_code_number_to_image,open_after_day_due,slip_value,qrcode_base64,qrcode_image_url,emv,bacen_url,pix_url) VALUES ('$transaction_type', '$transaction_id','$invoice_id','$due_date','$status','$url_slip','$url_slip_pdf','$digitable_line','$bar_code_number_to_image', '$open_after_day_due','$this->transactionTotal','$qrcode_base64','$qrcode_image_url','$emv','$bacen_url','$pix_url');";
             $query = Capsule::connection()
                         ->getPdo()
                         ->prepare($sql);
@@ -592,7 +579,7 @@ class PaghiperTransaction {
                 exit();
             }
 
-            $this->transactionData = ($this->isPIX) ? json_encode($json['pix_create_request']) : json_encode($json['create_request']);
+            $this->transactionData = ($this->isPIX) ? $json['pix_create_request'] : $json['create_request'];
     
         } else {
     
@@ -612,19 +599,32 @@ class PaghiperTransaction {
     private function getTransaction() {
     
         if($this->outputFormat == 'json') {
-            header('Content-Type: application/json');
-            return $this->transactionData;
+            return json_encode($this->transactionData);
         }
         
         if($this->isPIX) {
-            return paghiper_print_screen($this->transactionData['pix_code']['qrcode_image_url'], null, null, array('is_pix' => true, 'invoice_id' => $this->$invoiceID, 'payment_value' => $this->transactionTotal, 'pix_emv' => $this->transactionData['pix_code']['emv']));
+            return paghiper_print_screen($this->transactionData['pix_code']['qrcode_image_url'], null, null, array('is_pix' => true, 'invoice_id' => $this->invoiceID, 'payment_value' => $this->transactionTotal, 'pix_emv' => $this->transactionData['pix_code']['emv']));
         } else {
             return paghiper_fetch_remote_url($url_slip);
         }
+
+        return false;
         
     }
 
     public function isPIX() {
         return $this->isPIX;
+    }
+
+    public function process() {
+
+        if($this->hasPayableStatus()) {
+            if($this->hasPayableTransaction()) {
+                return $this->getTransaction();
+            } else {
+                $this->createTransaction();
+                return $this->getTransaction();
+            }
+        }
     }
 }
