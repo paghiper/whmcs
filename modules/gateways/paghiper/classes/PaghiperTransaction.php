@@ -591,7 +591,7 @@ class PaghiperTransaction {
     
             // Não foi possível solicitar o boleto.
             $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Ops! Não foi possível emitir o '.(($this->isPIX) ? 'boleto bancário' : 'PIX').'.';
+            $title = 'Ops! Não foi possível emitir o '.(($this->isPIX) ? 'PIX' : 'boleto bancário').'.';
             $message = 'Por favor entre em contato com o suporte. Erro 0x004682';
             
             echo paghiper_print_screen($ico, $title, $message);
