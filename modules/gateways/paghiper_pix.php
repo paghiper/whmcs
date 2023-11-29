@@ -151,7 +151,6 @@ function paghiper_pix_link($params) {
     $taxIdFields = explode("|", $params['cpf_cnpj']);
     $payerNameField = $params['razao_social'];
 
-    /*echo sprintf('<pre>%s</pre>', var_export($params['clientdetails'], TRUE));
     if(array_key_exists('billingcid', $params['clientdetails']) && $params['clientdetails']['billingcid'] == 0) {
         $client = $params['clientdetails'];
     } else {
