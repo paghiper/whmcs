@@ -206,10 +206,10 @@ function paghiper_link($params) {
     $taxIdFields = explode("|", $params['cpf_cnpj']);
     $payerNameField = $params['razao_social'];
 
-    if(!is_numeric($params['clientdetails']['owner_user_id'])) {
+    if(array_key_exists('billingcid', $params['clientdetails']) && $params['clientdetails']['billingcid'] == 0) {
         $client = $params['clientdetails'];
     } else {
-        $clientData = Client::find($params['clientdetails']['owner_user_id']);
+        $clientData = Client::find($params['clientdetails']['client_id']);
 
         $client = [
             'firstname' 	=> $clientData->firstname,
