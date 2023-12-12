@@ -32,8 +32,6 @@ $asset_url = (!$is_pix) ?
     ((array_key_exists('bank_slip', $invoiceTransaction) && !is_null($invoiceTransaction['bank_slip'])) ? $invoiceTransaction['bank_slip']['url_slip_pdf'] : $invoiceTransaction['url_slip_pdf']) : 
     ((array_key_exists('pix_code', $invoiceTransaction) && !is_null($invoiceTransaction['pix_code'])) ? $invoiceTransaction['pix_code']['qrcode_image_url'] : $invoiceTransaction['qrcode_image_url']);
 
-if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url) && !empty($asset_url)) && (isset($transaction_id) && !empty($transaction_id))){
-
 if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($assets_dir) && !empty($assets_dir)) && (isset($transaction_id) && !empty($transaction_id))){
 
 
