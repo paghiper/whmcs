@@ -79,6 +79,25 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Mais dados para debug nos Logs de Portais de Pagamento
 
+## 2.4.4 - 2023/11/13
+
+`Bugs resolvidos`
+* PDF anexo falhava em algumas ocasiões
+
+## 2.4.3 - 2023/10/26
+
+`Bugs resolvidos`
+* Método de pagamento indisponível para a moeda selecionada
+* CPF/CNPJ inválido! Cheque seu cadastro. (WHMCS 7/8)
+* String + Float operator na integração com PDFs
+* Boletos e PIXes não anexos quando processando via CRON
+
+`Melhorias`
+
+* Novo bloco de integração para PDFs anexos
+* Checagem de ACL compatível com WHMCS8
+* Refatoramento progressivo do plugin
+
 ## 2.4.1 - 2023/01/09
 
 `Bugs resolvidos`

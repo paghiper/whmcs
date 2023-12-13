@@ -3,7 +3,7 @@
  * Adiciona boleto bancário como página adicional na fatura anexa no WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.4.3
+ * @version    2.4.4
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -31,8 +31,6 @@ $transaction_id = (isset($invoiceTransaction['transaction_id'])) ? $invoiceTrans
 $asset_url = (!$is_pix) ? 
     ((array_key_exists('bank_slip', $invoiceTransaction) && !is_null($invoiceTransaction['bank_slip'])) ? $invoiceTransaction['bank_slip']['url_slip_pdf'] : $invoiceTransaction['url_slip_pdf']) : 
     ((array_key_exists('pix_code', $invoiceTransaction) && !is_null($invoiceTransaction['pix_code'])) ? $invoiceTransaction['pix_code']['qrcode_image_url'] : $invoiceTransaction['qrcode_image_url']);
-
-if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($asset_url) && !empty($asset_url)) && (isset($transaction_id) && !empty($transaction_id))){
 
 if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($assets_dir) && !empty($assets_dir)) && (isset($transaction_id) && !empty($transaction_id))){
 
