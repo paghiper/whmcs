@@ -30,6 +30,11 @@ class PaghiperTransaction {
 
     function __construct( $transactionParams ) {
 
+        // Pegamos as dependências necessárias para as operações dessa classe (core, gateway e invoice)
+        require_once __DIR__ . '/../../../init.php';
+        require_once __DIR__ . '/../../../includes/gatewayfunctions.php';
+        require_once __DIR__ . '/../../../includes/invoicefunctions.php';
+
         $this->invoiceID    = $transactionParams['invoiceID'];
         $this->outputFormat = array_key_exists('format', $transactionParams) ? $transactionParams['format'] : 'html';
 
