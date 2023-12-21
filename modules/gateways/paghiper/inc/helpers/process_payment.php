@@ -305,7 +305,13 @@ if (!defined("WHMCS")) {
                             'stats'		=> false
                         );
                         $client_query = localAPI('getClientsDetails', $query_params, $whmcs_admin);
-                        $client_details = $client_query['client'];
+
+                        $installedVersion = App::getVersion();
+                        if (version_compare($installedVersion->getCasual(), '8.0.0') >= 0) {
+                            $client_details = $client_query['client'];
+                        } else {
+                            $client_details = $client_query;
+                        }
                     }
 
                     // Get used currency

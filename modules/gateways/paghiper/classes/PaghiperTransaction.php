@@ -23,6 +23,7 @@ class PaghiperTransaction {
             $outputFormat,
             $gatewayConfConf,
             $reissueUnpaid,
+            $whmcsVersion,
             $whmcsAdminUser,
             $systemURL,
             $transactionData,
@@ -31,9 +32,9 @@ class PaghiperTransaction {
     function __construct( $transactionParams ) {
 
         // Pegamos as dependências necessárias para as operações dessa classe (core, gateway e invoice)
-        require_once __DIR__ . '/../../../init.php';
-        require_once __DIR__ . '/../../../includes/gatewayfunctions.php';
-        require_once __DIR__ . '/../../../includes/invoicefunctions.php';
+        require_once __DIR__ . '/../../../../init.php';
+        require_once __DIR__ . '/../../../../includes/gatewayfunctions.php';
+        require_once __DIR__ . '/../../../../includes/invoicefunctions.php';
 
         $this->invoiceID    = $transactionParams['invoiceID'];
         $this->outputFormat = array_key_exists('format', $transactionParams) ? $transactionParams['format'] : 'html';
@@ -47,6 +48,7 @@ class PaghiperTransaction {
         $this->gatewayConf      = getGatewayVariables($this->gatewayName);
         $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
         $this->whmcsAdminUser   = paghiper_autoSelectAdminUser($this->gatewayConf);
+        $this->whmcsVersion     = App::getVersion()->getCasual();
 
         // Define variáveis para configurações do gateway
         $account_email      = trim($this->gatewayConf["email"]);
@@ -279,7 +281,12 @@ class PaghiperTransaction {
             $client_details = $client_data;
         } else {
             $client_query = localAPI('getClientsDetails', ['clientid' => $this->invoiceData['userid'], 'stats' => false], $this->whmcsAdminUser);
-            $client_details = $client_query['client'];
+
+            if (version_compare($this->whmcsVersion, '8.0.0') >= 0) {
+                $client_details = $client_query['client'];
+            } else {
+                $client_details = $client_query;
+            }
         }
 
         // Get used currency
