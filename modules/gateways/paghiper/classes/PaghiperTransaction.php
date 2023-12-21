@@ -597,7 +597,10 @@ class PaghiperTransaction {
                 exit();
             }
 
-            $this->transactionData = ($this->isPIX) ? $json['pix_create_request']['pix_code'] : $json['create_request']['bank_slip'];
+            $transactionData    = ($this->isPIX) ? $json['pix_create_request'] : $json['create_request'];
+            $transactionDetails = ($this->isPIX) ? $json['pix_create_request']['pix_code'] : $json['create_request']['bank_slip'];
+
+            $this->transactionData = array_merge($transactionData, $transactionDetails);
     
         } else {
     
