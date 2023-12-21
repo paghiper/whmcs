@@ -621,6 +621,8 @@ class PaghiperTransaction {
     
         if($this->outputFormat == 'json') {
             return json_encode($this->transactionData);
+        } elseif($this->outputFormat == 'array') {
+            return $this->transactionData;
         }
         
         if($this->isPIX) {
