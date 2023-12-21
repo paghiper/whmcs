@@ -47,10 +47,6 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 # Changelog
 
-## Disponíveis em alguns dias:
-
-* Disponibilização de linha digitável no painel
-
 ## 2.5 - 2023/12/21
 
 * Maior estabilidade e rapidez na execução das CRONs
