@@ -947,6 +947,28 @@ function paghiper_check_table() {
             }
         }
 
+        // Alterar coluna qrcode_base64
+        $sql = "SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'qrcode_base64' AND `type` = 'LONGTEXT'";
+        $query = Capsule::connection()
+            ->getPdo()
+            ->prepare($sql);
+        $query->execute();
+        $qrcode_base64 = $query->fetch(\PDO::FETCH_ASSOC);
+
+        if(!$qrcode_base64) {
+
+            $sql = "ALTER TABLE `mod_paghiper` CHANGE `qrcode_base64` `qrcode_base64` LONGTEXT NULL DEFAULT NULL;";
+            $query = Capsule::connection()
+                ->getPdo()
+                ->prepare($sql);
+            $query->execute();
+            $alter_table = $query->fetch(\PDO::FETCH_ASSOC);
+
+            if(!$alter_table) {
+                logTransaction($GATEWAY["name"],$_POST,"Não foi possível alterar o formato de dados da coluna qrcode_base64. Por favor altere manualmente para LONGTEXT.");
+            }
+        }
+
 
     } else {
         if(!create_paghiper_table()) {
