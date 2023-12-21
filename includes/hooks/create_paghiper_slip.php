@@ -3,7 +3,7 @@
  * Adiciona boleto bancário e link direto para boleto no WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.4.4
+ * @version    2.5
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)
