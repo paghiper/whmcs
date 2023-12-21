@@ -3,7 +3,7 @@
  * Classe responsável pela criação e resgate de transações
  * 
  * @package    PagHiper para WHMCS
- * @version    2.4.3
+ * @version    2.5
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -23,12 +23,18 @@ class PaghiperTransaction {
             $outputFormat,
             $gatewayConfConf,
             $reissueUnpaid,
+            $whmcsVersion,
             $whmcsAdminUser,
             $systemURL,
             $transactionData,
             $transactionTotal;
 
     function __construct( $transactionParams ) {
+
+        // Pegamos as dependências necessárias para as operações dessa classe (core, gateway e invoice)
+        require_once __DIR__ . '/../../../../init.php';
+        require_once __DIR__ . '/../../../../includes/gatewayfunctions.php';
+        require_once __DIR__ . '/../../../../includes/invoicefunctions.php';
 
         $this->invoiceID    = $transactionParams['invoiceID'];
         $this->outputFormat = array_key_exists('format', $transactionParams) ? $transactionParams['format'] : 'html';
@@ -42,6 +48,7 @@ class PaghiperTransaction {
         $this->gatewayConf      = getGatewayVariables($this->gatewayName);
         $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
         $this->whmcsAdminUser   = paghiper_autoSelectAdminUser($this->gatewayConf);
+        $this->whmcsVersion     = App::getVersion()->getCasual();
 
         // Define variáveis para configurações do gateway
         $account_email      = trim($this->gatewayConf["email"]);
@@ -274,7 +281,12 @@ class PaghiperTransaction {
             $client_details = $client_data;
         } else {
             $client_query = localAPI('getClientsDetails', ['clientid' => $this->invoiceData['userid'], 'stats' => false], $this->whmcsAdminUser);
-            $client_details = $client_query['client'];
+
+            if (version_compare($this->whmcsVersion, '8.0.0') >= 0) {
+                $client_details = $client_query['client'];
+            } else {
+                $client_details = $client_query;
+            }
         }
 
         // Get used currency
@@ -585,7 +597,10 @@ class PaghiperTransaction {
                 exit();
             }
 
-            $this->transactionData = ($this->isPIX) ? $json['pix_create_request']['pix_code'] : $json['create_request']['bank_slip'];
+            $transactionData    = ($this->isPIX) ? $json['pix_create_request'] : $json['create_request'];
+            $transactionDetails = ($this->isPIX) ? $json['pix_create_request']['pix_code'] : $json['create_request']['bank_slip'];
+
+            $this->transactionData = array_merge($transactionData, $transactionDetails);
     
         } else {
     
@@ -606,6 +621,8 @@ class PaghiperTransaction {
     
         if($this->outputFormat == 'json') {
             return json_encode($this->transactionData);
+        } elseif($this->outputFormat == 'array') {
+            return $this->transactionData;
         }
         
         if($this->isPIX) {

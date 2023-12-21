@@ -305,7 +305,13 @@ if (!defined("WHMCS")) {
                             'stats'		=> false
                         );
                         $client_query = localAPI('getClientsDetails', $query_params, $whmcs_admin);
-                        $client_details = $client_query['client'];
+
+                        $installedVersion = App::getVersion();
+                        if (version_compare($installedVersion->getCasual(), '8.0.0') >= 0) {
+                            $client_details = $client_query['client'];
+                        } else {
+                            $client_details = $client_query;
+                        }
                     }
 
                     // Get used currency
@@ -427,7 +433,7 @@ if (!defined("WHMCS")) {
                 $message = 'O thread ID desta notificação não está autorizado a ser processado.';
                 
                 echo paghiper_print_screen($ico, $title, $message);
-                logTransaction($gateway_settings["name"],array('invoice_id' => $order_id, 'exception' => 'Thread ID error (0x004682)'), sprintf("O ID de requosição associado %s não é desta sessão. Erro 0x004682 \n\nThread ID: %s\nLock: %s", (($is_pix) ? 'PIX' : 'boleto'), $request_id, $current_lock_id));
+                logTransaction($gateway_settings["name"],array('invoice_id' => $order_id, 'exception' => 'Thread ID error (0x004682)'), sprintf("O ID de requisição associado %s não é desta sessão. Erro 0x004682 \n\nThread ID: %s\nLock: %s", (($is_pix) ? 'PIX' : 'boleto'), $request_id, $current_lock_id));
                 exit();
             } else {
                 paghiper_write_lock_id(NULL, $transaction_id);

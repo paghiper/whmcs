@@ -3,7 +3,7 @@
  * Adiciona boleto bancário e link direto para boleto no WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.4.4
+ * @version    2.5
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)
@@ -25,17 +25,13 @@ function paghiper_display_digitable_line($vars) {
         $invoice = mysql_fetch_array(mysql_query("SELECT tblinvoices.*,tblclients.id as client_id, tblclients.email FROM tblinvoices INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.id='$invoice_id'"));
 
         $whmcs_url = rtrim(\App::getSystemUrl(),"/");
-        $json_url = $whmcs_url."/modules/gateways/paghiper.php?invoiceid=".$invoice_id."&uuid=".$invoice['client_id']."&mail=".$invoice['email']."&json=1";
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $json_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        require_once(dirname(__FILE__) . '/../../modules/gateways/paghiper/classes/PaghiperTransaction.php');
+        $paghiperTransaction    = new PaghiperTransaction(['invoiceID' => $invoice_id, 'format' => 'array']);
+        $invoiceTransaction     = $paghiperTransaction->process();
 
-        $json = curl_exec($ch);
-        $result = json_decode($json);
-
-        $digitable_line = (isset($result->bank_slip)) ? $result->bank_slip->digitable_line : $result->digitable_line;
-        $bar_code_number_to_image = (isset($result->bank_slip)) ? $result->bank_slip->bar_code_number_to_image : $result->bar_code_number_to_image;
+        $digitable_line             = $invoiceTransaction['digitable_line'];
+        $bar_code_number_to_image   = $invoiceTransaction['bar_code_number_to_image'];
         
         if($digitable_line) {
             $merge_fields['linha_digitavel'] = '<div style="text-align: center;" class="billet-barcode-container"><span>Linha digitável: <br><span style="font-size: 16px; color: #000000"><strong>';
