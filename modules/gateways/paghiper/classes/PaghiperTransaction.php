@@ -47,11 +47,12 @@ class PaghiperTransaction {
         $this->gatewayConf      = getGatewayVariables($this->gatewayName);
         $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
         $this->whmcsAdminUser   = paghiper_autoSelectAdminUser($this->gatewayConf);
+        $this->reissueUnpaid    = $this->gatewayConf["reissue_unpaid"];
 
         // Define variáveis para configurações do gateway
         $account_email      = trim($this->gatewayConf["email"]);
-        $account_token      = trim($this->gatewayConf['token']);
-        $account_api_key    = trim($this->gatewayConf['api_key']);
+        $account_token      = trim($this->gatewayConf["token"]);
+        $account_api_key    = trim($this->gatewayConf["api_key"]);
     
         // Checamos se a tabela da PagHiper está pronta pra uso
         if(!paghiper_check_table()) {
@@ -180,7 +181,7 @@ class PaghiperTransaction {
             (
                 // Caso nenhum boleto tenha sido emitido
                 empty($transaction) || 
-                // Caso não haja URL de boleto disponível no banco
+                // Caso não haja URL de boleto/PIX disponível no banco
                 (empty($transaction_url) && empty($qrcode_image_url)) ||
                 // Caso o vencimento esteja no futuro mas for diferente do definido na fatura
                 (strtotime($invoiceDuedate) > strtotime(date('Y-m-d')) && $due_date !== $invoiceDuedate)
@@ -633,6 +634,32 @@ class PaghiperTransaction {
             if($this->hasPayableTransaction()) {
                 return $this->getTransaction();
             } else {
+
+                // Error when not possible to reissue transaction
+
+                if($this->reissueUnpaid == -1) {
+                    switch ($this->outputFormat) {
+                        case 'json':
+                            return json_encode([
+                                'status'    => 400,
+                                'error'     => 'reissue_not_allowed',
+                                'message'   => 'Impossível emitir segunda via.'
+                            ]);
+                            break;
+                        case 'html':
+        
+                            // Mostrar tela de boleto indisponível
+                            $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                            $title = 'Não foi possível gerar seu '. (($this->isPIX) ? 'PIX' : 'Boleto bancário') . '.';
+                            $title = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' venceu!';
+                            $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
+                            echo paghiper_print_screen($ico, $title, $message);
+                            exit();
+        
+                            break;
+                    }                     
+                }
+
                 $this->createTransaction();
                 return $this->getTransaction();
             }
