@@ -47,9 +47,17 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 # Changelog
 
-## Disponíveis em alguns dias:
+## 2.5 - 2023/12/21
 
-* Disponibilização de linha digitável no painel
+* Maior estabilidade e rapidez na execução das CRONs
+* Compatibilidade com PHP 5.6 e WHMCS 7.x
+* Refatoração dos hooks e integrações nos templates de e-mail
+* Otimização da arquitetura do banco de dados
+
+## 2.4.4 - 2023/11/13
+
+`Bugs resolvidos`
+* PDF anexo falhava em algumas ocasiões
 
 ## 2.4.3 - 2023/10/26
 
@@ -78,25 +86,6 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 `Melhorias`
 
 * Mais dados para debug nos Logs de Portais de Pagamento
-
-## 2.4.4 - 2023/11/13
-
-`Bugs resolvidos`
-* PDF anexo falhava em algumas ocasiões
-
-## 2.4.3 - 2023/10/26
-
-`Bugs resolvidos`
-* Método de pagamento indisponível para a moeda selecionada
-* CPF/CNPJ inválido! Cheque seu cadastro. (WHMCS 7/8)
-* String + Float operator na integração com PDFs
-* Boletos e PIXes não anexos quando processando via CRON
-
-`Melhorias`
-
-* Novo bloco de integração para PDFs anexos
-* Checagem de ACL compatível com WHMCS8
-* Refatoramento progressivo do plugin
 
 ## 2.4.1 - 2023/01/09
 

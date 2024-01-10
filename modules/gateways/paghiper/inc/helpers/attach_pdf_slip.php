@@ -3,7 +3,7 @@
  * Adiciona boleto bancário como página adicional na fatura anexa no WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.4.4
+ * @version    2.5
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -14,7 +14,21 @@
 use WHMCS\Database\Capsule;
 use setasign\Fpdi;
 
-$basedir    = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
+// PHP 5.x compatibility
+if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
+    $basedir = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
+} else {
+
+    function dirname_with_levels($path, $levels = 1) {
+        while ($levels--) {
+            $path = dirname($path);
+        }
+        return $path;
+    }
+
+    $basedir = (function_exists('dirname')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
+}
+
 $assets_dir = "{$basedir}/assets/img";
 require_once($basedir.'/classes/PaghiperTransaction.php');
 
