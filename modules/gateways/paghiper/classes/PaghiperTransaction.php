@@ -89,22 +89,33 @@ class PaghiperTransaction {
         switch($this->invoiceData['status']) {
             case "Paid":
 
-                // Mostrar tela de boleto pago
-                $ico = ($this->isPIX) ? 'pix-ok.png' : 'billet-ok.png';
-                $title = 'Fatura paga!';
-                $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' ja foi compensado no sistema e consta como pago.';
-                echo paghiper_print_screen($ico, $title, $message);
-                exit();
+                if($this->outputFormat == 'html') {
+
+                    // Mostrar tela de boleto pago
+                    $ico = ($this->isPIX) ? 'pix-ok.png' : 'billet-ok.png';
+                    $title = 'Fatura paga!';
+                    $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' ja foi compensado no sistema e consta como pago.';
+                    echo paghiper_print_screen($ico, $title, $message);
+                    exit();
+                    
+                }
 
                 break;
             case "Draft":
 
-                // Mostrar tela de boleto indisponível
-                $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                $title = 'Esta fatura ainda não está disponível!';
-                $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' ainda não está disponível. Caso acredite que seja um erro, por favor acione o suporte.';
-                echo paghiper_print_screen($ico, $title, $message);
-                exit();
+                logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => 'Transaction not published'),"Transação ainda em rascunho, não é possível criar a transação.");
+
+                if($this->outputFormat == 'html') {
+                    // Mostrar tela de boleto indisponível
+                    $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                    $title = 'Esta fatura ainda não está disponível!';
+                    $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' ainda não está disponível. Caso acredite que seja um erro, por favor acione o suporte.';
+                    echo paghiper_print_screen($ico, $title, $message);
+                    exit();
+
+                }
+
+                return false;
 
                 break;
             case "Unpaid":
@@ -117,22 +128,38 @@ class PaghiperTransaction {
                 break;
             case "Cancelled":
 
-                // Mostrar tela de boleto indisponível
-                $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                $title = 'Esta fatura foi cancelada!';
-                $message = 'Por consequencia, esse '.(($this->isPIX) ? 'PIX' : 'boleto').' também foi cancelado. Caso acredite que seja um erro, por favor acione o suporte.';
-                echo paghiper_print_screen($ico, $title, $message);
-                exit();
+                logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => 'Transaction cancelled'),"Transação cancelada, não é possível criar novas transações. Caso acredite que seja um erro, por favor acione o suporte.");
+
+                if($this->outputFormat == 'html') {
+
+                    // Mostrar tela de boleto indisponível
+                    $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                    $title = 'Esta fatura foi cancelada!';
+                    $message = 'Por consequencia, esse '.(($this->isPIX) ? 'PIX' : 'boleto').' também foi cancelado. Caso acredite que seja um erro, por favor acione o suporte.';
+                    echo paghiper_print_screen($ico, $title, $message);
+                    exit();
+
+                }
+
+                return false;
 
                 break;
             case "Refunded":
 
-                // Mostrar tela de boleto indisponível
-                $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                $title = 'Este fatura foi estornada.';
-                $message = 'Seu '.(($this->isPIX) ? 'PIX' : 'boleto').' foi estornado. Caso acredite que seja um erro, por favor acione o suporte.';
-                echo paghiper_print_screen($ico, $title, $message);
-                exit();
+                logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => 'Transaction refunded'),"Transação estornada, não é possível emitir segunda via. Caso acredite que seja um erro, por favor acione o suporte.");
+
+                if($this->outputFormat == 'html') {
+
+                    // Mostrar tela de boleto indisponível
+                    $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                    $title = 'Este fatura foi estornada.';
+                    $message = 'Seu '.(($this->isPIX) ? 'PIX' : 'boleto').' foi estornado. Caso acredite que seja um erro, por favor acione o suporte.';
+                    echo paghiper_print_screen($ico, $title, $message);
+                    exit();
+                
+                }
+
+                return false;
 
                 break;
             case "Collections":
@@ -217,24 +244,35 @@ class PaghiperTransaction {
                 $reissue_unpaid = (isset($reissue_unpaid_cont) && ($reissue_unpaid_cont === 0 || !empty($reissue_unpaid_cont))) ? $reissue_unpaid_cont : 1 ;
                 if($reissue_unpaid == -1 && $dataHoje > $invoiceDuedate) {
 
-                    // Mostrar tela de boleto cancelado
-                    $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                    $title = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' venceu!';
-                    $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
-                    echo paghiper_print_screen($ico, $title, $message);
-                    exit();
+                    logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => 'Reissue not allowed'),"Transação vencida. Configuração não permite reemissão. Caso ache que isso é um erro, revise nas opções ou entre em contato com o suporte");
+
+                    if($this->outputFormat == 'html') {
+
+                        // Mostrar tela de boleto cancelado
+                        $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                        $title = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' venceu!';
+                        $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
+                        echo paghiper_print_screen($ico, $title, $message);
+                        exit();
+
+                    }
+
 
                 }
 
                 // Abortamos a exibição, caso valor seja menor que R$ 3
                 if((int) $this->invoiceData['total'] < 3) {
 
-                    // Mostrar tela de boleto cancelado
-                    $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                    $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
-                    $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.';
-                    echo paghiper_print_screen($ico, $title, $message);
-                    exit();
+                    if($this->outputFormat == 'html') {
+
+                        // Mostrar tela de boleto cancelado
+                        $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                        $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
+                        $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.';
+                        echo paghiper_print_screen($ico, $title, $message);
+                        exit();
+
+                    }
 
                 }
 
@@ -299,11 +337,20 @@ class PaghiperTransaction {
         }
         
         if($currency !== 'BRL' && $currency !== 'R$') {
-            $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Método de pagamento indisponível para a moeda selecionada';
-            $message = 'Este método de pagamento só pode ser utilizado para pagamentos em R$ (BRL)<br>Caso creia que isso seja um erro, entre em contato com o suporte.';
-            echo paghiper_print_screen($ico, $title, $message);
-            exit();
+
+            logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => 'Invalid currency', 'currency' => $currency),"Este método de pagamento só pode ser utilizado para pagamentos em R$ (BRL)<br>Caso creia que isso seja um erro, entre em contato com o suporte.");
+
+            if($this->outputFormat == 'html') {
+
+                $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                $title = 'Método de pagamento indisponível para a moeda selecionada';
+                $message = 'Este método de pagamento só pode ser utilizado para pagamentos em R$ (BRL)<br>Caso creia que isso seja um erro, entre em contato com o suporte.';
+                echo paghiper_print_screen($ico, $title, $message);
+                exit();
+
+            }
+
+            return false;
         }
 
         return [
@@ -398,13 +445,20 @@ class PaghiperTransaction {
     
         // Validate CPF/CNPJ
         if(!paghiper_is_tax_id_valid($cpf) && !paghiper_is_tax_id_valid($cnpj)) {
-            $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Ops! Não foi possível emitir o '.((!$this->isPIX) ? 'boleto bancário' : 'PIX').'.';
-            $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
-            
-            echo paghiper_print_screen($ico, $title, $message);
+
             logTransaction($this->gatewayConf["name"],array('tax_id' => (!empty($cnpj)) ? $cnpj : $cpf, 'invoice_id' => $invoice_id, 'exception' => 'Failed Paghiper TaxID validation'), sprintf("Número de CPF/CNPJ inválido! Não foi possível gerar o %s.", ($this->isPIX) ? 'PIX' : 'boleto'));
-            exit();
+
+            if($this->outputFormat == 'html') {
+                $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                $title = 'Ops! Não foi possível emitir o '.((!$this->isPIX) ? 'boleto bancário' : 'PIX').'.';
+                $message = 'Número de CPF/CNPJ inválido! Por favor atualize seus dados ou entre em contato com o suporte';
+                
+                echo paghiper_print_screen($ico, $title, $message);
+                exit();
+
+            }
+
+            return false;
         }
     
     
@@ -510,13 +564,19 @@ class PaghiperTransaction {
         $discount_cents = (!empty($discount_value)) ? paghiper_convert_to_numeric(number_format($discount_value, 2, '.', '' )) : 0;
     
         if((floatval($total) - floatval($discount_value)) < 3) {
+
+            logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => $e),"O valor com desconto por pagto. antecipado é inferior a R$3,00! Por favor, revise a configuração.");
+
+            if($this->outputFormat == 'html') {
     
-            // Mostrar tela de boleto cancelado
-            $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
-            $message = 'O valor com desconto por pagto. antecipado é inferior a R$3,00! Por favor, revise a configuração.';
-            echo paghiper_print_screen($ico, $title, $message);
-            exit();
+                // Mostrar tela de boleto cancelado
+                $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
+                $message = 'O valor com desconto por pagto. antecipado é inferior a R$3,00! Por favor, revise a configuração.';
+                echo paghiper_print_screen($ico, $title, $message);
+                exit();
+                
+            }
     
         }
     
@@ -589,13 +649,21 @@ class PaghiperTransaction {
             $query_insert = $query->execute();
     
             if(!$query_insert) {
-                $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                $title = 'Ops! Não foi possível emitir o '.(($this->isPIX) ? 'PIX' : 'boleto bancário').'.';
-                $message = 'Por favor entre em contato com o suporte. Erro 0x004681';
                 
-                echo paghiper_print_screen($ico, $title, $message);
                 logTransaction($this->gatewayConf["name"],array('json' => $json, 'query' => $sql, 'query_result' => $query, 'exception' => $e),"Não foi possível inserir a transação no banco de dados. Por favor entre em contato com o suporte.");
-                exit();
+
+                if($this->outputFormat == 'html') {
+
+                    $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                    $title = 'Ops! Não foi possível emitir o '.(($this->isPIX) ? 'PIX' : 'boleto bancário').'.';
+                    $message = 'Por favor entre em contato com o suporte. Erro 0x004681';
+
+                    echo paghiper_print_screen($ico, $title, $message);
+                    exit();
+
+                }
+
+                return false;
             }
 
             $transactionData    = ($this->isPIX) ? $json['pix_create_request'] : $json['create_request'];
@@ -604,15 +672,20 @@ class PaghiperTransaction {
             $this->transactionData = array_merge($transactionData, $transactionDetails);
     
         } else {
-    
-            // Não foi possível solicitar o boleto.
-            $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-            $title = 'Ops! Não foi possível emitir o '.(($this->isPIX) ? 'PIX' : 'boleto bancário').'.';
-            $message = 'Por favor entre em contato com o suporte. Erro 0x004682';
-            
-            echo paghiper_print_screen($ico, $title, $message);
-    
+
             logTransaction($this->gatewayConf["name"],array('json' => $json, 'post' => $_POST, 'request' => $data_post),"Não foi possível criar a transação.");
+
+            if($this->outputFormat == 'html') {
+    
+                // Não foi possível solicitar o boleto.
+                $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                $title = 'Ops! Não foi possível emitir o '.(($this->isPIX) ? 'PIX' : 'boleto bancário').'.';
+                $message = 'Por favor entre em contato com o suporte. Erro 0x004682';
+                
+                echo paghiper_print_screen($ico, $title, $message);
+                exit();
+            }
+    
             return false;
         }
 
@@ -655,14 +728,13 @@ class PaghiperTransaction {
                             return json_encode([
                                 'status'    => 400,
                                 'error'     => 'reissue_not_allowed',
-                                'message'   => 'Impossível emitir segunda via.'
+                                'message'   => 'Reemissão não disponível.'
                             ]);
                             break;
                         case 'html':
         
                             // Mostrar tela de boleto indisponível
                             $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                            $title = 'Não foi possível gerar seu '. (($this->isPIX) ? 'PIX' : 'Boleto bancário') . '.';
                             $title = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' venceu!';
                             $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
                             echo paghiper_print_screen($ico, $title, $message);
