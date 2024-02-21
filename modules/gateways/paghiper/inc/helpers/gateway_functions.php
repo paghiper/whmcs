@@ -1028,3 +1028,10 @@ function create_paghiper_table() {
         return true;
     }
 }
+
+// Polyfill for str_contains
+if (!function_exists('str_contains')) {
+    function str_contains($haystack, $needle) {
+        return $needle !== '' && mb_strpos($haystack, $needle) !== false;
+    }
+}

@@ -44,6 +44,11 @@ class PaghiperTransaction {
         $this->gatewayName = $this->invoiceData['paymentmethod'];
         $this->isPIX       = ($this->gatewayName == 'paghiper_pix');
 
+        // Saímos do fluxo, caso o método de pagamento não seja Paghiper.
+        if(!str_contains($this->gatewayName, 'paghiper')) {
+            return false;
+        }
+
         // Pegamos as configurações do gateway e de sistema necessárias
         $this->gatewayConf      = getGatewayVariables($this->gatewayName);
         $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
