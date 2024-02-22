@@ -433,8 +433,10 @@ class PaghiperTransaction {
                     ->prepare($sql);
                 $query->execute();
                 $result = $query->fetch(\PDO::FETCH_BOTH);
-    
-                $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift($result)));
+
+                if(is_array($result) && !empty($result)) {
+                    $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift($result)));
+                }
             
             }
     
@@ -519,8 +521,11 @@ class PaghiperTransaction {
                             ->prepare($sql);
                         $query->execute();
                         $result = $query->fetch(\PDO::FETCH_BOTH);
-    
-                        $razaosocial_val = trim(array_shift($result));
+
+                        if(is_array($result) && !empty($result)) {
+                            $razaosocial_val = trim(array_shift($result));
+                        }
+                        
                     }
     
                 }

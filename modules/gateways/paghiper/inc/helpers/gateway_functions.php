@@ -517,7 +517,12 @@ function paghiper_getBackupAdminUser() {
     $query->execute();
     $result = $query->fetch(\PDO::FETCH_BOTH);
 
-    return array_shift($result);
+    if(is_array($result) && !empty($result)) {
+        return array_shift($result);
+    }
+
+    return false;
+
 }
 
 function paghiper_checkIfAdminUserExists($admin_user) {
@@ -529,7 +534,11 @@ function paghiper_checkIfAdminUserExists($admin_user) {
     $query->execute();
     $result = $query->fetch(\PDO::FETCH_BOTH);
 
-    return !empty(array_shift($result));
+    if(is_array($result) && !empty($result)) {
+        return array_shift($result);
+    }
+
+    return false;
 }
 
 function generate_paghiper_billet($invoice, $params) {
@@ -601,7 +610,9 @@ function generate_paghiper_billet($invoice, $params) {
             $query->execute();
             $result = $query->fetch(\PDO::FETCH_BOTH);
 
-            $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift($result)));
+            if(is_array($result) && !empty($result)) {
+                $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift($result)));
+            }
         
         }
 
@@ -680,7 +691,9 @@ function generate_paghiper_billet($invoice, $params) {
                     $query->execute();
                     $result = $query->fetch(\PDO::FETCH_BOTH);
 
-                    $razaosocial_val = trim(array_shift($result));
+                    if(is_array($result) && !empty($result)) {
+                        $razaosocial_val = trim(array_shift($result));
+                    }
                 }
 
             }

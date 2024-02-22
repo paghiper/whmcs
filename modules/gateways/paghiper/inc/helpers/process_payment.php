@@ -88,9 +88,12 @@ if (!defined("WHMCS")) {
                     ->prepare($sql);
                 $query->execute();
                 $user = $query->fetch(\PDO::FETCH_BOTH);
-                $email = array_shift($user); 
 
-                if($email !== $user_email) {
+                if(is_array($user) && !empty($user)) {
+                    $email = array_shift($user); 
+                }
+
+                if(!isset($email) || $email !== $user_email) {
 
                     // Mostrar tela de boleto indisponível
                     $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
