@@ -14,23 +14,15 @@
 use WHMCS\Database\Capsule;
 use setasign\Fpdi;
 
+$assets_dir = "{$basedir}/assets/img";
+require_once($basedir.'/classes/PaghiperTransaction.php');
+
 // PHP 5.x compatibility
 if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
     $basedir = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
 } else {
-
-    function dirname_with_levels($path, $levels = 1) {
-        while ($levels--) {
-            $path = dirname($path);
-        }
-        return $path;
-    }
-
-    $basedir = (function_exists('dirname')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
+    $basedir = (function_exists('dirname') && function_exists('dirname_with_levels')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
 }
-
-$assets_dir = "{$basedir}/assets/img";
-require_once($basedir.'/classes/PaghiperTransaction.php');
 
 $transactionData = [
     'invoiceID'     => $invoiceid,

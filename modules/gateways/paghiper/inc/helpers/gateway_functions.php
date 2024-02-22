@@ -1035,3 +1035,13 @@ if (!function_exists('str_contains')) {
         return $needle !== '' && mb_strpos($haystack, $needle) !== false;
     }
 }
+
+// Polyfill for 5.6 compat.
+if (version_compare(PHP_VERSION, '7.0.0') < 0 && !function_exists('dirname_with_levels')) {
+    function dirname_with_levels($path, $levels = 1) {
+        while ($levels--) {
+            $path = dirname($path);
+        }
+        return $path;
+    }
+}
