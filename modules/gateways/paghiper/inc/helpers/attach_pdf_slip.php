@@ -14,15 +14,15 @@
 use WHMCS\Database\Capsule;
 use setasign\Fpdi;
 
-$assets_dir = "{$basedir}/assets/img";
-require_once($basedir.'/classes/PaghiperTransaction.php');
-
 // PHP 5.x compatibility
 if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
     $basedir = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
 } else {
     $basedir = (function_exists('dirname') && function_exists('dirname_with_levels')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
 }
+
+$assets_dir = "{$basedir}/assets/img";
+require_once($basedir.'/classes/PaghiperTransaction.php');
 
 $transactionData = [
     'invoiceID'     => $invoiceid,
@@ -31,7 +31,7 @@ $transactionData = [
 $paghiperTransaction    = new PaghiperTransaction($transactionData);
 $invoiceTransaction     = json_decode($paghiperTransaction->process(), TRUE);
 
-$is_pix = array_key_exists('emv', $invoiceTransaction) ? TRUE : FALSE;
+$is_pix = array_key_exists('emv', $invoiceTransaction && !is_null($invoiceTransaction['emv'])) ? TRUE : FALSE;
 
 $transaction_id = (isset($invoiceTransaction['transaction_id'])) ? $invoiceTransaction['transaction_id'] : '';
 $asset_url = (!$is_pix) ? 
@@ -47,7 +47,7 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($assets_di
     $print_paghiper_page = FALSE;
 
     // Checamos se temos um boleto para disponibilizar
-    if(file_exists($filename)) {
+    if(file_exists($filename) && filesize($filename)) {
         $print_paghiper_page = TRUE;
     } else {
 
