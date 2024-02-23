@@ -31,7 +31,7 @@ $transactionData = [
 $paghiperTransaction    = new PaghiperTransaction($transactionData);
 $invoiceTransaction     = json_decode($paghiperTransaction->process(), TRUE);
 
-$is_pix = array_key_exists('emv', $invoiceTransaction && !is_null($invoiceTransaction['emv'])) ? TRUE : FALSE;
+$is_pix = (array_key_exists('emv', $invoiceTransaction) && !is_null($invoiceTransaction['emv'])) ? TRUE : FALSE;
 
 $transaction_id = (isset($invoiceTransaction['transaction_id'])) ? $invoiceTransaction['transaction_id'] : '';
 $asset_url = (!$is_pix) ? 
@@ -75,7 +75,6 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($assets_di
         }
         catch (Exception $e) {
             echo $e->getMessage();
-            exit();
         }
 
         restore_error_handler();
