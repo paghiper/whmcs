@@ -105,6 +105,8 @@ class PaghiperTransaction {
                     
                 }
 
+                return false;
+
                 break;
             case "Draft":
 
@@ -119,6 +121,8 @@ class PaghiperTransaction {
                     exit();
 
                 }
+
+                return false;
 
                 return false;
 
@@ -232,11 +236,15 @@ class PaghiperTransaction {
             
             if(!empty($reserved_billet)) {
 
-                $ico = ($this->isPIX) ? 'pix-reserved.png' : 'billet-reserved.png';
-                $title = 'Pagamento pré-confirmado.';
-                $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' teve o pagamento pré-confirmado e está aguardando compensação bancária. Por favor, aguarde.';
-                echo paghiper_print_screen($ico, $title, $message);
-                exit();
+                if($this->outputFormat == 'html') {
+
+                    $ico = ($this->isPIX) ? 'pix-reserved.png' : 'billet-reserved.png';
+                    $title = 'Pagamento pré-confirmado.';
+                    $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' teve o pagamento pré-confirmado e está aguardando compensação bancária. Por favor, aguarde.';
+                    echo paghiper_print_screen($ico, $title, $message);
+                    exit();
+
+                }
 
                 return false;
 
@@ -262,11 +270,15 @@ class PaghiperTransaction {
 
                     }
 
+                    return false;
+
 
                 }
 
                 // Abortamos a exibição, caso valor seja menor que R$ 3
                 if((int) $this->invoiceData['total'] < 3) {
+
+                    logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => 'Below minimun ticket'),'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.');
 
                     if($this->outputFormat == 'html') {
 
@@ -278,6 +290,8 @@ class PaghiperTransaction {
                         exit();
 
                     }
+
+                    return false;
 
                 }
 
@@ -587,6 +601,8 @@ class PaghiperTransaction {
                 exit();
                 
             }
+
+            return false;
     
         }
     
