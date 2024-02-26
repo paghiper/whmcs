@@ -39,6 +39,13 @@ class PaghiperTransaction {
         $this->invoiceID    = $transactionParams['invoiceID'];
         $this->outputFormat = array_key_exists('format', $transactionParams) ? $transactionParams['format'] : 'html';
 
+        // Pegamos as configurações do gateway e de sistema necessárias
+        $this->gatewayConf      = getGatewayVariables($this->gatewayName);
+        $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
+        $this->whmcsAdminUser   = paghiper_autoSelectAdminUser($this->gatewayConf);
+        $this->reissueUnpaid    = $this->gatewayConf["reissue_unpaid"];
+        $this->whmcsVersion     = App::getVersion()->getCasual();
+
         // Pegamos a fatura no banco de dados
         $this->invoiceData = localAPI('getinvoice', ['invoiceid' => intval($this->invoiceID)], $this->whmcsAdminUser);
         $this->gatewayName = $this->invoiceData['paymentmethod'];
@@ -48,13 +55,6 @@ class PaghiperTransaction {
         if(!str_contains($this->gatewayName, 'paghiper')) {
             return false;
         }
-
-        // Pegamos as configurações do gateway e de sistema necessárias
-        $this->gatewayConf      = getGatewayVariables($this->gatewayName);
-        $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
-        $this->whmcsAdminUser   = paghiper_autoSelectAdminUser($this->gatewayConf);
-        $this->reissueUnpaid    = $this->gatewayConf["reissue_unpaid"];
-        $this->whmcsVersion     = App::getVersion()->getCasual();
 
         // Define variáveis para configurações do gateway
         $account_email      = trim($this->gatewayConf["email"]);
