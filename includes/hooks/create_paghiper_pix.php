@@ -21,8 +21,6 @@ function paghiper_display_pix_qr_code($vars) {
     $target_templates = array('Invoice Created', 'Invoice Payment Reminder', 'First Invoice Overdue Notice', 'Second Invoice Overdue Notice', 'Third Invoice Overdue Notice');
 
     if(in_array($email_template, $target_templates)) {
-        // Todo: 
-        $invoice = mysql_fetch_array(mysql_query("SELECT tblinvoices.*,tblclients.id as client_id, tblclients.email FROM tblinvoices INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.id='$invoice_id'"));
 
         require_once(dirname(__FILE__) . '/../../modules/gateways/paghiper/classes/PaghiperTransaction.php');
         $paghiperTransaction    = new PaghiperTransaction(['invoiceID' => $invoice_id, 'format' => 'array']);
