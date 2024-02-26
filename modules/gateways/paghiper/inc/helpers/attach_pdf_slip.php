@@ -43,7 +43,7 @@ $asset_url = (!$is_pix) ?
     ((array_key_exists('pix_code', $invoiceTransaction) && !empty($invoiceTransaction['pix_code'])) ? $invoiceTransaction['pix_code']['qrcode_image_url'] : $invoiceTransaction['qrcode_image_url']);
 
 if($is_pix) {
-    $asset_url = $invoiceTransaction['qrcode_image_url'])
+    $asset_url = $invoiceTransaction['qrcode_image_url'];
 } else {
     $asset_url = $invoiceTransaction['url_slip_pdf'];
 }
