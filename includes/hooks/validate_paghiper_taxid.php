@@ -11,7 +11,14 @@
  * @link       https://www.paghiper.com/
  */
 
-require_once(dirname(__FILE__) . '/../../modules/gateways/paghiper/inc/helpers/gateway_functions.php');
+// PHP 5.x compatibility
+if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
+    $basedir = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
+} else {
+    $basedir = (function_exists('dirname') && function_exists('dirname_with_levels')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
+}
+
+require_once($basedir . '/modules/gateways/paghiper/inc/helpers/gateway_functions.php');
 
 function paghiper_getClientDetails($vars, $gateway_config) {
 

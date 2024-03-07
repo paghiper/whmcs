@@ -14,6 +14,14 @@
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
 
 function paghiper_display_pix_qr_code($vars) {
+	
+	// PHP 5.x compatibility
+	if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
+		$basedir = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
+	} else {
+		$basedir = (function_exists('dirname') && function_exists('dirname_with_levels')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
+	}
+
     $merge_fields = [];
     $email_template = $vars['messagename'];
     $invoice_id = $vars['relid'];
@@ -24,7 +32,7 @@ function paghiper_display_pix_qr_code($vars) {
         // Todo: 
         $invoice = mysql_fetch_array(mysql_query("SELECT tblinvoices.*,tblclients.id as client_id, tblclients.email FROM tblinvoices INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.id='$invoice_id'"));
 
-        require_once(dirname(__FILE__) . '/../../modules/gateways/paghiper/classes/PaghiperTransaction.php');
+        require_once($basedir . '/modules/gateways/paghiper/classes/PaghiperTransaction.php');
         $paghiperTransaction    = new PaghiperTransaction(['invoiceID' => $invoice_id, 'format' => 'array']);
         $invoiceTransaction     = $paghiperTransaction->process();
 		
