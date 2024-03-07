@@ -3,7 +3,7 @@
  * Adiciona boleto bancário e link direto para boleto no WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.5
+ * @version    2.5.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)
@@ -37,7 +37,6 @@ function paghiper_display_digitable_line($vars) {
             $merge_fields['linha_digitavel'] .= $digitable_line;
             $merge_fields['linha_digitavel'] .= '</strong></span></span></div>';
         }
-
 
     }
     return $merge_fields;
