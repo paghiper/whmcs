@@ -32,7 +32,7 @@ $paghiperTransaction    = new PaghiperTransaction($transactionData);
 $invoiceTransaction     = json_decode($paghiperTransaction->process(), TRUE);
 
 // Bail if we don't have a transaction to process
-if(is_null($invoiceTransaction)) {
+if(!is_null($invoiceTransaction)) {
 
     if(array_key_exists('transaction_type', $invoiceTransaction) && $invoiceTransaction['transaction_type'] == 'billet') {
         $is_pix = FALSE;
