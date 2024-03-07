@@ -39,6 +39,13 @@ class PaghiperTransaction {
         $this->invoiceID    = $transactionParams['invoiceID'];
         $this->outputFormat = array_key_exists('format', $transactionParams) ? $transactionParams['format'] : 'html';
 
+        // Pegamos as configurações do gateway e de sistema necessárias
+        $this->gatewayConf      = getGatewayVariables($this->gatewayName);
+        $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
+        $this->whmcsAdminUser   = paghiper_autoSelectAdminUser($this->gatewayConf);
+        $this->reissueUnpaid    = $this->gatewayConf["reissue_unpaid"];
+        $this->whmcsVersion     = App::getVersion()->getCasual();
+
         // Pegamos a fatura no banco de dados
         $this->invoiceData = localAPI('getinvoice', ['invoiceid' => intval($this->invoiceID)], $this->whmcsAdminUser);
         $this->gatewayName = $this->invoiceData['paymentmethod'];
@@ -48,13 +55,6 @@ class PaghiperTransaction {
         if(!str_contains($this->gatewayName, 'paghiper')) {
             return false;
         }
-
-        // Pegamos as configurações do gateway e de sistema necessárias
-        $this->gatewayConf      = getGatewayVariables($this->gatewayName);
-        $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
-        $this->whmcsAdminUser   = paghiper_autoSelectAdminUser($this->gatewayConf);
-        $this->reissueUnpaid    = $this->gatewayConf["reissue_unpaid"];
-        $this->whmcsVersion     = App::getVersion()->getCasual();
 
         // Define variáveis para configurações do gateway
         $account_email      = trim($this->gatewayConf["email"]);
@@ -280,14 +280,30 @@ class PaghiperTransaction {
 
                     logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => 'Below minimun ticket'),'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.');
 
-                    if($this->outputFormat == 'html') {
+                    $err_message = [
+                        'status'    => 400,
+                        'error'     => 'below_minimum_ticket',
+                        'message'   => 'Valor total com inferior a R$ 3.'
+                    ];
 
-                        // Mostrar tela de boleto cancelado
-                        $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                        $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
-                        $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.';
-                        echo paghiper_print_screen($ico, $title, $message);
-                        exit();
+                    switch($this->outputFormat) {
+
+                        case 'html':
+
+                            // Mostrar tela de boleto cancelado
+                            $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                            $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
+                            $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.';
+                            echo paghiper_print_screen($ico, $title, $message);
+                            exit();
+                            break;
+
+                        case 'json':
+                            return json_encode($err_message);
+                            break;
+                        case 'array':
+                            return $err_message;
+                            break;
 
                     }
 
@@ -591,15 +607,31 @@ class PaghiperTransaction {
 
             logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => $e),"O valor com desconto por pagto. antecipado é inferior a R$3,00! Por favor, revise a configuração.");
 
-            if($this->outputFormat == 'html') {
-    
-                // Mostrar tela de boleto cancelado
-                $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
-                $message = 'O valor com desconto por pagto. antecipado é inferior a R$3,00! Por favor, revise a configuração.';
-                echo paghiper_print_screen($ico, $title, $message);
-                exit();
-                
+            $err_message = [
+                'status'    => 400,
+                'error'     => 'below_minimum_ticket',
+                'message'   => 'Valor total com inferior a R$ 3.'
+            ];
+
+            switch($this->outputFormat) {
+
+                case 'html':
+
+                    // Mostrar tela de boleto cancelado
+                    $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                    $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
+                    $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.';
+                    echo paghiper_print_screen($ico, $title, $message);
+                    exit();
+                    break;
+
+                case 'json':
+                    return json_encode($err_message);
+                    break;
+                case 'array':
+                    return $err_message;
+                    break;
+
             }
 
             return false;
