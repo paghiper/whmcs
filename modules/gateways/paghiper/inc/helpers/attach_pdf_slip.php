@@ -31,21 +31,26 @@ $transactionData = [
 $paghiperTransaction    = new PaghiperTransaction($transactionData);
 $invoiceTransaction     = json_decode($paghiperTransaction->process(), TRUE);
 
-if(array_key_exists('transaction_type', $invoiceTransaction) && $invoiceTransaction['transaction_type'] == 'billet') {
-    $is_pix = FALSE;
-} elseif(array_key_exists('emv', $invoiceTransaction) && !empty($invoiceTransaction['emv'])) {
-    $is_pix = TRUE;
-}
+// Bail if we don't have a transaction to process
+if(is_null($invoiceTransaction)) {
 
-$transaction_id = (isset($invoiceTransaction['transaction_id'])) ? $invoiceTransaction['transaction_id'] : '';
-$asset_url = (!$is_pix) ? 
-    ((array_key_exists('bank_slip', $invoiceTransaction) && !empty($invoiceTransaction['bank_slip'])) ? $invoiceTransaction['bank_slip']['url_slip_pdf'] : $invoiceTransaction['url_slip_pdf']) : 
-    ((array_key_exists('pix_code', $invoiceTransaction) && !empty($invoiceTransaction['pix_code'])) ? $invoiceTransaction['pix_code']['qrcode_image_url'] : $invoiceTransaction['qrcode_image_url']);
+    if(array_key_exists('transaction_type', $invoiceTransaction) && $invoiceTransaction['transaction_type'] == 'billet') {
+        $is_pix = FALSE;
+    } elseif(array_key_exists('emv', $invoiceTransaction) && !empty($invoiceTransaction['emv'])) {
+        $is_pix = TRUE;
+    }
+    
+    $transaction_id = (isset($invoiceTransaction['transaction_id'])) ? $invoiceTransaction['transaction_id'] : '';
+    $asset_url = (!$is_pix) ? 
+        ((array_key_exists('bank_slip', $invoiceTransaction) && !empty($invoiceTransaction['bank_slip'])) ? $invoiceTransaction['bank_slip']['url_slip_pdf'] : $invoiceTransaction['url_slip_pdf']) : 
+        ((array_key_exists('pix_code', $invoiceTransaction) && !empty($invoiceTransaction['pix_code'])) ? $invoiceTransaction['pix_code']['qrcode_image_url'] : $invoiceTransaction['qrcode_image_url']);
+    
+    if($is_pix) {
+        $asset_url = $invoiceTransaction['qrcode_image_url'];
+    } else {
+        $asset_url = $invoiceTransaction['url_slip_pdf'];
+    }
 
-if($is_pix) {
-    $asset_url = $invoiceTransaction['qrcode_image_url'];
-} else {
-    $asset_url = $invoiceTransaction['url_slip_pdf'];
 }
 
 if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($assets_dir) && !empty($assets_dir)) && (isset($transaction_id) && !empty($transaction_id))){
