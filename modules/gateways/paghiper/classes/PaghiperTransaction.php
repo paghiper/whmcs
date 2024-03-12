@@ -45,6 +45,8 @@ class PaghiperTransaction {
             // Pegamos a fatura no banco de dados
             $invoice = Invoice::find($this->invoiceID);
             $this->invoiceData = $invoice->getRawOriginal();
+            $this->invoiceData['balance'] = $invoice->getBalanceAttribute();
+            $this->invoiceData['items'] = $invoice->items()->get();
 
             // Variáveis básicas para nossa operação. Caso algo falhe aqui, não será possível inicializar o gateway.
             $this->gatewayName = $this->invoiceData['paymentmethod'];
@@ -199,7 +201,9 @@ class PaghiperTransaction {
         $invoice_total = paghiper_apply_custom_taxes((float) $this->invoiceData['balance'], $this->gatewayConf);
         $invoice_balance = $invoice_total;
 
-        foreach($this->invoiceData['items']['item'] as $invoice_key => $invoice_item) {
+        foreach($this->invoiceData['items'] as $invoice_key => $item) {
+
+            $invoice_item = $item->getRawOriginal();
 
             if($invoice_item['type'] == 'LateFee') {
                 $invoice_balance -= (float) $invoice_item['amount'];
@@ -263,67 +267,7 @@ class PaghiperTransaction {
 
             }
 
-            if(empty($transaction) && empty($reserved_billet)) { 
-
-                // Pegamos a data de hoje, adicionamos um dia e usamos como nova data de vencimento
-                $reissue_unpaid_cont = (int) $this->gatewayConf['reissue_unpaid'];
-                $reissue_unpaid = (isset($reissue_unpaid_cont) && ($reissue_unpaid_cont === 0 || !empty($reissue_unpaid_cont))) ? $reissue_unpaid_cont : 1 ;
-                if($reissue_unpaid == -1 && $dataHoje > $invoiceDuedate) {
-
-                    logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => 'Reissue not allowed'),"Transação vencida. Configuração não permite reemissão. Caso ache que isso é um erro, revise nas opções ou entre em contato com o suporte");
-
-                    if($this->outputFormat == 'html') {
-
-                        // Mostrar tela de boleto cancelado
-                        $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                        $title = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' venceu!';
-                        $message = 'Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária. Caso contrário, por favor acione o suporte.';
-                        echo paghiper_print_screen($ico, $title, $message);
-                        exit();
-
-                    }
-
-                    return false;
-
-
-                }
-
-                // Abortamos a exibição, caso valor seja menor que R$ 3
-                if((int) $this->invoiceData['total'] < 3) {
-
-                    logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => 'Below minimun ticket'),'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.');
-
-                    $err_message = [
-                        'status'    => 400,
-                        'error'     => 'below_minimum_ticket',
-                        'message'   => 'Valor total com inferior a R$ 3.'
-                    ];
-
-                    switch($this->outputFormat) {
-
-                        case 'html':
-
-                            // Mostrar tela de boleto cancelado
-                            $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
-                            $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
-                            $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.';
-                            echo paghiper_print_screen($ico, $title, $message);
-                            exit();
-                            break;
-
-                        case 'json':
-                            return json_encode($err_message);
-                            break;
-                        case 'array':
-                            return $err_message;
-                            break;
-
-                    }
-
-                    return false;
-
-                }
-
+            if(empty($transaction) && empty($reserved_billet)) {
                 return false;
             }
         }
@@ -440,7 +384,7 @@ class PaghiperTransaction {
         $razaosocial        = $this->gatewayConf['razao_social'];
     
         // Data received through function params
-        $invoice_id			= $this->invoiceData['invoiceid'];
+        $invoice_id			= $this->invoiceData['id'];
         $client_id 			= $this->invoiceData['userid'];
     
         if(empty($cpf_cnpj)) {
@@ -792,8 +736,16 @@ class PaghiperTransaction {
             } else {
 
                 // Error when not possible to reissue transaction
+                // Pegamos a data de hoje, adicionamos um dia e usamos como nova data de vencimento
+                $dataHoje = date('Y-m-d'); // Data de Hoje
 
-                if($this->reissueUnpaid == -1) {
+                $reissue_unpaid_cont = (int) $this->gatewayConf['reissue_unpaid'];
+                $reissue_unpaid = (isset($reissue_unpaid_cont) && ($reissue_unpaid_cont === 0 || !empty($reissue_unpaid_cont))) ? $reissue_unpaid_cont : 1 ;
+                
+                if($reissue_unpaid == -1 && $dataHoje > $this->invoiceData['duedate']) {
+
+                    logTransaction($this->gatewayConf["name"],array('transactionData' => $transactionParams, 'exception' => 'Reissue not allowed'),"Transação vencida. Configuração não permite reemissão. Caso ache que isso é um erro, revise nas opções ou entre em contato com o suporte");
+
                     switch ($this->outputFormat) {
                         case 'json':
                             return json_encode([
@@ -812,7 +764,45 @@ class PaghiperTransaction {
                             exit();
         
                             break;
-                    }                     
+                    }   
+                    
+                    return false;
+                }
+
+                // Abortamos a exibição, caso valor seja menor que R$ 3
+                if((int) $this->invoiceData['total'] < 3) {
+
+                    logTransaction($this->gatewayConf["name"],array('transactionData' => $transactionParams, 'exception' => 'Below minimun ticket'),'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.');
+
+                    $err_message = [
+                        'status'    => 400,
+                        'error'     => 'below_minimum_ticket',
+                        'message'   => 'Valor total com inferior a R$ 3.'
+                    ];
+
+                    switch($this->outputFormat) {
+
+                        case 'html':
+
+                            // Mostrar tela de boleto cancelado
+                            $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                            $title = 'Não foi possível gerar o '.(($this->isPIX) ? 'PIX' : 'boleto').'!';
+                            $message = 'Este '.(($this->isPIX) ? 'PIX' : 'boleto').' tem o valor total inferior a R$3,00! Por favor, escolha outro método de pagamento.';
+                            echo paghiper_print_screen($ico, $title, $message);
+                            exit();
+                            break;
+
+                        case 'json':
+                            return json_encode($err_message);
+                            break;
+                        case 'array':
+                            return $err_message;
+                            break;
+
+                    }
+
+                    return false;
+
                 }
 
                 $this->createTransaction();
