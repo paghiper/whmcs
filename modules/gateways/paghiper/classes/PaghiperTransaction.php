@@ -13,6 +13,7 @@
 
 use WHMCS\Database\Capsule;
 use WHMCS\User\Client;
+use WHMCS\Billing\Invoice;
 
 class PaghiperTransaction {
 
@@ -39,21 +40,33 @@ class PaghiperTransaction {
         $this->invoiceID    = $transactionParams['invoiceID'];
         $this->outputFormat = array_key_exists('format', $transactionParams) ? $transactionParams['format'] : 'html';
 
-        // Pegamos as configurações do gateway e de sistema necessárias
-        $this->gatewayConf      = getGatewayVariables($this->gatewayName);
-        $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
-        $this->whmcsAdminUser   = paghiper_autoSelectAdminUser($this->gatewayConf);
-        $this->reissueUnpaid    = $this->gatewayConf["reissue_unpaid"];
-        $this->whmcsVersion     = App::getVersion()->getCasual();
+        try {
 
-        // Pegamos a fatura no banco de dados
-        $this->invoiceData = localAPI('getinvoice', ['invoiceid' => intval($this->invoiceID)], $this->whmcsAdminUser);
-        $this->gatewayName = $this->invoiceData['paymentmethod'];
-        $this->isPIX       = ($this->gatewayName == 'paghiper_pix');
+            // Pegamos a fatura no banco de dados
+            $invoice = Invoice::find($this->invoiceID);
+            $this->invoiceData = $invoice->getRawOriginal();
 
-        // Saímos do fluxo, caso o método de pagamento não seja Paghiper.
-        if(!str_contains($this->gatewayName, 'paghiper')) {
+            // Variáveis básicas para nossa operação. Caso algo falhe aqui, não será possível inicializar o gateway.
+            $this->gatewayName = $this->invoiceData['paymentmethod'];
+            $this->isPIX       = ($this->gatewayName == 'paghiper_pix');
+
+            // Saímos do fluxo, caso o método de pagamento não seja Paghiper.
+            if(!str_contains($this->gatewayName, 'paghiper')) {
+                return false;
+            }
+
+            // Pegamos as configurações do gateway e de sistema necessárias
+            $this->gatewayConf      = getGatewayVariables($this->gatewayName);
+            $this->systemURL        = rtrim(\App::getSystemUrl(),"/");
+            $this->whmcsAdminUser   = paghiper_autoSelectAdminUser($this->gatewayConf);
+            $this->reissueUnpaid    = $this->gatewayConf["reissue_unpaid"];
+            $this->whmcsVersion     = App::getVersion()->getCasual();
+
+        } catch(Exception $e) {
+
+            logTransaction($this->gatewayConf["name"],array('error' => $e->getMessage(), 'transactionData' => $transactionParams, 'exception' => 'Failed to initialise payment gateway'),"Não foi possível inicializar o gateway.");
             return false;
+
         }
 
         // Define variáveis para configurações do gateway
