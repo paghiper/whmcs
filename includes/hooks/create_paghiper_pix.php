@@ -33,16 +33,19 @@ function paghiper_display_pix_qr_code($vars) {
         require_once($basedir . '/modules/gateways/paghiper/classes/PaghiperTransaction.php');
         $paghiperTransaction    = new PaghiperTransaction(['invoiceID' => $invoice_id, 'format' => 'array']);
         $invoiceTransaction     = $paghiperTransaction->process();
-		
-        $digitable_line 	= $invoiceTransaction['emv'];
-        $qrcode_image_url 	= $invoiceTransaction['qrcode_image_url'];
 
-        if($digitable_line) {
-			$merge_fields['codigo_pix'] = "<div style='text-align: center;' class='qr-code-container'><img class='qr-code' width='320' height='320' src='{$qrcode_image_url}'><br>";
-            $merge_fields['codigo_pix'] .= '<h2 style="font-size: 16px; color: #000000">Use a opção QR Code no seu app de internet banking<br><span style="font-size: 14px; font-weight: normal;">Ou, se preferir, copie o texto abaixo para fazer o pagamento</span></h2>';
-            $merge_fields['codigo_pix'] .= '<span>Seu código PIX: <br><span style="font-size: 16px; color: #000000"><strong>';
-            $merge_fields['codigo_pix'] .= $digitable_line;
-            $merge_fields['codigo_pix'] .= '</strong></span></span></div>';
+        if($invoiceTransaction) {
+		
+            $digitable_line 	= $invoiceTransaction['emv'];
+            $qrcode_image_url 	= $invoiceTransaction['qrcode_image_url'];
+    
+            if($digitable_line) {
+                $merge_fields['codigo_pix'] = "<div style='text-align: center;' class='qr-code-container'><img class='qr-code' width='320' height='320' src='{$qrcode_image_url}'><br>";
+                $merge_fields['codigo_pix'] .= '<h2 style="font-size: 16px; color: #000000">Use a opção QR Code no seu app de internet banking<br><span style="font-size: 14px; font-weight: normal;">Ou, se preferir, copie o texto abaixo para fazer o pagamento</span></h2>';
+                $merge_fields['codigo_pix'] .= '<span>Seu código PIX: <br><span style="font-size: 16px; color: #000000"><strong>';
+                $merge_fields['codigo_pix'] .= $digitable_line;
+                $merge_fields['codigo_pix'] .= '</strong></span></span></div>';
+            }
         }
 
 

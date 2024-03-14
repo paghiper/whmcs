@@ -36,14 +36,17 @@ function paghiper_display_digitable_line($vars) {
         $paghiperTransaction    = new PaghiperTransaction(['invoiceID' => $invoice_id, 'format' => 'array']);
         $invoiceTransaction     = $paghiperTransaction->process();
 
-        $digitable_line             = $invoiceTransaction['digitable_line'];
-        $bar_code_number_to_image   = $invoiceTransaction['bar_code_number_to_image'];
-        
-        if($digitable_line) {
-            $merge_fields['linha_digitavel'] = '<div style="text-align: center;" class="billet-barcode-container"><span>Linha digitável: <br><span style="font-size: 16px; color: #000000"><strong>';
-            $merge_fields['linha_digitavel'] .= "<img class='billet-barcode' style='max-width: 100%;' height='50' src='{$whmcs_url}/modules/gateways/paghiper/assets/php/barcode.php?codigo={$bar_code_number_to_image}'><br>";
-            $merge_fields['linha_digitavel'] .= $digitable_line;
-            $merge_fields['linha_digitavel'] .= '</strong></span></span></div>';
+        if($invoiceTransaction) {
+
+            $digitable_line             = $invoiceTransaction['digitable_line'];
+            $bar_code_number_to_image   = $invoiceTransaction['bar_code_number_to_image'];
+            
+            if($digitable_line) {
+                $merge_fields['linha_digitavel'] = '<div style="text-align: center;" class="billet-barcode-container"><span>Linha digitável: <br><span style="font-size: 16px; color: #000000"><strong>';
+                $merge_fields['linha_digitavel'] .= "<img class='billet-barcode' style='max-width: 100%;' height='50' src='{$whmcs_url}/modules/gateways/paghiper/assets/php/barcode.php?codigo={$bar_code_number_to_image}'><br>";
+                $merge_fields['linha_digitavel'] .= $digitable_line;
+                $merge_fields['linha_digitavel'] .= '</strong></span></span></div>';
+            }
         }
 
     }
