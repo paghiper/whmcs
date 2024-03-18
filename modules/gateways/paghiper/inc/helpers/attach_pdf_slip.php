@@ -3,11 +3,11 @@
  * Adiciona boleto bancário como página adicional na fatura anexa no WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.5
+ * @version    2.5.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
- * @copyright  (c) 2017-2023, PagHiper
+ * @copyright  (c) 2017-2024, PagHiper
  * @link       https://www.paghiper.com/
  */
 
@@ -18,15 +18,7 @@ use setasign\Fpdi;
 if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
     $basedir = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
 } else {
-
-    function dirname_with_levels($path, $levels = 1) {
-        while ($levels--) {
-            $path = dirname($path);
-        }
-        return $path;
-    }
-
-    $basedir = (function_exists('dirname')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
+    $basedir = (function_exists('dirname') && function_exists('dirname_with_levels')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
 }
 
 $assets_dir = "{$basedir}/assets/img";
@@ -39,12 +31,27 @@ $transactionData = [
 $paghiperTransaction    = new PaghiperTransaction($transactionData);
 $invoiceTransaction     = json_decode($paghiperTransaction->process(), TRUE);
 
-$is_pix = array_key_exists('emv', $invoiceTransaction) ? TRUE : FALSE;
+// Bail if we don't have a transaction to process
+if(!is_null($invoiceTransaction)) {
 
-$transaction_id = (isset($invoiceTransaction['transaction_id'])) ? $invoiceTransaction['transaction_id'] : '';
-$asset_url = (!$is_pix) ? 
-    ((array_key_exists('bank_slip', $invoiceTransaction) && !is_null($invoiceTransaction['bank_slip'])) ? $invoiceTransaction['bank_slip']['url_slip_pdf'] : $invoiceTransaction['url_slip_pdf']) : 
-    ((array_key_exists('pix_code', $invoiceTransaction) && !is_null($invoiceTransaction['pix_code'])) ? $invoiceTransaction['pix_code']['qrcode_image_url'] : $invoiceTransaction['qrcode_image_url']);
+    if(array_key_exists('transaction_type', $invoiceTransaction) && $invoiceTransaction['transaction_type'] == 'billet') {
+        $is_pix = FALSE;
+    } elseif(array_key_exists('emv', $invoiceTransaction) && !empty($invoiceTransaction['emv'])) {
+        $is_pix = TRUE;
+    }
+    
+    $transaction_id = (isset($invoiceTransaction['transaction_id'])) ? $invoiceTransaction['transaction_id'] : '';
+    $asset_url = (!$is_pix) ? 
+        ((array_key_exists('bank_slip', $invoiceTransaction) && !empty($invoiceTransaction['bank_slip'])) ? $invoiceTransaction['bank_slip']['url_slip_pdf'] : $invoiceTransaction['url_slip_pdf']) : 
+        ((array_key_exists('pix_code', $invoiceTransaction) && !empty($invoiceTransaction['pix_code'])) ? $invoiceTransaction['pix_code']['qrcode_image_url'] : $invoiceTransaction['qrcode_image_url']);
+    
+    if($is_pix) {
+        $asset_url = $invoiceTransaction['qrcode_image_url'];
+    } else {
+        $asset_url = $invoiceTransaction['url_slip_pdf'];
+    }
+
+}
 
 if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($assets_dir) && !empty($assets_dir)) && (isset($transaction_id) && !empty($transaction_id))){
 
@@ -55,7 +62,7 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($assets_di
     $print_paghiper_page = FALSE;
 
     // Checamos se temos um boleto para disponibilizar
-    if(file_exists($filename)) {
+    if(file_exists($filename) && filesize($filename)) {
         $print_paghiper_page = TRUE;
     } else {
 
@@ -83,7 +90,6 @@ if ((in_array($status, array('Unpaid', 'Payment Pending'))) && (isset($assets_di
         }
         catch (Exception $e) {
             echo $e->getMessage();
-            exit();
         }
 
         restore_error_handler();

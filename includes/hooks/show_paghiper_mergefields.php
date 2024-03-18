@@ -3,11 +3,11 @@
  * Mostra campos da Paghiper na lista de campos disponíveis para uso nos templates
  * 
  * @package    PagHiper e Boleto para WHMCS
- * @version    2.5
+ * @version    2.5.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)
- * @copyright  (c) 2017-2023, PagHiper
+ * @copyright  (c) 2017-2024, PagHiper
  * @link       https://www.paghiper.com/
  */
 

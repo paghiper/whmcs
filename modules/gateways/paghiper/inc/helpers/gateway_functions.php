@@ -3,11 +3,11 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.5
+ * @version    2.5.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
- * @copyright  (c) 2017-2023, PagHiper
+ * @copyright  (c) 2017-2024, PagHiper
  * @link       https://www.paghiper.com/
  */
 
@@ -517,7 +517,12 @@ function paghiper_getBackupAdminUser() {
     $query->execute();
     $result = $query->fetch(\PDO::FETCH_BOTH);
 
-    return array_shift($result);
+    if(is_array($result) && !empty($result)) {
+        return array_shift($result);
+    }
+
+    return false;
+
 }
 
 function paghiper_checkIfAdminUserExists($admin_user) {
@@ -529,7 +534,11 @@ function paghiper_checkIfAdminUserExists($admin_user) {
     $query->execute();
     $result = $query->fetch(\PDO::FETCH_BOTH);
 
-    return !empty(array_shift($result));
+    if(is_array($result) && !empty($result)) {
+        return array_shift($result);
+    }
+
+    return false;
 }
 
 function generate_paghiper_billet($invoice, $params) {
@@ -601,7 +610,9 @@ function generate_paghiper_billet($invoice, $params) {
             $query->execute();
             $result = $query->fetch(\PDO::FETCH_BOTH);
 
-            $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift($result)));
+            if(is_array($result) && !empty($result)) {
+                $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift($result)));
+            }
         
         }
 
@@ -680,7 +691,9 @@ function generate_paghiper_billet($invoice, $params) {
                     $query->execute();
                     $result = $query->fetch(\PDO::FETCH_BOTH);
 
-                    $razaosocial_val = trim(array_shift($result));
+                    if(is_array($result) && !empty($result)) {
+                        $razaosocial_val = trim(array_shift($result));
+                    }
                 }
 
             }
@@ -1026,5 +1039,22 @@ function create_paghiper_table() {
     } else {
         logTransaction($GATEWAY["name"],$_POST,"Banco de dados criado com sucesso");
         return true;
+    }
+}
+
+// Polyfill for str_contains
+if (!function_exists('str_contains')) {
+    function str_contains($haystack, $needle) {
+        return $needle !== '' && mb_strpos($haystack, $needle) !== false;
+    }
+}
+
+// Polyfill for 5.6 compat.
+if (version_compare(PHP_VERSION, '7.0.0') < 0 && !function_exists('dirname_with_levels')) {
+    function dirname_with_levels($path, $levels = 1) {
+        while ($levels--) {
+            $path = dirname($path);
+        }
+        return $path;
     }
 }
