@@ -8,9 +8,9 @@ Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos au
 
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 2.4.2
+* **Versão mais Recente:** 2.5.1
 * **Requer WHMCS** versão mínima 5.0
-* **Requisitos:** PHP >= 5.2.0, cURL e JSON ativado.
+* **Requisitos:** PHP >= 5.6.0, cURL e JSON ativado.
 * **Compatibilidade:** WHMCS 8.X, PHP 7.x. Mod_rewrite opcional
 
 
@@ -33,7 +33,16 @@ Na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure p
 
 8. Adicione o texto abaixo no arquivo invoicepdf.tpl do seu tema, para anexar boletos e códigos PIX ao PDF das faturas (opcional)
 
-```<?php include dirname(__FILE__).'/../../modules/gateways/paghiper/inc/helpers/attach_pdf_slip.php'; ?>```
+```<?php // Paghiper PHP template integration
+	
+// PHP 5.x compatibility
+if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
+    $basedir = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
+} else {
+    $basedir = (function_exists('dirname') && function_exists('dirname_with_levels')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
+}
+
+include $basedir . '/modules/gateways/paghiper/inc/helpers/attach_pdf_slip.php'; ?>```
 
 9. Para inserir código PIX e linha digitável de boletos, edite seu template de e-mail em Opções (Setup) > Modelos de e-mail (E-mail templates). Você pode usar dois campos de mesclagens, um para boleto e outro para PIX, respectivamente: {$linha_digitavel} e {$codigo_pix}. Basta inserí-los nos templates de comunicação de e-mail nos locais desejados.
 
