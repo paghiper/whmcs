@@ -19,16 +19,15 @@ class PaghiperTransaction {
 
     private $invoiceID,
             $invoiceData,
-            $gatewayConfName,
             $isPIX,
             $outputFormat,
-            $gatewayConfConf,
             $reissueUnpaid,
             $whmcsVersion,
             $whmcsAdminUser,
             $systemURL,
             $transactionData,
-            $transactionTotal;
+            $transactionTotal,
+            $isGatewayAvailable;
 
     function __construct( $transactionParams ) {
 
@@ -40,6 +39,7 @@ class PaghiperTransaction {
         $this->invoiceID    = $transactionParams['invoiceID'];
         $this->outputFormat = array_key_exists('format', $transactionParams) ? $transactionParams['format'] : 'html';
 
+        $this->isGatewayAvailable = true;
         try {
 
             // Pegamos a fatura no banco de dados
@@ -54,7 +54,7 @@ class PaghiperTransaction {
 
             // Saímos do fluxo, caso o método de pagamento não seja Paghiper.
             if(!str_contains($this->gatewayName, 'paghiper')) {
-                return false;
+                $this->isGatewayAvailable = false;
             }
 
             // Pegamos as configurações do gateway e de sistema necessárias
@@ -67,14 +67,9 @@ class PaghiperTransaction {
         } catch(Exception $e) {
 
             logTransaction($this->gatewayConf["name"],array('error' => $e->getMessage(), 'transactionData' => $transactionParams, 'exception' => 'Failed to initialise payment gateway'),"Não foi possível inicializar o gateway.");
-            return false;
+            $this->isGatewayAvailable = false;
 
         }
-
-        // Define variáveis para configurações do gateway
-        $account_email      = trim($this->gatewayConf["email"]);
-        $account_token      = trim($this->gatewayConf["token"]);
-        $account_api_key    = trim($this->gatewayConf["api_key"]);
     
         // Checamos se a tabela da PagHiper está pronta pra uso
         if(!paghiper_check_table()) {
@@ -98,7 +93,7 @@ class PaghiperTransaction {
                     break;
             }
                     
-            return false;
+            $this->isGatewayAvailable = false;
         }
     }
 
@@ -121,7 +116,6 @@ class PaghiperTransaction {
                 }
 
                 return false;
-
                 break;
             case "Draft":
 
@@ -138,17 +132,12 @@ class PaghiperTransaction {
                 }
 
                 return false;
-
-                return false;
-
                 break;
             case "Unpaid":
                 return true;
-
                 break;
             case "Overdue":
                 return true;
-
                 break;
             case "Cancelled":
 
@@ -166,7 +155,6 @@ class PaghiperTransaction {
                 }
 
                 return false;
-
                 break;
             case "Refunded":
 
@@ -184,9 +172,9 @@ class PaghiperTransaction {
                 }
 
                 return false;
-
                 break;
             case "Collections":
+                return false;
                 break;
         }
     }
@@ -729,6 +717,10 @@ class PaghiperTransaction {
     }
 
     public function process() {
+
+        if(!$this->isGatewayAvailable) {
+            return false;
+        }
 
         if($this->hasPayableStatus()) {
             if($this->hasPayableTransaction()) {
