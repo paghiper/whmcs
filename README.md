@@ -8,7 +8,7 @@ Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos au
 
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 2.5.1
+* **Versão mais Recente:** 2.5.2
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.6.0, cURL e JSON ativado.
 * **Compatibilidade:** WHMCS 8.X, PHP 7.x. Mod_rewrite opcional
@@ -58,7 +58,12 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 # Changelog
 
-## 2.5.1 - 2024/03/18
+## 2.5.2 - 2024/07/04
+
+* Evita mensagens de validação e criação de transações quando o método de pagto. escolhido não for Paghiper
+* Remoção de Warning relacionado a atualização do banco de dados
+
+## 2.5.1
 
 * Refatoramento do plug-in
 * Mais estabilidade na execução
@@ -68,19 +73,19 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Mais informações de log
 * Remoção de múltiplos warnings no geral
 
-## 2.5 - 2023/12/21
+## 2.5
 
 * Maior estabilidade e rapidez na execução das CRONs
 * Compatibilidade com PHP 5.6 e WHMCS 7.x
 * Refatoração dos hooks e integrações nos templates de e-mail
 * Otimização da arquitetura do banco de dados
 
-## 2.4.4 - 2023/11/13
+## 2.4.4
 
 `Bugs resolvidos`
 * PDF anexo falhava em algumas ocasiões
 
-## 2.4.3 - 2023/10/26
+## 2.4.3
 
 `Bugs resolvidos`
 * Método de pagamento indisponível para a moeda selecionada
@@ -96,7 +101,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 `Melhorias`
 
-## 2.4.2 - 2023/01/10
+## 2.4.2
 
 `Bugs resolvidos`
 
@@ -108,14 +113,14 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Mais dados para debug nos Logs de Portais de Pagamento
 
-## 2.4.1 - 2023/01/09
+## 2.4.1
 
 `Bugs resolvidos`
 
 * Emissão falhava ao configurar o gateway com um user admin inválido (função de fallback falhava)
 * Mensagem "Table exists/Table does not exist" aparecendo de maneira intermitente
 
-## 2.4 - 2023/01/09
+## 2.4
 
 `Bugs resolvidos`
 
@@ -127,7 +132,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Queries convertidas para uso da classe Capsule (ao invés de mysqli)
 
 
-## 2.3 - 2022/06/20
+## 2.3
 
 `Bugs resolvidos`
 
@@ -147,7 +152,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Refatoração e melhor eficiência de código
 
 
-## 2.2.1 - 2021/06/17
+## 2.2.1
 
 `Bugs resolvidos`
 
@@ -155,7 +160,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Crash ao marcar pedido como pago ou cancelado via painel
 * Conciliação (adição de taxa ou desconto a fatura) impedindo a baixa
 
-## 2.2 - 2021/05/27
+## 2.2
 
 `Melhorias implementadas`
 
@@ -179,7 +184,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Warning de operador ternário removido
 
 
-## 2.1 - 2020/12/18
+## 2.1
 
 `Melhorias implementadas`
 
@@ -195,7 +200,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Em alguns casos, o campo de nome era utilizado na emissão do boleto, mesmo com CNPJ do cliente informado
 * Só exibimos boleto e PIX para usuários com moeda em 
 
-## 2.0.3 - 2020/01/03
+## 2.0.3
 
 `Melhorias implementadas`
 
@@ -206,7 +211,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * PDF de fatura mostrava boleto em branco de maneira intermitente
 * Pagamentos duplicados em alguns ambientes
 
-## 2.0.2 - 2019/11/14
+## 2.0.2
 
 `Melhorias implementadas`
 
@@ -222,21 +227,21 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Conciliação de multa/desconto impedia baixa das faturas como esperado no WHMCS v7.8
 
-## 2.0.1.2 - 2019/05/20
+## 2.0.1.2
 
 `Bugs resolvidos`
 
 * Boleto não era resgatado caso taxa personalizada estivesse sendo aplicada
 * Multa fatorada e descrição fixa não funcionavam em circunstâncias específicas
 
-## 2.0.1.1 - 2019/02/09
+## 2.0.1.1
 
 `Bugs resolvidos`
 
 * Boletos sendo emitidos para todas as faturas, independente do método de pagamento
 * Possível erro 500 causado pelo invoicepdf.tpl (Adicionada tag de fechamento do php)
 
-## 2.0.1 - 2019/02/08
+## 2.0.1
 
 `Melhorias`
 
@@ -254,7 +259,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Melhorada a lógica de busca de boletos emitidos (para faturas vencidas)
 * Novo método de formação de URL de retorno
 
-## 2.0 - 2019/02/01
+## 2.0
 
 `Novas funcionalidades`
 
@@ -280,7 +285,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Compatibilidade com WHMCS 7.5
 * Erro ao emitir/visualizar boletos através de uma sub-conta
 
-## 1.2.1b - 2019/01/26
+## 1.2.1b
 
 `Melhorias e novidades`
 
@@ -290,7 +295,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Coluna de valores estava sendo criada como FLOAT, causando erro nas queries em algumas versões do MySQL. Boletos são reutilizados corretamente agora.
 
-## 1.2.1 - 2019/01/23
+## 1.2.1
 
 `Melhorias e novidades`
 
@@ -300,7 +305,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Remoção da "integração avançada"
 * Preparação para implementação de linha digitável e boleto anexo no e-mail da fatura
 
-## 1.2 - 2019/01/20
+## 1.2
 
 `Melhorias e novidades`
 
@@ -316,13 +321,13 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Problema nas queries de atualização da tabela mod_paghiper
 * Erro ao emitir/visualizar boletos através de uma sub-conta
 
-## 1.121 - 2017/09/30
+## 1.121
 
 `Bugs e correções`
 
 * Corrigido erro na formação da URL para recebimento de retorno
 
-## 1.12 - 2017/05/03
+## 1.12
 
 `Melhorias e novidades`
 
@@ -335,14 +340,14 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * URL do sistema não era retornada caso o WHMCS estivesse instalado em subdiretório
 * Caracteres nos nomes de campos personalizados vinham sem HTML entities
 
-## 1.11 - 2017/04/20
+## 1.11
 
 `Bugs e correções`
 
 * Problemas relacionados ao checkout transparente
 * Omissão de CPF/CNPJ
 
-## 1.1 - 2017/04/13
+## 1.1
 
 `Melhorias e novidades`
 
@@ -359,7 +364,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Usa o nome de usuário admin por padrão, caso não seja informado
 
 
-## 1.0 - 
+## 1.0
 
 * Lançamento inicial
 

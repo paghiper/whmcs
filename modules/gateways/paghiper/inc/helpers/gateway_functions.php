@@ -961,7 +961,7 @@ function paghiper_check_table() {
         }
 
         // Alterar coluna qrcode_base64
-        $sql = "SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'qrcode_base64' AND `type` = 'LONGTEXT'";
+        $sql = "SHOW COLUMNS FROM `mod_paghiper` WHERE `field` = 'qrcode_base64' AND `type` = 'longtext'";
         $query = Capsule::connection()
             ->getPdo()
             ->prepare($sql);
@@ -1017,7 +1017,7 @@ function create_paghiper_table() {
           `bar_code_number_to_image` varchar(54) DEFAULT NULL,
           `open_after_day_due` int(2) DEFAULT NULL,
           `slip_value` decimal(11,2) DEFAULT NULL,
-		  `qrcode_base64` varchar(255) DEFAULT NULL,
+          `qrcode_base64` longtext,
 		  `qrcode_image_url` varchar(255) DEFAULT NULL,
 		  `emv` varchar(255) DEFAULT NULL,
 		  `pix_url` varchar(255) DEFAULT NULL,
