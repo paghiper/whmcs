@@ -33,7 +33,8 @@ Na aba “All Payment Gateways” ou "Todos os Portais de Pagamento" e procure p
 
 8. Adicione o texto abaixo no arquivo invoicepdf.tpl do seu tema, para anexar boletos e códigos PIX ao PDF das faturas (opcional)
 
-```<?php // Paghiper PHP template integration
+```
+<?php // Paghiper PHP template integration
 	
 // PHP 5.x compatibility
 if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
@@ -42,7 +43,8 @@ if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
     $basedir = (function_exists('dirname') && function_exists('dirname_with_levels')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
 }
 
-include $basedir . '/modules/gateways/paghiper/inc/helpers/attach_pdf_slip.php'; ?>```
+include $basedir . '/modules/gateways/paghiper/inc/helpers/attach_pdf_slip.php'; ?>
+```
 
 9. Para inserir código PIX e linha digitável de boletos, edite seu template de e-mail em Opções (Setup) > Modelos de e-mail (E-mail templates). Você pode usar dois campos de mesclagens, um para boleto e outro para PIX, respectivamente: {$linha_digitavel} e {$codigo_pix}. Basta inserí-los nos templates de comunicação de e-mail nos locais desejados.
 
