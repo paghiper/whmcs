@@ -318,7 +318,7 @@ class PaghiperTransaction {
         
         if($currency !== 'BRL' && $currency !== 'R$') {
 
-            logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => 'Invalid currency', 'currency' => $currency),"Este método de pagamento só pode ser utilizado para pagamentos em R$ (BRL)<br>Caso creia que isso seja um erro, entre em contato com o suporte.");
+            logTransaction($this->gatewayConf["name"],array('json' => $client_details, 'transactionData' => $transactionParams, 'exception' => 'Invalid currency', 'currency' => $currency),"Este método de pagamento só pode ser utilizado para pagamentos em R$ (BRL)<br>Caso creia que isso seja um erro, entre em contato com o suporte.");
 
             if($this->outputFormat == 'html') {
 
