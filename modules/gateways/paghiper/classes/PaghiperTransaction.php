@@ -294,18 +294,59 @@ class PaghiperTransaction {
 		$urlRetorno = $this->systemURL.'/modules/gateways/';
 		$urlRetorno .= ($this->isPIX) ? 'paghiper_pix.php' : 'paghiper.php';
 
+        $client_data_breakpoint = 0;
+
         // Checamos se os dados do cliente vem de um checkout ou do perfil do cliente.
         $client_data = json_decode(html_entity_decode($_POST['client_data']), TRUE);
         if( !empty($_POST) && is_array($client_data) && !empty($client_data) ) {
             $client_details = $client_data;
+            $client_data_breakpoint = 1;
         } else {
+
+            // Se não tivermos um UserID, abortar operação
+            if(!array_key_exists('userid', $this->invoiceData) || empty($this->invoiceData['userid'])) {
+                logTransaction($this->gatewayConf["name"],array('json' => $paghiper_data, 'transactionData' => $transactionParams, 'exception' => 'No user ID found'),"Não foi possível encontrar o ID do cliente associado a fatura. Por favor, verifique os dados da fatura.");
+                return false;
+            }
+
             $client_query = localAPI('getClientsDetails', ['clientid' => $this->invoiceData['userid'], 'stats' => false], $this->whmcsAdminUser);
 
-            if (version_compare($this->whmcsVersion, '8.0.0') >= 0) {
+            if (version_compare($this->whmcsVersion, '8.0.0') >= 0 && array_key_exists('client', $client_query)) {
                 $client_details = $client_query['client'];
-            } else {
+                $client_data_breakpoint = 2;
+            } elseif(array_key_exists('email', $client_query)) {
                 $client_details = $client_query;
+                $client_data_breakpoint = 3;
+            } else {
+                // Se a função localAPI falhar aqui, provavelmente estamos tratando de uma questão relacionada a licença e executando uma CRON.
+                // Se não conseguimos pegar os dados do cliente via API, tentamos pegar via Model
+                $client = Client::find($this->invoiceData['userid'], ['email', 'firstname', 'lastname', 'companyname', 'phonenumber', 'address1', 'address2', 'city', 'state', 'postcode', 'country']);
+                if($client) {
+                    $client_details = $client->toArray();
+                    $client_data_breakpoint = 4;
+                } else {
+                    $client_details = [];
+                    $client_data_breakpoint = 5;
+                }
             }
+        }
+
+        // Checamos se o cliente é um usuário válido
+        if(!is_array($client_details) || !array_key_exists('email', $client_details) || empty($client_details['email']) || is_null($client_details['email'])) {
+
+            logTransaction($this->gatewayConf["name"], ['client_id' => $this->invoiceData['userid'], 'client_details' => var_export($client_query, TRUE), 'client_data_origin' => $client_data_breakpoint, 'exception' => 'Invalid client details'], "Não foi possível obter os dados do cliente. Por favor, verifique se o cliente existe.");
+
+            if($this->outputFormat == 'html') {
+
+                $ico = ($this->isPIX) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+                $title = 'Ops! Não foi possível emitir o '.(($this->isPIX) ? 'PIX' : 'boleto bancário').'.';
+                $message = 'Não foi possível obter os dados do cliente. Por favor, entre em contato com o suporte.';
+                echo paghiper_print_screen($ico, $title, $message);
+                exit();
+
+            }
+
+            return false;
         }
 
         // Get used currency
