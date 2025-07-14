@@ -3,7 +3,7 @@
  * Valida informações de faturamento do cliente no check-out
  * 
  * @package    PagHiper e Boleto para WHMCS
- * @version    2.5.3-rc1
+ * @version    2.5.3
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)

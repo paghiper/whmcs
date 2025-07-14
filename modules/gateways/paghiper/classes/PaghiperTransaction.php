@@ -3,7 +3,7 @@
  * Classe responsável pela criação e resgate de transações
  * 
  * @package    PagHiper para WHMCS
- * @version    2.5.3-rc1
+ * @version    2.5.3
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
