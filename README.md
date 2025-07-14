@@ -8,7 +8,7 @@ Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos au
 
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 2.5.2
+* **Versão mais Recente:** 2.5.3
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.6.0, cURL e JSON ativado.
 * **Compatibilidade:** WHMCS 8.X, PHP 7.x. Mod_rewrite opcional
@@ -57,6 +57,11 @@ Para questões relacionadas a integração e plugin, acesse o [forum de suporte 
 Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/).
 
 # Changelog
+
+## 2.5.3 - 2025/07/14
+
+* Fix: Dados de clientes com parâmetros NULL
+* Mais informações nos logs
 
 ## 2.5.2 - 2024/07/04
 
