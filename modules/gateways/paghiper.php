@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.5.4
+ * @version    3.0.0
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -11,26 +11,88 @@
  * @link       https://www.paghiper.com/
  */
 
-use WHMCS\User\Client; 
-
 // Opções padrão do Gateway
 function paghiper_config($params = NULL) {
+    require_once __DIR__ . '/paghiper/inc/helpers/integrate_pdf_template.php';
+    $integrator = new PaghiperPdfInvoiceIntegrator();
+
+    // Intercept AJAX actions from our Custom UI
+    if (isset($_POST['paghiper_action']) && $_POST['paghiper_action'] != 'analyze_email_templates') {
+        require_once __DIR__ . '/paghiper/inc/helpers/integrate_pdf_template.php';
+        PaghiperPdfInvoiceIntegrator::handleAjaxActions();
+    }
+    
+    if (isset($_POST['paghiper_action']) && $_POST['paghiper_action'] == 'analyze_email_templates') {
+        ob_clean();
+        header('Content-Type: application/json');
+        
+        $templates_str = $_POST['templates'] ?? '';
+        $module_type = $_POST['module'] ?? 'paghiper'; // paghiper or paghiper_pix
+        $templates = array_map('trim', explode(',', $templates_str));
+        $required_tag = ($module_type == 'paghiper_pix') ? '{$codigo_pix}' : '{$linha_digitavel}';
+        
+        require_once __DIR__ . '/paghiper/inc/helpers/integrate_pdf_template.php';
+        $integrator = new PaghiperPdfInvoiceIntegrator();
+        $names = $integrator->getFriendlyNames();
+        $currentFriendlyName = ($module_type == 'paghiper_pix') ? $names['paghiper_pix'] : $names['paghiper'];
+        
+        $results = [];
+        foreach ($templates as $tplName) {
+            if (empty($tplName)) continue;
+            $db_results = \Illuminate\Database\Capsule\Manager::table('tblemailtemplates')
+                ->where('name', $tplName)
+                ->get();
+                
+            $results[$tplName] = [];
+            foreach ($db_results as $row) {
+                $lang = empty($row->language) ? 'Default' : ucfirst($row->language);
+                $hasTag = (strpos($row->message, $required_tag) !== false);
+                $isIntegrated = $hasTag;
+                
+                if ($hasTag) {
+                    if (preg_match_all('/(?:if|elseif)\s+\$invoice_payment_method\s+eq\s+[\'"]([^\'"]+)[\'"]/i', $row->message, $matches)) {
+                        $foundNames = $matches[1];
+                        $hasCurrentName = in_array($currentFriendlyName, $foundNames);
+                        $hasElse = (stripos($row->message, '{else}') !== false);
+                        
+                        if (!$hasCurrentName && !$hasElse) {
+                            $defaultNames = ['PagHiper', 'PagHiper PIX', 'PagHiper Boleto', 'Boleto', 'PIX'];
+                            foreach ($defaultNames as $dn) {
+                                if (in_array($dn, $foundNames) && $currentFriendlyName !== $dn) {
+                                    $isIntegrated = false; // Name mismatch!
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                $results[$tplName][] = [
+                    'language' => $lang,
+                    'id' => $row->id,
+                    'integrated' => $isIntegrated
+                ];
+            }
+        }
+        echo json_encode(['success' => true, 'analysis' => $results, 'required_tag' => $required_tag]);
+        exit;
+    }
 
     $custom_fields_conf = paghiper_get_customfield_id();
 
-    $config = array(
-        'FriendlyName' => array(
+    $config = [
+        'FriendlyName' => [
             "Type" => "System",
             "Value" => "PagHiper Boleto"
-        ),
-        "nota" => array(
+        ],
+        "nota" => [
             "FriendlyName" => "Nota",
-            "Description" => "
+            "Description" => "<div id='paghiper_row_nota'>
             <table>
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>2.5.4</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>3.0.0</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -43,75 +105,75 @@ function paghiper_config($params = NULL) {
                <li>Gere o seu token PagHiper na página <a href='https://www.paghiper.com/painel/token/' target='_blank'><strong> Ferramentas > Token</strong></a> e pegue sua ApiKey na página <a href='https://www.paghiper.com/painel/token/' target='_blank'><strong>Minha Conta > Dados da Conta</strong></a></li>
                <li>Ative a integração entre o PagHiper e o <a href='https://www.paghiper.com/painel/whmcs' target='_blank'><strong>WHMCS</strong></a>, <a href='https://www.paghiper.com/painel/whmcs' target='_blank'><strong>Acesse aqui</strong></a> e ative.</li>
                <li><h5>Suporte</h5><p>Se tiver qualquer duvida, visite a nossa <a href='https://www.paghiper.com/atendimento/' target='_blank'><strong>central de atendimento</strong></a></p></li>
-           </ul>"
-        ),
+           </ul></div>"
+        ],
         
-        'email' => array(
+        'email' => [
             "FriendlyName" => "Email",
             "Type" => "text",
             "Size" => "100",
             "Description" => "Email da conta PagHiper que irá receber"
-        ),
-        'api_key' => array(
+        ],
+        'api_key' => [
             "FriendlyName" => "API Key",
             "Type" => "text",
             "Size" => "66",
             "Description" => "Campo composto de números, letras, traços e hífen.
 Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API <a href='https://www.paghiper.com/painel/credenciais/' target='_blank'><strong>aqui</strong></a>."
-        ),
-        'token' => array(
+        ],
+        'token' => [
             "FriendlyName" => "Token",
             "Type" => "text",
             "Size" => "66",
             "Description" => "Extremamente importante, você pode gerar seu token em nossa pagina: Painel > Ferramentas > Token ( <a href='https://www.paghiper.com/painel/token/' target='_blank'><strong>Confira Aqui</strong></a> )."
-        ),
-        "cpf_cnpj" => array(
+        ],
+        "cpf_cnpj" => [
             "FriendlyName" => "ID do custom field contendo CPF/CNPJ",
             "Type" => "text",
             "Size" => "3",
             "Description" => "Defina aqui o ID do campo usado para coletar CPF/CNPJ do seu cliente. Isso é necessário para usar o checkout transparente." . $custom_fields_conf
-        ),
-        "razao_social" => array(
+        ],
+        "razao_social" => [
             "FriendlyName" => "ID do custom field contendo Razão Social",
             "Type" => "text",
             "Size" => "3",
             "Description" => "Defina aqui o ID do campo usado, caso utilize um campo personalizado para coletar a Razão Social do seu cliente. Isso é opcional."
-        ),
-        "negar_sem_company_razao" => array(
+        ],
+        "negar_sem_company_razao" => [
             "FriendlyName" => "Negar emissões pra CNPJs sem Razão Social?",
             "Type" => "yesno",
             "Description" => "Marque essa opção caso não queira aceitar faturar para CNPJs mesmo que o campo de nome da Empresa ou Razão Social estejam vazios."
-        ),
-        "porcento" => array(
+        ],
+        "porcento" => [
             "FriendlyName" => "Taxa Percentual (%)",
             "Type" => "text",
             "Size" => "3",
             "Description" => "Porcentagem da fatura a se pagar a mais por usar o PagHiper. Ex.: (2.5). Obs.: não precisa colocar o % no final. Obs²: Use o ponto (.) como delimitador de casas decimais. <br> Recomendamos não cobrar nenhuma taxa."
-        ),
-        "taxa" => array(
+        ],
+        "taxa" => [
             "FriendlyName" => "Taxa fixa",
             "Type" => "text",
             "Size" => "7",
             "Description" => "Taxa cobrada a mais do cliente por utilizar esse meio de pagamento, exemplo: 2.0 (dois reais). Obs: Use o ponto (.) como delimitador de casas decimais.<br> Recomendamos não cobrar nenhuma taxa."
-        ),
-        "abrirauto" => array(
+        ],
+        "abrirauto" => [
             "FriendlyName" => "Abrir boleto ao abrir fatura?",
             "Type" => "yesno"
-        ),
-        "fixed_description" => array(
+        ],
+        "fixed_description" => [
             "FriendlyName" => "Exibe ou não a frase fixa do boleto (configurada no painel da PagHiper)",
             "Type" => "yesno"
-        ),
-        "open_after_day_due" => array(
+        ],
+        "open_after_day_due" => [
             "FriendlyName" => "Tolerância para pagto",
             "Type" => "text",
             "Size" => "2",
             "Description" => "Número máximo de dias em que o boleto poderá ser pago após o vencimento. (Prática comum para quem opta por cobrar juros e multas)."
-        ),
-        "reissue_unpaid" => array(
+        ],
+        "reissue_unpaid" => [
             "FriendlyName" => "Vencimento padrão para boletos emitidos",
             'Type' => 'dropdown',
-            'Options' => array(
+            'Options' => [
                 '-1'    => 'Não permitir reemissão',
                 '0'     => 'Vcto. no mesmo dia',
                 '1'     => '+1 dia',
@@ -119,76 +181,91 @@ Sempre começa por apk_. Caso não tenha essa informação, pegue sua chave API 
                 '3'     => '+3 dias',
                 '4'     => '+4 dias',
                 '5'     => '+5 dias',
-            ),
+            ],
             'Description' => 'Escolha a quantidade de dias para o vencimento de boletos reemitidos (para faturas ja vencidas). Caso decida não permitir reemissão, você precisará mudar a data de vencimento manualmente.',
-        ),
-        "late_payment_fine" => array(
+        ],
+        "late_payment_fine" => [
             "FriendlyName" => "Percentual da multa por atraso (%)",
             "Type" => "text",
             "Size" => "1",
             "Description" => "O percentual máximo autorizado é de 2%, de acordo artigo 52, parágrafo primeiro do Código de Defesa do Consumidor, Lei 8.078/90"
-        ),
-        "per_day_interest" => array(
+        ],
+        "per_day_interest" => [
             "FriendlyName" => "Juros proporcional",
             "Type" => "yesno",
             "Description" => "Ao aplicar 1% de juros máximo ao mês, esse percentual será cobrado proporcionalmente aos dias de atraso.<br><br>Dividindo 1% por 30 dias = 0,033% por dia de atraso."
-        ),
-        "early_payment_discounts_days" => array(
+        ],
+        "early_payment_discounts_days" => [
             "FriendlyName" => "Qtde. de dias para aplicação de desconto",
             "Type" => "text",
             "Size" => "2",
             "Description" => "Número de dias em que o pagamento pode ser realizado com antecedência recebendo o desconto extra."
-        ),
-        "early_payment_discounts_cents" => array(
+        ],
+        "early_payment_discounts_cents" => [
             "FriendlyName" => "Desconto por pagto. antecipado",
             "Type" => "text",
             "Size" => "6",
             "Description" => "Valor do desconto que será aplicado caso o pagamento ocorra de forma antecipada. Em percentual (Ex.: 10%)"
-        ),
-        "issue_all" => array(
+        ],
+        "issue_all" => [
             "FriendlyName" => "Gerar boletos para todos os pedidos?",
-            'Type' => 'dropdown',
-            'Options' => array(
-                '1'    => 'Sim',
-                '0'     => 'Não',
-            ),
-            'Description' => 'Caso selecione não, boletos bancários e lihnas digitáveis serão selecionadas somente caso o cliente selecione "Boleto Bancário" (ou o nome que você configurar no primeiro campo de configuração) como método de pagamento padrão.',
-        ),
-        "tax_id_validation" => array(
+            "Type" => "yesno",
+            "Description" => "Ao marcar, todo pedido (com valor mínimo aceito) gerará boleto PagHiper na mesma hora."
+        ],
+        "tax_id_validation" => [
             "FriendlyName" => "Validar campos de CPF/CNPJ no checkout?",
             'Type' => 'dropdown',
-            'Options' => array(
+            'Options' => [
                 'strict'        => 'Aceitar pedidos somente com CPF e CNPJ válidos',
                 'flexible_f'    => 'Aceitar pedidos, desde que CPF seja válido',
                 'flexible_j'    => 'Aceitar pedidos, desde que CNPJ seja válido',
                 'flexible'      => 'Aceitar pedidos com CPF ou CNPJ válidos, tanto faz',
                 '0'             => 'Não validar nenhum dos campos',
-            ),
+            ],
             'Description' => 'Caso selecione não, boletos bancários e lihnas digitáveis serão selecionadas somente caso o cliente selecione "Boleto Bancário" (ou o nome que você configurar no primeiro campo de configuração) como método de pagamento padrão.',
-        ),
-        "admin" => array(
+        ],
+        "admin" => [
             "FriendlyName" => "Administrador atribuído",
             "Type" => "text",
             "Size" => "10",
             "Default" => "admin",
             "Description" => "Insira o nome de usuário ou ID do administrador do WHMCS que será atribuído as transações. Necessário para usar a API interna do WHMCS."
-        ),
-        'suporte' => array(
+        ],
+        'email_templates' => [
+            "FriendlyName" => "Templates de E-mail (Interno)",
+            "Type" => "text",
+            "Default" => "Invoice Created,Invoice Payment Reminder,First Invoice Overdue Notice,Second Invoice Overdue Notice,Third Invoice Overdue Notice",
+            "Description" => "<div id='paghiper_row_email_templates_hidden'></div>"
+        ],
+        'ui_email_templates' => [
+            "FriendlyName" => "Templates de E-mail",
+            "Description" => "<div id='paghiper_row_ui_email_templates'></div><script src=\"" . rtrim(\App::getSystemUrl(), "/") . "/modules/gateways/paghiper/assets/js/admin_tabs.js?v=" . time() . "\"></script>"
+        ],
+        'auto_pdf_integration' => [
+            "FriendlyName" => "Customização Automática do PDF (Auto-Heal)",
+            "Type" => "yesno",
+            "Description" => "Se marcado, o sistema verificará silenciosamente se o template PDF possui o bloco do PagHiper antes do envio de cada fatura. Caso o lojista troque de tema, o sistema tentará reinstalar o bloco do código automaticamente."
+        ],
+        'ui_injector' => [
+            "FriendlyName" => "Configuração de Integração (PDF & Email)",
+            "Description" => "<div id='paghiper_row_ui_injector'>" . $integrator->renderIntegrationUI('paghiper') . "</div>"
+        ],
+        'suporte' => [
             "FriendlyName" => "<span class='label label-primary'><i class='fa fa-question-circle'></i> Suporte</span>",
-            "Description" => '<h2>Para informações ou duvidas: </h2><br><br>
+            "Description" => "<div id='paghiper_row_suporte'><h2>Para informações ou duvidas: </h2><br><br>
 <ul>
 <li>Duvidas sobre a conta <strong> PAGHIPER:</strong> <br><br>
 Devem ser resolvidas diretamente na central de atendimento: <br>
-<strong><a href="https://www.paghiper.com/atendimento" target="_blank">https://www.paghiper.com/atendimento</a></strong></li>
+<strong><a href=\"https://www.paghiper.com/atendimento\" target=\"_blank\">https://www.paghiper.com/atendimento</a></strong></li>
 <br><br><br>
 <li>Duvidas sobre o <strong> Modulo WHMCS </strong> <br><br>
 Tem uma dúvida ou quer contribuir para o projeto? Acesse nosso repositório no GitHub!
 <br>
-<strong><a href="https://github.com/paghiper/whmcs" target="_blank">https://github.com/paghiper/whmcs</a></strong></li>
-</ul><br>'
-        )
+<strong><a href=\"https://github.com/paghiper/whmcs\" target=\"_blank\">https://github.com/paghiper/whmcs</a></strong></li>
+</ul><br></div>"
+        ]
        
-    );
+    ];
     return $config;
 }
 
@@ -267,7 +344,7 @@ function paghiper_link($params) {
         if($denyCNPJWithoutPayerName && strlen( $taxid_value ) > 11 && empty($client['companyname']) && empty($payerNameField) && empty($clientPayerName)) {
             
             $isValidPayerName = false;
-            $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'Razão social inválida, atualize seus dados cadastrais.');
+            $code .= sprintf('<div class="alert alert-danger" role="alert">%s <br><a href="clientarea.php?action=details" class="btn btn-default btn-sm" style="margin-top:10px;"><i class="fas fa fa-edit"></i> Atualizar Cadastro</a></div>', '<strong>Atenção:</strong> Razão social inválida. Por favor, atualize seus dados cadastrais para gerar o boleto.');
 
         }
     }
@@ -295,7 +372,7 @@ function paghiper_link($params) {
             <form name=\"paghiper\" action=\"{$urlRetorno}?invoiceid={$params['invoiceid']}&uuid={$params['clientdetails']['userid']}&mail={$params['clientdetails']['email']}\" method=\"post\">
                 <input type=\"hidden\" name=\"client_data\" value='".json_encode($client_details)."'>
                 <input type='image' src='{$systemurl}/modules/gateways/paghiper/assets/img/billet.jpg' title='Pagar com Boleto' alt='Pagar com Boleto' border='0' align='absbottom' width='120' height='74' /><br>
-                <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fa fa-barcode'></i> Gerar Boleto</button>
+                <button formtarget='_blank' class='btn btn-success' style='margin-top: 5px;' type=\"submit\"><i class='fas fa-barcode'></i> Gerar Boleto</button>
                 <br> <br>
                 <div class='alert alert-warning' role='alert'>
                 <strong>Importante:</strong> A compensação bancária poderá levar até 2 dias úteis.
@@ -304,11 +381,11 @@ function paghiper_link($params) {
             </form>
             {$abrirAuto}";
         } else {
-            $code = sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'Nome do pagador inválido, atualize seus dados cadastrais.');
+            $code = sprintf('<div class="alert alert-danger" role="alert">%s <br><a href="clientarea.php?action=details" class="btn btn-default btn-sm" style="margin-top:10px;"><i class="fas fa fa-edit"></i> Atualizar Cadastro</a></div>', '<strong>Atenção:</strong> Razão social inválida. Por favor, atualize seus dados cadastrais para gerar o boleto.');
         }
 
     } else {
-        $code .= sprintf('<div class="alert alert-danger" role="alert">%s</div>', 'CPF ou CNPJ inválido, atualize seus dados cadastrais.');
+        $code .= sprintf('<div class="alert alert-danger" role="alert">%s <br><a href="clientarea.php?action=details" class="btn btn-default btn-sm" style="margin-top:10px;"><i class="fas fa fa-edit"></i> Atualizar Cadastro</a></div>', '<strong>Atenção:</strong> CPF ou CNPJ inválido. Por favor, atualize seus dados cadastrais para gerar o boleto.');
     }
     
    return $code; 

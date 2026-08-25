@@ -3,11 +3,11 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    2.5.3
+ * @version    3.0.0
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
- * @copyright  (c) 2017-2025, PagHiper
+ * @copyright  (c) 2017-2026, PagHiper
  * @link       https://www.paghiper.com/
  */
 
@@ -52,16 +52,42 @@ function paghiper_get_customfield_id() {
 }
 
 function paghiper_add_to_invoice($invoice_id, $desc, $value, $whmcs_admin) {
+    try {
+        $invoice = Capsule::table('tblinvoices')->where('id', $invoice_id)->first();
+        if (!$invoice) {
+            throw new \Exception("Fatura não encontrada.");
+        }
 
-    $postData = array(
-        'invoiceid'             => (int) $invoice_id,
-        'newitemdescription'    => array('PAGHIPER: '. $desc),
-        'newitemamount'         => array($value)
-    );
+        // Insere o item (Juros ou Desconto) diretamente no banco de dados, burlando a API UpdateInvoice
+        Capsule::table('tblinvoiceitems')->insert([
+            'invoiceid' => $invoice_id,
+            'userid' => $invoice->userid,
+            'type' => 'Fee',
+            'relid' => 0,
+            'description' => 'PAGHIPER: ' . $desc,
+            'amount' => $value,
+            'taxed' => 0,
+            'duedate' => $invoice->duedate,
+            'paymentmethod' => $invoice->paymentmethod,
+        ]);
 
-    // Atualizamos a invoice com os valores novos
-    $results = localAPI('UpdateInvoice', $postData, $whmcs_admin);
+        // Recalcula o subtotal e atualiza a fatura diretamente
+        $subtotal = Capsule::table('tblinvoiceitems')->where('invoiceid', $invoice_id)->sum('amount');
+        $total = $subtotal + $invoice->tax + $invoice->tax2;
 
+        Capsule::table('tblinvoices')->where('id', $invoice_id)->update([
+            'subtotal' => $subtotal,
+            'total' => $total
+        ]);
+
+        // Loga a transação informando que o bypass de imutabilidade foi acionado
+        logTransaction('PagHiper', array('invoiceid' => $invoice_id, 'desc' => $desc, 'value' => $value), "Fatura atualizada com sucesso via manipulação de banco de dados (Bypass de Imutabilidade WHMCS v9).");
+        
+        return true;
+    } catch (\Exception $e) {
+        logTransaction('PagHiper', array('invoiceid' => $invoice_id, 'error' => $e->getMessage()), "Erro ao atualizar a fatura no banco de dados (Imutabilidade Bypass).");
+        return false;
+    }
 }
 
 function paghiper_to_monetary($int) {
@@ -127,17 +153,7 @@ function paghiper_convert_to_numeric($str) {
     return preg_replace('/\D/', '', $str);
 }
 
-function paghiper_query_scape_string($string) {
-	if(function_exists('mysql_real_escape_string')) {
-		return mysql_real_escape_string($string);
-	}
-
-	return mysql_escape_string($string);
-
-}
-
-function paghiper_apply_custom_taxes($amount, $GATEWAY, $params = NULL){
-    if($params && array_key_exists('amount', $params)) {
+function paghiper_apply_custom_taxes($amount, $GATEWAY, $params = NULL){    if($params && array_key_exists('amount', $params)) {
         $amount     = (float) $params['amount'];
         $porcento   = (float) $params['porcento'];
         $taxa       = (float) $params['taxa'];
@@ -226,10 +242,11 @@ function paghiper_is_valid_cnpj( $cnpj ) {
 }
 
 function paghiper_check_if_subaccount($user_id, $email, $invoice_userid) {
-    $sql = "SELECT userid, id, email, permissions, invoiceemails FROM tblcontacts WHERE userid = '$user_id' AND email = '$email' LIMIT 1";
-    $query = Capsule::connection()
-        ->getPdo()
-        ->prepare($sql);
+    $sql = "SELECT userid, id, email, permissions, invoiceemails FROM tblcontacts WHERE userid = :user_id AND email = :email LIMIT 1";
+    $pdo = Capsule::connection()->getPdo();
+    $query = $pdo->prepare($sql);
+    $query->bindValue(':user_id', $user_id);
+    $query->bindValue(':email', $email);
     $query->execute();
     $user = $query->fetch(\PDO::FETCH_BOTH);
 

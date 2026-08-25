@@ -8,7 +8,7 @@ Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos au
 
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 2.5.4
+* **Versão mais Recente:** 3.0.0
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.6.0, cURL e JSON ativado.
 * **Compatibilidade:** WHMCS 8.X, PHP 7.x. Mod_rewrite opcional
@@ -57,6 +57,15 @@ Para questões relacionadas a integração e plugin, acesse o [forum de suporte 
 Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/).
 
 # Changelog
+
+## 3.0.0 - 2026/08/25
+
+* **Bypass de Imutabilidade (WHMCS v9):** Correção do erro de faturas pagas imutáveis, realizando inserções diretas e seguras via Capsule no banco de dados.
+* **Nova Interface Administrativa (Abas):** Tela de configuração do gateway reestruturada em abas interativas (*Geral, Taxas e Prazos, Integração, Avançado*) para melhor usabilidade.
+* **Integração e Auto-Heal do PDF:** Adicionada automação que injeta o bloco do boleto/PIX no template `invoicepdf.tpl` e repara o arquivo silenciosamente caso o tema seja alterado.
+* **Hooks de E-mail Dinâmicos:** Envio de anexos de boleto ou PIX integrado diretamente às configurações administrativas, mapeando o envio de acordo com os templates de e-mail selecionados.
+* **Refatoração para PHP 8.1+ / WHMCS 9.x:** Remoção completa de funções legadas/obsoletas do MySQL (`mysql_query`, etc.) e parametrização de queries contra SQL Injection.
+* **Experiência do Usuário no Checkout:** Adicionado link de redirecionamento direto para a área do cliente atualizar dados cadastrais caso o CPF/CNPJ ou Razão Social estejam inválidos na hora de pagar.
 
 ## 2.5.4 - 2025/09/05
 

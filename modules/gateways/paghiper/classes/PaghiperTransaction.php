@@ -3,11 +3,11 @@
  * Classe responsável pela criação e resgate de transações
  * 
  * @package    PagHiper para WHMCS
- * @version    2.5.3
+ * @version    3.0.0
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
- * @copyright  (c) 2017-2025, PagHiper
+ * @copyright  (c) 2017-2026, PagHiper
  * @link       https://www.paghiper.com/
  */
 
@@ -35,6 +35,7 @@ class PaghiperTransaction {
         require_once __DIR__ . '/../../../../init.php';
         require_once __DIR__ . '/../../../../includes/gatewayfunctions.php';
         require_once __DIR__ . '/../../../../includes/invoicefunctions.php';
+        require_once __DIR__ . '/../inc/helpers/gateway_functions.php';
 
         $this->invoiceID    = $transactionParams['invoiceID'];
         $this->outputFormat = array_key_exists('format', $transactionParams) ? $transactionParams['format'] : 'html';
@@ -50,9 +51,28 @@ class PaghiperTransaction {
 
             // Variáveis básicas para nossa operação. Caso algo falhe aqui, não será possível inicializar o gateway.
             $this->gatewayName = $this->invoiceData['paymentmethod'];
+
+            // Se o método original da fatura não for paghiper, checamos os issue_all (Fallback automático)
+            if(!str_contains($this->gatewayName, 'paghiper')) {
+                $issueAllPix = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper_pix')->where('setting', 'issue_all')->value('value');
+                $issueAllBoleto = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper')->where('setting', 'issue_all')->value('value');
+                
+                // Prioriza o PIX se estiver com issue_all ativo
+                if ($issueAllPix == '1' || $issueAllPix == 'on') {
+                    $this->gatewayName = 'paghiper_pix';
+                } elseif ($issueAllBoleto == '1' || $issueAllBoleto == 'on') {
+                    $this->gatewayName = 'paghiper';
+                }
+            }
+            
+            // Hooks externos podem forçar qual transação deve ser gerada/puxada (Boleto vs PIX)
+            if (isset($transactionParams['forceGateway'])) {
+                $this->gatewayName = $transactionParams['forceGateway'];
+            }
+
             $this->isPIX       = ($this->gatewayName == 'paghiper_pix');
 
-            // Saímos do fluxo, caso o método de pagamento não seja Paghiper.
+            // Saímos do fluxo, caso o método de pagamento não seja Paghiper (nem original nem via issue_all).
             if(!str_contains($this->gatewayName, 'paghiper')) {
                 $this->isGatewayAvailable = false;
             }
@@ -297,7 +317,9 @@ class PaghiperTransaction {
         $client_data_breakpoint = 0;
 
         // Checamos se os dados do cliente vem de um checkout ou do perfil do cliente.
-        $client_data = json_decode(html_entity_decode($_POST['client_data']), TRUE);
+        $client_data_raw = isset($_POST['client_data']) ? $_POST['client_data'] : '';
+        $client_data = !empty($client_data_raw) ? json_decode(html_entity_decode($client_data_raw), TRUE) : [];
+        
         if( !empty($_POST) && is_array($client_data) && !empty($client_data) ) {
             $client_details = $client_data;
             $client_data_breakpoint = 1;
@@ -428,32 +450,29 @@ class PaghiperTransaction {
         
                 foreach($fields as $field) {
                     
-                    $sql = "SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'";
-                    $query = Capsule::connection()
-                        ->getPdo()
-                        ->prepare($sql);
-                    $query->execute();
-                    $result = $query->fetch(\PDO::FETCH_BOTH);
-    
-                    ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($result["value"])) : $cnpj = paghiper_convert_to_numeric(trim($result["value"]));
+                    $result = Capsule::table('tblcustomfieldsvalues')
+                        ->where('relid', $client_id)
+                        ->where('fieldid', trim($field))
+                        ->first();
+                    
+                    $val = $result ? $result->value : '';
+                    ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($val)) : $cnpj = paghiper_convert_to_numeric(trim($val));
                     if($i == 1) { break; }
                     $i++;
                 }
+    
+                $cpf_cnpj = (empty($cnpj)) ? $cpf : $cnpj;
         
             } else {
     
                 // Se simples, pegamos somente o que temos
-                $sql = "SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'";
-                $query = Capsule::connection()
-                    ->getPdo()
-                    ->prepare($sql);
-                $query->execute();
-                $result = $query->fetch(\PDO::FETCH_BOTH);
-
-                if(is_array($result) && !empty($result)) {
-                    $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift($result)));
-                }
-            
+                $result = Capsule::table('tblcustomfieldsvalues')
+                    ->where('relid', $client_id)
+                    ->where('fieldid', trim($cpfcnpj))
+                    ->first();
+                
+                $val = $result ? $result->value : '';
+                $cpf_cnpj = paghiper_convert_to_numeric(trim($val));
             }
     
         }
