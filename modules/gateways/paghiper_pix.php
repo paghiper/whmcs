@@ -3,7 +3,7 @@
  * PagHiper PIX - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    3.0.0
+ * @version    3.0.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -95,7 +95,7 @@ function paghiper_pix_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>3.0.0</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>3.0.1</h2></td>
                     </tr>
                 </tbody>
             </table>

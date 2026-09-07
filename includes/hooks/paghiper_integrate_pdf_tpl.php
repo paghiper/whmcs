@@ -6,7 +6,7 @@
  * 2. Auto-heals the invoicepdf.tpl integration to ensure it stays active.
  * 
  * @package    PagHiper para WHMCS
- * @version    3.0.0
+ * @version    3.0.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)

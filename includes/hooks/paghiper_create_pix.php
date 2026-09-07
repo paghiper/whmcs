@@ -3,7 +3,7 @@
  * Adiciona QR code do PIX nos templates do WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    3.0.0
+ * @version    3.0.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)
@@ -12,6 +12,8 @@
  */
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
+
+use WHMCS\Database\Capsule;
 
 function paghiper_display_pix_qr_code($vars) {
 	
