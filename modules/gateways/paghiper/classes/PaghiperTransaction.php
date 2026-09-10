@@ -54,8 +54,10 @@ class PaghiperTransaction {
 
             // Se o método original da fatura não for paghiper, checamos os issue_all (Fallback automático)
             if(!str_contains($this->gatewayName, 'paghiper')) {
-                $issueAllPix = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper_pix')->where('setting', 'issue_all')->value('value');
-                $issueAllBoleto = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper')->where('setting', 'issue_all')->value('value');
+                $pixParams      = getGatewayVariables('paghiper_pix');
+                $boletoParams   = getGatewayVariables('paghiper');
+                $issueAllPix    = $pixParams['issue_all'] ?? '';
+                $issueAllBoleto = $boletoParams['issue_all'] ?? '';
                 
                 // Prioriza o PIX se estiver com issue_all ativo
                 if ($issueAllPix == '1' || $issueAllPix == 'on') {

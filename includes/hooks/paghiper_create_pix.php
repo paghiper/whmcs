@@ -28,11 +28,9 @@ function paghiper_display_pix_qr_code($vars) {
     $email_template = $vars['messagename'];
     $invoice_id = $vars['relid'];
 
-    $db_templates = Capsule::table('tblpaymentgateways')
-        ->where('gateway', 'paghiper_pix')
-        ->where('setting', 'email_templates')
-        ->value('value');
-        
+    $gatewayParams = getGatewayVariables('paghiper_pix');
+    $db_templates  = $gatewayParams['email_templates'] ?? '';
+
     $target_templates = $db_templates ? array_map('trim', explode(',', $db_templates)) : [];
 
     if(in_array($email_template, $target_templates)) {
@@ -40,7 +38,7 @@ function paghiper_display_pix_qr_code($vars) {
         $invoice = Capsule::table('tblinvoices')->where('id', $invoice_id)->first();
         if (!$invoice) return [];
         
-        $issueAllPix = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper_pix')->where('setting', 'issue_all')->value('value');
+        $issueAllPix = $gatewayParams['issue_all'] ?? '';
         
         if ($invoice->paymentmethod == 'paghiper_pix' || $issueAllPix == '1' || $issueAllPix == 'on') {
             require_once($basedir . '/modules/gateways/paghiper/classes/PaghiperTransaction.php');
