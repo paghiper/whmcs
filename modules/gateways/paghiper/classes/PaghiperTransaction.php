@@ -54,15 +54,15 @@ class PaghiperTransaction {
 
             // Se o método original da fatura não for paghiper, checamos os issue_all (Fallback automático)
             if(!str_contains($this->gatewayName, 'paghiper')) {
-                $paghiperPixConfig = getGatewayVariables('paghiper_pix');
-    $issueAllPix = isset($paghiperPixConfig['issue_all']) ? $paghiperPixConfig['issue_all'] : '';
-                $paghiperConfig = getGatewayVariables('paghiper');
-    $issueAllBoleto = isset($paghiperConfig['issue_all']) ? $paghiperConfig['issue_all'] : '';
+                $paghiper_pix_config = getGatewayVariables('paghiper_pix');
+    $issue_all_pix = isset($paghiper_pix_config['issue_all']) ? $paghiper_pix_config['issue_all'] : '';
+                $paghiper_config = getGatewayVariables('paghiper');
+    $issue_all_billet = isset($paghiper_config['issue_all']) ? $paghiper_config['issue_all'] : '';
                 
                 // Prioriza o PIX se estiver com issue_all ativo
-                if ($issueAllPix == '1' || $issueAllPix == 'on') {
+                if ($issue_all_pix == '1' || $issue_all_pix == 'on') {
                     $this->gatewayName = 'paghiper_pix';
-                } elseif ($issueAllBoleto == '1' || $issueAllBoleto == 'on') {
+                } elseif ($issue_all_billet == '1' || $issue_all_billet == 'on') {
                     $this->gatewayName = 'paghiper';
                 }
             }
@@ -453,9 +453,9 @@ class PaghiperTransaction {
                 foreach($fields as $field) {
                     
                     $val = '';
-                    $clientModel = \WHMCS\User\Client::find($client_id);
-                    if ($clientModel) {
-                        foreach ($clientModel->customFieldValues as $cf) {
+                    $client_model = \WHMCS\User\Client::find($client_id);
+                    if ($client_model) {
+                        foreach ($client_model->customFieldValues as $cf) {
                             if ($cf->fieldid == trim($field)) {
                                 $val = $cf->value;
                                 break;
@@ -473,9 +473,9 @@ class PaghiperTransaction {
     
                 // Se simples, pegamos somente o que temos
                 $val = '';
-                $clientModel = \WHMCS\User\Client::find($client_id);
-                if ($clientModel) {
-                    foreach ($clientModel->customFieldValues as $cf) {
+                $client_model = \WHMCS\User\Client::find($client_id);
+                if ($client_model) {
+                    foreach ($client_model->customFieldValues as $cf) {
                         if ($cf->fieldid == trim($cpfcnpj)) {
                             $val = $cf->value;
                             break;
@@ -560,9 +560,9 @@ class PaghiperTransaction {
     
                     if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
                         
-                        $clientModel = \WHMCS\User\Client::find($client_id);
-                        if ($clientModel) {
-                            foreach ($clientModel->customFieldValues as $cf) {
+                        $client_model = \WHMCS\User\Client::find($client_id);
+                        if ($client_model) {
+                            foreach ($client_model->customFieldValues as $cf) {
                                 if ($cf->fieldid == trim($razaosocial)) {
                                     $razaosocial_val = trim($cf->value);
                                     break;

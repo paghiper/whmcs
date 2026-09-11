@@ -28,20 +28,20 @@ function paghiper_display_digitable_line($vars) {
     $email_template = $vars['messagename'];
     $invoice_id = $vars['relid'];
 
-    $paghiperConfig = getGatewayVariables('paghiper');
-    $dbTemplates = isset($paghiperConfig['email_templates']) ? $paghiperConfig['email_templates'] : '';
+    $paghiper_config = getGatewayVariables('paghiper');
+    $db_templates = isset($paghiper_config['email_templates']) ? $paghiper_config['email_templates'] : '';
         
-    $target_templates = $dbTemplates ? array_map('trim', explode(',', $dbTemplates)) : [];
+    $target_templates = $db_templates ? array_map('trim', explode(',', $db_templates)) : [];
 
     if(in_array($email_template, $target_templates)) {
 
         $invoice = Capsule::table('tblinvoices')->where('id', $invoice_id)->first();
         if (!$invoice) return [];
         
-        $paghiperConfig = getGatewayVariables('paghiper');
-    $issueAllBoleto = isset($paghiperConfig['issue_all']) ? $paghiperConfig['issue_all'] : '';
+        $paghiper_config = getGatewayVariables('paghiper');
+    $issue_all_billet = isset($paghiper_config['issue_all']) ? $paghiper_config['issue_all'] : '';
         
-        if ($invoice->paymentmethod == 'paghiper' || $issueAllBoleto == '1' || $issueAllBoleto == 'on') {
+        if ($invoice->paymentmethod == 'paghiper' || $issue_all_billet == '1' || $issue_all_billet == 'on') {
             $whmcs_url = rtrim(\App::getSystemUrl(),"/");
 
             require_once($basedir . '/modules/gateways/paghiper/classes/PaghiperTransaction.php');

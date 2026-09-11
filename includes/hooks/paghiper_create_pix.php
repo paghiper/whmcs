@@ -28,20 +28,20 @@ function paghiper_display_pix_qr_code($vars) {
     $email_template = $vars['messagename'];
     $invoice_id = $vars['relid'];
 
-    $paghiperPixConfig = getGatewayVariables('paghiper_pix');
-    $dbTemplates = isset($paghiperPixConfig['email_templates']) ? $paghiperPixConfig['email_templates'] : '';
+    $paghiper_pix_config = getGatewayVariables('paghiper_pix');
+    $db_templates = isset($paghiper_pix_config['email_templates']) ? $paghiper_pix_config['email_templates'] : '';
         
-    $target_templates = $dbTemplates ? array_map('trim', explode(',', $dbTemplates)) : [];
+    $target_templates = $db_templates ? array_map('trim', explode(',', $db_templates)) : [];
 
     if(in_array($email_template, $target_templates)) {
 
         $invoice = Capsule::table('tblinvoices')->where('id', $invoice_id)->first();
         if (!$invoice) return [];
         
-        $paghiperPixConfig = getGatewayVariables('paghiper_pix');
-    $issueAllPix = isset($paghiperPixConfig['issue_all']) ? $paghiperPixConfig['issue_all'] : '';
+        $paghiper_pix_config = getGatewayVariables('paghiper_pix');
+    $issue_all_pix = isset($paghiper_pix_config['issue_all']) ? $paghiper_pix_config['issue_all'] : '';
         
-        if ($invoice->paymentmethod == 'paghiper_pix' || $issueAllPix == '1' || $issueAllPix == 'on') {
+        if ($invoice->paymentmethod == 'paghiper_pix' || $issue_all_pix == '1' || $issue_all_pix == 'on') {
             require_once($basedir . '/modules/gateways/paghiper/classes/PaghiperTransaction.php');
             $paghiperTransaction    = new PaghiperTransaction(['invoiceID' => $invoice_id, 'format' => 'array', 'forceGateway' => 'paghiper_pix']);
             $invoiceTransaction     = $paghiperTransaction->process();

@@ -606,9 +606,9 @@ function generate_paghiper_billet($invoice, $params) {
             foreach($fields as $field) {
                 
                 $val = '';
-                $clientModel = \WHMCS\User\Client::find($client_id);
-                if ($clientModel) {
-                    foreach ($clientModel->customFieldValues as $cf) {
+                $client_model = \WHMCS\User\Client::find($client_id);
+                if ($client_model) {
+                    foreach ($client_model->customFieldValues as $cf) {
                         if ($cf->fieldid == trim($field)) {
                             $val = $cf->value;
                             break;
@@ -625,9 +625,9 @@ function generate_paghiper_billet($invoice, $params) {
 
             // Se simples, pegamos somente o que temos
             $val = '';
-            $clientModel = \WHMCS\User\Client::find($client_id);
-            if ($clientModel) {
-                foreach ($clientModel->customFieldValues as $cf) {
+            $client_model = \WHMCS\User\Client::find($client_id);
+            if ($client_model) {
+                foreach ($client_model->customFieldValues as $cf) {
                     if ($cf->fieldid == trim($cpfcnpj)) {
                         $val = $cf->value;
                         break;
@@ -709,9 +709,9 @@ function generate_paghiper_billet($invoice, $params) {
 
                 if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
                     
-                    $clientModel = \WHMCS\User\Client::find($client_id);
-                    if ($clientModel) {
-                        foreach ($clientModel->customFieldValues as $cf) {
+                    $client_model = \WHMCS\User\Client::find($client_id);
+                    if ($client_model) {
+                        foreach ($client_model->customFieldValues as $cf) {
                             if ($cf->fieldid == trim($razaosocial)) {
                                 $razaosocial_val = trim($cf->value);
                                 break;

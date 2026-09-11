@@ -243,14 +243,14 @@ class PaghiperPdfInvoiceIntegrator {
         $names = $this->getFriendlyNames();
         $namesJson = htmlspecialchars(json_encode($names), ENT_QUOTES, 'UTF-8');
         
-        $paghiperConfig = getGatewayVariables('paghiper');
-    $issueAllBoleto = isset($paghiperConfig['issue_all']) ? $paghiperConfig['issue_all'] : '';
-        $paghiperPixConfig = getGatewayVariables('paghiper_pix');
-    $issueAllPix = isset($paghiperPixConfig['issue_all']) ? $paghiperPixConfig['issue_all'] : '';
+        $paghiper_config = getGatewayVariables('paghiper');
+    $issue_all_billet = isset($paghiper_config['issue_all']) ? $paghiper_config['issue_all'] : '';
+        $paghiper_pix_config = getGatewayVariables('paghiper_pix');
+    $issue_all_pix = isset($paghiper_pix_config['issue_all']) ? $paghiper_pix_config['issue_all'] : '';
         
         $issueAllConfig = [
-            'paghiper' => ($issueAllBoleto == '1' || $issueAllBoleto == 'on'),
-            'paghiper_pix' => ($issueAllPix == '1' || $issueAllPix == 'on')
+            'paghiper' => ($issue_all_billet == '1' || $issue_all_billet == 'on'),
+            'paghiper_pix' => ($issue_all_pix == '1' || $issue_all_pix == 'on')
         ];
         $issueAllJson = htmlspecialchars(json_encode($issueAllConfig), ENT_QUOTES, 'UTF-8');
 
