@@ -28,19 +28,18 @@ function paghiper_display_digitable_line($vars) {
     $email_template = $vars['messagename'];
     $invoice_id = $vars['relid'];
 
-    $db_templates = Capsule::table('tblpaymentgateways')
-        ->where('gateway', 'paghiper')
-        ->where('setting', 'email_templates')
-        ->value('value');
+    $paghiperConfig = getGatewayVariables('paghiper');
+    $dbTemplates = isset($paghiperConfig['email_templates']) ? $paghiperConfig['email_templates'] : '';
         
-    $target_templates = $db_templates ? array_map('trim', explode(',', $db_templates)) : [];
+    $target_templates = $dbTemplates ? array_map('trim', explode(',', $dbTemplates)) : [];
 
     if(in_array($email_template, $target_templates)) {
 
         $invoice = Capsule::table('tblinvoices')->where('id', $invoice_id)->first();
         if (!$invoice) return [];
         
-        $issueAllBoleto = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper')->where('setting', 'issue_all')->value('value');
+        $paghiperConfig = getGatewayVariables('paghiper');
+    $issueAllBoleto = isset($paghiperConfig['issue_all']) ? $paghiperConfig['issue_all'] : '';
         
         if ($invoice->paymentmethod == 'paghiper' || $issueAllBoleto == '1' || $issueAllBoleto == 'on') {
             $whmcs_url = rtrim(\App::getSystemUrl(),"/");

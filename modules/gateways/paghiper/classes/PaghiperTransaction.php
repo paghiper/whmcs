@@ -54,8 +54,10 @@ class PaghiperTransaction {
 
             // Se o método original da fatura não for paghiper, checamos os issue_all (Fallback automático)
             if(!str_contains($this->gatewayName, 'paghiper')) {
-                $issueAllPix = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper_pix')->where('setting', 'issue_all')->value('value');
-                $issueAllBoleto = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper')->where('setting', 'issue_all')->value('value');
+                $paghiperPixConfig = getGatewayVariables('paghiper_pix');
+    $issueAllPix = isset($paghiperPixConfig['issue_all']) ? $paghiperPixConfig['issue_all'] : '';
+                $paghiperConfig = getGatewayVariables('paghiper');
+    $issueAllBoleto = isset($paghiperConfig['issue_all']) ? $paghiperConfig['issue_all'] : '';
                 
                 // Prioriza o PIX se estiver com issue_all ativo
                 if ($issueAllPix == '1' || $issueAllPix == 'on') {
@@ -450,12 +452,16 @@ class PaghiperTransaction {
         
                 foreach($fields as $field) {
                     
-                    $result = Capsule::table('tblcustomfieldsvalues')
-                        ->where('relid', $client_id)
-                        ->where('fieldid', trim($field))
-                        ->first();
-                    
-                    $val = $result ? $result->value : '';
+                    $val = '';
+                    $clientModel = \WHMCS\User\Client::find($client_id);
+                    if ($clientModel) {
+                        foreach ($clientModel->customFieldValues as $cf) {
+                            if ($cf->fieldid == trim($field)) {
+                                $val = $cf->value;
+                                break;
+                            }
+                        }
+                    }
                     ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($val)) : $cnpj = paghiper_convert_to_numeric(trim($val));
                     if($i == 1) { break; }
                     $i++;
@@ -466,12 +472,16 @@ class PaghiperTransaction {
             } else {
     
                 // Se simples, pegamos somente o que temos
-                $result = Capsule::table('tblcustomfieldsvalues')
-                    ->where('relid', $client_id)
-                    ->where('fieldid', trim($cpfcnpj))
-                    ->first();
-                
-                $val = $result ? $result->value : '';
+                $val = '';
+                $clientModel = \WHMCS\User\Client::find($client_id);
+                if ($clientModel) {
+                    foreach ($clientModel->customFieldValues as $cf) {
+                        if ($cf->fieldid == trim($cpfcnpj)) {
+                            $val = $cf->value;
+                            break;
+                        }
+                    }
+                }
                 $cpf_cnpj = paghiper_convert_to_numeric(trim($val));
             }
     
@@ -550,15 +560,14 @@ class PaghiperTransaction {
     
                     if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
                         
-                        $sql = "SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'";
-                        $query = Capsule::connection()
-                            ->getPdo()
-                            ->prepare($sql);
-                        $query->execute();
-                        $result = $query->fetch(\PDO::FETCH_BOTH);
-
-                        if(is_array($result) && !empty($result)) {
-                            $razaosocial_val = trim(array_shift($result));
+                        $clientModel = \WHMCS\User\Client::find($client_id);
+                        if ($clientModel) {
+                            foreach ($clientModel->customFieldValues as $cf) {
+                                if ($cf->fieldid == trim($razaosocial)) {
+                                    $razaosocial_val = trim($cf->value);
+                                    break;
+                                }
+                            }
                         }
                         
                     }

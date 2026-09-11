@@ -605,14 +605,18 @@ function generate_paghiper_billet($invoice, $params) {
     
             foreach($fields as $field) {
                 
-                $sql = "SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'";
-                $query = Capsule::connection()
-                    ->getPdo()
-                    ->prepare($sql);
-                $query->execute();
-                $result = $query->fetch(\PDO::FETCH_BOTH);
+                $val = '';
+                $clientModel = \WHMCS\User\Client::find($client_id);
+                if ($clientModel) {
+                    foreach ($clientModel->customFieldValues as $cf) {
+                        if ($cf->fieldid == trim($field)) {
+                            $val = $cf->value;
+                            break;
+                        }
+                    }
+                }
 
-                ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($result["value"])) : $cnpj = paghiper_convert_to_numeric(trim($result["value"]));
+                ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($val)) : $cnpj = paghiper_convert_to_numeric(trim($val));
                 if($i == 1) { break; }
                 $i++;
             }
@@ -620,15 +624,19 @@ function generate_paghiper_billet($invoice, $params) {
         } else {
 
             // Se simples, pegamos somente o que temos
-            $sql = "SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'";
-            $query = Capsule::connection()
-                ->getPdo()
-                ->prepare($sql);
-            $query->execute();
-            $result = $query->fetch(\PDO::FETCH_BOTH);
+            $val = '';
+            $clientModel = \WHMCS\User\Client::find($client_id);
+            if ($clientModel) {
+                foreach ($clientModel->customFieldValues as $cf) {
+                    if ($cf->fieldid == trim($cpfcnpj)) {
+                        $val = $cf->value;
+                        break;
+                    }
+                }
+            }
 
-            if(is_array($result) && !empty($result)) {
-                $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift($result)));
+            if(!empty($val)) {
+                $cpf_cnpj     = paghiper_convert_to_numeric(trim($val));
             }
         
         }
@@ -701,15 +709,14 @@ function generate_paghiper_billet($invoice, $params) {
 
                 if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
                     
-                    $sql = "SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'";
-                    $query = Capsule::connection()
-                        ->getPdo()
-                        ->prepare($sql);
-                    $query->execute();
-                    $result = $query->fetch(\PDO::FETCH_BOTH);
-
-                    if(is_array($result) && !empty($result)) {
-                        $razaosocial_val = trim(array_shift($result));
+                    $clientModel = \WHMCS\User\Client::find($client_id);
+                    if ($clientModel) {
+                        foreach ($clientModel->customFieldValues as $cf) {
+                            if ($cf->fieldid == trim($razaosocial)) {
+                                $razaosocial_val = trim($cf->value);
+                                break;
+                            }
+                        }
                     }
                 }
 

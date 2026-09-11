@@ -24,17 +24,13 @@ use Illuminate\Database\Capsule\Manager as Capsule;
  */
 add_hook('EmailPreSend', 1, function($vars) {
     // 1. Auto-Heal Check (Runs before any email is sent to ensure PDF is ready)
-    $auto_heal_boleto = Capsule::table('tblpaymentgateways')
-        ->where('gateway', 'paghiper')
-        ->where('setting', 'auto_pdf_integration')
-        ->value('value');
+    $paghiperConfig = getGatewayVariables('paghiper');
+    $autoHealBoleto = isset($paghiperConfig['auto_pdf_integration']) ? $paghiperConfig['auto_pdf_integration'] : '';
         
-    $auto_heal_pix = Capsule::table('tblpaymentgateways')
-        ->where('gateway', 'paghiper_pix')
-        ->where('setting', 'auto_pdf_integration')
-        ->value('value');
+    $paghiperPixConfig = getGatewayVariables('paghiper_pix');
+    $autoHealPix = isset($paghiperPixConfig['auto_pdf_integration']) ? $paghiperPixConfig['auto_pdf_integration'] : '';
 
-    if ($auto_heal_boleto == 'on' || $auto_heal_boleto == '1' || $auto_heal_pix == 'on' || $auto_heal_pix == '1') {
+    if ($autoHealBoleto == 'on' || $autoHealBoleto == '1' || $autoHealPix == 'on' || $autoHealPix == '1') {
         $integrator_path = ROOTDIR . '/modules/gateways/paghiper/inc/helpers/integrate_pdf_template.php';
         if (file_exists($integrator_path)) {
             require_once($integrator_path);
@@ -52,12 +48,10 @@ add_hook('EmailPreSend', 1, function($vars) {
     $attachments = [];
 
     // Define which email templates should receive the attachment
-    $db_templates = Capsule::table('tblpaymentgateways')
-        ->where('gateway', 'paghiper')
-        ->where('setting', 'email_templates')
-        ->value('value');
+    $paghiperConfig = getGatewayVariables('paghiper');
+    $dbTemplates = isset($paghiperConfig['email_templates']) ? $paghiperConfig['email_templates'] : '';
         
-    $target_templates = $db_templates ? array_map('trim', explode(',', $db_templates)) : [];
+    $target_templates = $dbTemplates ? array_map('trim', explode(',', $dbTemplates)) : [];
 
 
     if (in_array($email_template, $target_templates) && $invoice_id) {
@@ -75,8 +69,10 @@ add_hook('EmailPreSend', 1, function($vars) {
 
         $isPaghiper = (strpos($invoice->paymentmethod, 'paghiper') !== false);
         
-        $issueAllPix = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper_pix')->where('setting', 'issue_all')->value('value');
-        $issueAllBoleto = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper')->where('setting', 'issue_all')->value('value');
+        $paghiperPixConfig = getGatewayVariables('paghiper_pix');
+    $issueAllPix = isset($paghiperPixConfig['issue_all']) ? $paghiperPixConfig['issue_all'] : '';
+        $paghiperConfig = getGatewayVariables('paghiper');
+    $issueAllBoleto = isset($paghiperConfig['issue_all']) ? $paghiperConfig['issue_all'] : '';
         
         $pixActive = ($issueAllPix == '1' || $issueAllPix == 'on');
         $boletoActive = ($issueAllBoleto == '1' || $issueAllBoleto == 'on');

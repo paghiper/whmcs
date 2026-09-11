@@ -43,17 +43,11 @@ function paghiper_clientValidateTaxId($vars) {
     $clientTaxIds = [];
 
     if (array_key_exists('custtype', $vars) && $vars['custtype'] == 'existing') {
-        $whmcsAdmin = paghiper_autoSelectAdminUser($gatewayConfig);
-
-        $query_params = array(
-            'clientid' 	=> $vars['userid'],
-            'stats'		=> false
-        );
-
-        $client_details = localAPI('getClientsDetails', $query_params, $whmcsAdmin);
-
-        foreach ($client_details["customfields"] as $key => $value) {
-            $clientCustomFields[$value['id']] = $value['value'];
+        $client = \WHMCS\User\Client::find($vars['userid']);
+        if ($client) {
+            foreach ($client->customFieldValues as $cf) {
+                $clientCustomFields[$cf->fieldid] = $cf->value;
+            }
         }
     } else {
         if (isset($vars["customfield"]) && is_array($vars["customfield"])) {

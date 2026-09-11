@@ -225,8 +225,8 @@ class PaghiperPdfInvoiceIntegrator {
 
     public function getFriendlyNames() {
         return [
-            'paghiper' => Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper')->where('setting', 'name')->value('value') ?: 'PagHiper',
-            'paghiper_pix' => Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper_pix')->where('setting', 'name')->value('value') ?: 'PagHiper PIX'
+            'paghiper' => (isset(getGatewayVariables('paghiper')['name']) ? getGatewayVariables('paghiper')['name'] : 'PagHiper') ?: 'PagHiper',
+            'paghiper_pix' => (isset(getGatewayVariables('paghiper_pix')['name']) ? getGatewayVariables('paghiper_pix')['name'] : 'PagHiper PIX') ?: 'PagHiper PIX'
         ];
     }
 
@@ -243,8 +243,10 @@ class PaghiperPdfInvoiceIntegrator {
         $names = $this->getFriendlyNames();
         $namesJson = htmlspecialchars(json_encode($names), ENT_QUOTES, 'UTF-8');
         
-        $issueAllBoleto = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper')->where('setting', 'issue_all')->value('value');
-        $issueAllPix = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper_pix')->where('setting', 'issue_all')->value('value');
+        $paghiperConfig = getGatewayVariables('paghiper');
+    $issueAllBoleto = isset($paghiperConfig['issue_all']) ? $paghiperConfig['issue_all'] : '';
+        $paghiperPixConfig = getGatewayVariables('paghiper_pix');
+    $issueAllPix = isset($paghiperPixConfig['issue_all']) ? $paghiperPixConfig['issue_all'] : '';
         
         $issueAllConfig = [
             'paghiper' => ($issueAllBoleto == '1' || $issueAllBoleto == 'on'),
