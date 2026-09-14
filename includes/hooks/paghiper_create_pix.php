@@ -3,7 +3,7 @@
  * Adiciona QR code do PIX nos templates do WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    3.0.1
+ * @version    3.1.0
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)
@@ -28,10 +28,8 @@ function paghiper_display_pix_qr_code($vars) {
     $email_template = $vars['messagename'];
     $invoice_id = $vars['relid'];
 
-    $db_templates = Capsule::table('tblpaymentgateways')
-        ->where('gateway', 'paghiper_pix')
-        ->where('setting', 'email_templates')
-        ->value('value');
+    $paghiper_pix_config = getGatewayVariables('paghiper_pix');
+    $db_templates = isset($paghiper_pix_config['email_templates']) ? $paghiper_pix_config['email_templates'] : '';
         
     $target_templates = $db_templates ? array_map('trim', explode(',', $db_templates)) : [];
 
@@ -40,9 +38,10 @@ function paghiper_display_pix_qr_code($vars) {
         $invoice = Capsule::table('tblinvoices')->where('id', $invoice_id)->first();
         if (!$invoice) return [];
         
-        $issueAllPix = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper_pix')->where('setting', 'issue_all')->value('value');
+        $paghiper_pix_config = getGatewayVariables('paghiper_pix');
+    $issue_all_pix = isset($paghiper_pix_config['issue_all']) ? $paghiper_pix_config['issue_all'] : '';
         
-        if ($invoice->paymentmethod == 'paghiper_pix' || $issueAllPix == '1' || $issueAllPix == 'on') {
+        if ($invoice->paymentmethod == 'paghiper_pix' || $issue_all_pix == '1' || $issue_all_pix == 'on') {
             require_once($basedir . '/modules/gateways/paghiper/classes/PaghiperTransaction.php');
             $paghiperTransaction    = new PaghiperTransaction(['invoiceID' => $invoice_id, 'format' => 'array', 'forceGateway' => 'paghiper_pix']);
             $invoiceTransaction     = $paghiperTransaction->process();

@@ -3,7 +3,7 @@
  * Adiciona boleto bancário e link direto para boleto no WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    3.0.1
+ * @version    3.1.0
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)
@@ -28,10 +28,8 @@ function paghiper_display_digitable_line($vars) {
     $email_template = $vars['messagename'];
     $invoice_id = $vars['relid'];
 
-    $db_templates = Capsule::table('tblpaymentgateways')
-        ->where('gateway', 'paghiper')
-        ->where('setting', 'email_templates')
-        ->value('value');
+    $paghiper_config = getGatewayVariables('paghiper');
+    $db_templates = isset($paghiper_config['email_templates']) ? $paghiper_config['email_templates'] : '';
         
     $target_templates = $db_templates ? array_map('trim', explode(',', $db_templates)) : [];
 
@@ -40,9 +38,10 @@ function paghiper_display_digitable_line($vars) {
         $invoice = Capsule::table('tblinvoices')->where('id', $invoice_id)->first();
         if (!$invoice) return [];
         
-        $issueAllBoleto = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper')->where('setting', 'issue_all')->value('value');
+        $paghiper_config = getGatewayVariables('paghiper');
+    $issue_all_billet = isset($paghiper_config['issue_all']) ? $paghiper_config['issue_all'] : '';
         
-        if ($invoice->paymentmethod == 'paghiper' || $issueAllBoleto == '1' || $issueAllBoleto == 'on') {
+        if ($invoice->paymentmethod == 'paghiper' || $issue_all_billet == '1' || $issue_all_billet == 'on') {
             $whmcs_url = rtrim(\App::getSystemUrl(),"/");
 
             require_once($basedir . '/modules/gateways/paghiper/classes/PaghiperTransaction.php');

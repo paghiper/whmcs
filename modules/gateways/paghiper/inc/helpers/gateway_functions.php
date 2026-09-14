@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    3.0.1
+ * @version    3.1.0
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -153,6 +153,10 @@ function paghiper_convert_to_numeric($str) {
     return preg_replace('/\D/', '', $str);
 }
 
+function paghiper_clean_tax_id($str) {
+    return preg_replace('/[^0-9a-zA-Z]/', '', $str);
+}
+
 function paghiper_apply_custom_taxes($amount, $GATEWAY, $params = NULL){    if($params && array_key_exists('amount', $params)) {
         $amount     = (float) $params['amount'];
         $porcento   = (float) $params['porcento'];
@@ -192,9 +196,9 @@ function paghiper_is_tax_id_valid($cpf_cnpj) {
  * @return bool
  */
 function paghiper_is_valid_cpf( $cpf ) {
-    $cpf = preg_replace( '/[^0-9]/', '', $cpf );
+    $cpf = sprintf( '%011s', paghiper_clean_tax_id( $cpf ) );
 
-    if ( 11 !== strlen( $cpf ) || preg_match( '/^([0-9])\1+$/', $cpf ) ) {
+    if ( 11 !== strlen( $cpf ) || preg_match( '/^([0-9])\1+$/', $cpf ) || preg_match( '/[^0-9]/', $cpf ) ) {
         return false;
     }
 
@@ -222,15 +226,17 @@ function paghiper_is_valid_cpf( $cpf ) {
  * @return bool
  */
 function paghiper_is_valid_cnpj( $cnpj ) {
-    $cnpj = sprintf( '%014s', preg_replace( '{\D}', '', $cnpj ) );
+    $cnpj = strtoupper(paghiper_clean_tax_id($cnpj));
+    $cnpj = sprintf( '%014s', $cnpj );
 
-    if ( 14 !== strlen( $cnpj ) || 0 === intval( substr( $cnpj, -4 ) ) ) {
+    if ( 14 !== strlen( $cnpj ) || preg_match( '/^([0-9a-zA-Z])\1+$/', $cnpj ) ) {
         return false;
     }
 
     for ( $t = 11; $t < 13; ) {
         for ( $d = 0, $p = 2, $c = $t; $c >= 0; $c--, ( $p < 9 ) ? $p++ : $p = 2 ) {
-            $d += $cnpj[ $c ] * $p;
+            $charValue = ord($cnpj[$c]) - 48; // ASCII math for the new format
+            $d += $charValue * $p;
         }
 
         if ( intval( $cnpj[ ++$t ] ) !== ( $d = ( ( 10 * $d ) % 11 ) % 10 ) ) {
@@ -605,14 +611,18 @@ function generate_paghiper_billet($invoice, $params) {
     
             foreach($fields as $field) {
                 
-                $sql = "SELECT * FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '".trim($field)."'";
-                $query = Capsule::connection()
-                    ->getPdo()
-                    ->prepare($sql);
-                $query->execute();
-                $result = $query->fetch(\PDO::FETCH_BOTH);
+                $val = '';
+                $client_model = \WHMCS\User\Client::find($client_id);
+                if ($client_model) {
+                    foreach ($client_model->customFieldValues as $cf) {
+                        if ($cf->fieldid == trim($field)) {
+                            $val = $cf->value;
+                            break;
+                        }
+                    }
+                }
 
-                ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($result["value"])) : $cnpj = paghiper_convert_to_numeric(trim($result["value"]));
+                ($i == 0) ? $cpf = paghiper_clean_tax_id(trim($val)) : $cnpj = paghiper_clean_tax_id(trim($val));
                 if($i == 1) { break; }
                 $i++;
             }
@@ -620,15 +630,19 @@ function generate_paghiper_billet($invoice, $params) {
         } else {
 
             // Se simples, pegamos somente o que temos
-            $sql = "SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$cpfcnpj'";
-            $query = Capsule::connection()
-                ->getPdo()
-                ->prepare($sql);
-            $query->execute();
-            $result = $query->fetch(\PDO::FETCH_BOTH);
+            $val = '';
+            $client_model = \WHMCS\User\Client::find($client_id);
+            if ($client_model) {
+                foreach ($client_model->customFieldValues as $cf) {
+                    if ($cf->fieldid == trim($cpfcnpj)) {
+                        $val = $cf->value;
+                        break;
+                    }
+                }
+            }
 
-            if(is_array($result) && !empty($result)) {
-                $cpf_cnpj     = paghiper_convert_to_numeric(trim(array_shift($result)));
+            if(!empty($val)) {
+                $cpf_cnpj     = paghiper_clean_tax_id(trim($val));
             }
         
         }
@@ -701,15 +715,14 @@ function generate_paghiper_billet($invoice, $params) {
 
                 if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
                     
-                    $sql = "SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'";
-                    $query = Capsule::connection()
-                        ->getPdo()
-                        ->prepare($sql);
-                    $query->execute();
-                    $result = $query->fetch(\PDO::FETCH_BOTH);
-
-                    if(is_array($result) && !empty($result)) {
-                        $razaosocial_val = trim(array_shift($result));
+                    $client_model = \WHMCS\User\Client::find($client_id);
+                    if ($client_model) {
+                        foreach ($client_model->customFieldValues as $cf) {
+                            if ($cf->fieldid == trim($razaosocial)) {
+                                $razaosocial_val = trim($cf->value);
+                                break;
+                            }
+                        }
                     }
                 }
 

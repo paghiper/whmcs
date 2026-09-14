@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    3.0.1
+ * @version    3.1.0
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -225,8 +225,8 @@ class PaghiperPdfInvoiceIntegrator {
 
     public function getFriendlyNames() {
         return [
-            'paghiper' => Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper')->where('setting', 'name')->value('value') ?: 'PagHiper',
-            'paghiper_pix' => Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper_pix')->where('setting', 'name')->value('value') ?: 'PagHiper PIX'
+            'paghiper' => (isset(getGatewayVariables('paghiper')['name']) ? getGatewayVariables('paghiper')['name'] : 'PagHiper') ?: 'PagHiper',
+            'paghiper_pix' => (isset(getGatewayVariables('paghiper_pix')['name']) ? getGatewayVariables('paghiper_pix')['name'] : 'PagHiper PIX') ?: 'PagHiper PIX'
         ];
     }
 
@@ -243,12 +243,14 @@ class PaghiperPdfInvoiceIntegrator {
         $names = $this->getFriendlyNames();
         $namesJson = htmlspecialchars(json_encode($names), ENT_QUOTES, 'UTF-8');
         
-        $issueAllBoleto = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper')->where('setting', 'issue_all')->value('value');
-        $issueAllPix = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper_pix')->where('setting', 'issue_all')->value('value');
+        $paghiper_config = getGatewayVariables('paghiper');
+    $issue_all_billet = isset($paghiper_config['issue_all']) ? $paghiper_config['issue_all'] : '';
+        $paghiper_pix_config = getGatewayVariables('paghiper_pix');
+    $issue_all_pix = isset($paghiper_pix_config['issue_all']) ? $paghiper_pix_config['issue_all'] : '';
         
         $issueAllConfig = [
-            'paghiper' => ($issueAllBoleto == '1' || $issueAllBoleto == 'on'),
-            'paghiper_pix' => ($issueAllPix == '1' || $issueAllPix == 'on')
+            'paghiper' => ($issue_all_billet == '1' || $issue_all_billet == 'on'),
+            'paghiper_pix' => ($issue_all_pix == '1' || $issue_all_pix == 'on')
         ];
         $issueAllJson = htmlspecialchars(json_encode($issueAllConfig), ENT_QUOTES, 'UTF-8');
 

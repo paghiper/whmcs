@@ -3,7 +3,7 @@
  * Valida informações de faturamento do cliente no check-out
  * 
  * @package    PagHiper e Boleto para WHMCS
- * @version    3.0.1
+ * @version    3.1.0
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)
@@ -24,61 +24,55 @@ require_once($basedir . '/modules/gateways/paghiper/inc/helpers/gateway_function
 
 function paghiper_clientValidateTaxId($vars) {
     if (array_key_exists('paymentmethod', $vars) && strpos($vars['paymentmethod'], "paghiper") !== false) {
-        $gatewayConfig = getGatewayVariables($vars['paymentmethod']);
+        $gateway_config = getGatewayVariables($vars['paymentmethod']);
     } else {
         return;
     }
 
-    if (empty($gatewayConfig['tax_id_validation']) || ($gatewayConfig['tax_id_validation'] != 'on' && $gatewayConfig['tax_id_validation'] != '1')) {
+    if (empty($gateway_config['tax_id_validation']) || ($gateway_config['tax_id_validation'] != 'on' && $gateway_config['tax_id_validation'] != '1')) {
         return;
     }
 
-    if (empty($gatewayConfig['cpf_cnpj'])) {
+    if (empty($gateway_config['cpf_cnpj'])) {
         return;
     }
 
     // Checamos o CPF/CNPJ novamente, para evitar problemas no checkout
-    $taxIdFields = explode("|", $gatewayConfig['cpf_cnpj']);
-    $clientCustomFields = [];
-    $clientTaxIds = [];
+    $tax_id_fields = explode("|", $gateway_config['cpf_cnpj']);
+    $client_custom_fields = [];
+    $client_tax_ids = [];
 
     if (array_key_exists('custtype', $vars) && $vars['custtype'] == 'existing') {
-        $whmcsAdmin = paghiper_autoSelectAdminUser($gatewayConfig);
-
-        $query_params = array(
-            'clientid' 	=> $vars['userid'],
-            'stats'		=> false
-        );
-
-        $client_details = localAPI('getClientsDetails', $query_params, $whmcsAdmin);
-
-        foreach ($client_details["customfields"] as $key => $value) {
-            $clientCustomFields[$value['id']] = $value['value'];
+        $client = \WHMCS\User\Client::find($vars['userid']);
+        if ($client) {
+            foreach ($client->customFieldValues as $cf) {
+                $client_custom_fields[$cf->fieldid] = $cf->value;
+            }
         }
     } else {
         if (isset($vars["customfield"]) && is_array($vars["customfield"])) {
             foreach ($vars["customfield"] as $key => $value) {
-                $clientCustomFields[$key] = $value;
+                $client_custom_fields[$key] = $value;
             }
         }
     }
 
-    if (count($taxIdFields) > 1) {
-        $clientTaxIds[] = isset($clientCustomFields[$taxIdFields[0]]) ? $clientCustomFields[$taxIdFields[0]] : '';
-        $clientTaxIds[] = isset($clientCustomFields[$taxIdFields[1]]) ? $clientCustomFields[$taxIdFields[1]] : '';
+    if (count($tax_id_fields) > 1) {
+        $client_tax_ids[] = isset($client_custom_fields[$tax_id_fields[0]]) ? $client_custom_fields[$tax_id_fields[0]] : '';
+        $client_tax_ids[] = isset($client_custom_fields[$tax_id_fields[1]]) ? $client_custom_fields[$tax_id_fields[1]] : '';
     } else {
-        $clientTaxIds[] = isset($clientCustomFields[$taxIdFields[0]]) ? $clientCustomFields[$taxIdFields[0]] : '';
+        $client_tax_ids[] = isset($client_custom_fields[$tax_id_fields[0]]) ? $client_custom_fields[$tax_id_fields[0]] : '';
     }
 
-    $isValidTaxId = false;
-    foreach ($clientTaxIds as $clientTaxId) {
-        if (!empty($clientTaxId) && paghiper_is_tax_id_valid($clientTaxId)) {
-            $isValidTaxId = true;
+    $is_valid_tax_id = false;
+    foreach ($client_tax_ids as $client_tax_id) {
+        if (!empty($client_tax_id) && paghiper_is_tax_id_valid($client_tax_id)) {
+            $is_valid_tax_id = true;
             break;
         }
     }
 
-    if (!$isValidTaxId) {
+    if (!$is_valid_tax_id) {
         if (array_key_exists('custtype', $vars) && $vars['custtype'] == 'existing') {
             return array('CPF/CNPJ inválido! Cheque seu cadastro.');
         } else {

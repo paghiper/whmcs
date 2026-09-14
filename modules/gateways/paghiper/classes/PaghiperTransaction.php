@@ -3,7 +3,7 @@
  * Classe responsável pela criação e resgate de transações
  * 
  * @package    PagHiper para WHMCS
- * @version    3.0.1
+ * @version    3.1.0
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -54,13 +54,15 @@ class PaghiperTransaction {
 
             // Se o método original da fatura não for paghiper, checamos os issue_all (Fallback automático)
             if(!str_contains($this->gatewayName, 'paghiper')) {
-                $issueAllPix = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper_pix')->where('setting', 'issue_all')->value('value');
-                $issueAllBoleto = Capsule::table('tblpaymentgateways')->where('gateway', 'paghiper')->where('setting', 'issue_all')->value('value');
+                $paghiper_pix_config = getGatewayVariables('paghiper_pix');
+    $issue_all_pix = isset($paghiper_pix_config['issue_all']) ? $paghiper_pix_config['issue_all'] : '';
+                $paghiper_config = getGatewayVariables('paghiper');
+    $issue_all_billet = isset($paghiper_config['issue_all']) ? $paghiper_config['issue_all'] : '';
                 
                 // Prioriza o PIX se estiver com issue_all ativo
-                if ($issueAllPix == '1' || $issueAllPix == 'on') {
+                if ($issue_all_pix == '1' || $issue_all_pix == 'on') {
                     $this->gatewayName = 'paghiper_pix';
-                } elseif ($issueAllBoleto == '1' || $issueAllBoleto == 'on') {
+                } elseif ($issue_all_billet == '1' || $issue_all_billet == 'on') {
                     $this->gatewayName = 'paghiper';
                 }
             }
@@ -450,13 +452,17 @@ class PaghiperTransaction {
         
                 foreach($fields as $field) {
                     
-                    $result = Capsule::table('tblcustomfieldsvalues')
-                        ->where('relid', $client_id)
-                        ->where('fieldid', trim($field))
-                        ->first();
-                    
-                    $val = $result ? $result->value : '';
-                    ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($val)) : $cnpj = paghiper_convert_to_numeric(trim($val));
+                    $val = '';
+                    $client_model = \WHMCS\User\Client::find($client_id);
+                    if ($client_model) {
+                        foreach ($client_model->customFieldValues as $cf) {
+                            if ($cf->fieldid == trim($field)) {
+                                $val = $cf->value;
+                                break;
+                            }
+                        }
+                    }
+                    ($i == 0) ? $cpf = paghiper_clean_tax_id(trim($val)) : $cnpj = paghiper_clean_tax_id(trim($val));
                     if($i == 1) { break; }
                     $i++;
                 }
@@ -466,13 +472,17 @@ class PaghiperTransaction {
             } else {
     
                 // Se simples, pegamos somente o que temos
-                $result = Capsule::table('tblcustomfieldsvalues')
-                    ->where('relid', $client_id)
-                    ->where('fieldid', trim($cpfcnpj))
-                    ->first();
-                
-                $val = $result ? $result->value : '';
-                $cpf_cnpj = paghiper_convert_to_numeric(trim($val));
+                $val = '';
+                $client_model = \WHMCS\User\Client::find($client_id);
+                if ($client_model) {
+                    foreach ($client_model->customFieldValues as $cf) {
+                        if ($cf->fieldid == trim($cpfcnpj)) {
+                            $val = $cf->value;
+                            break;
+                        }
+                    }
+                }
+                $cpf_cnpj = paghiper_clean_tax_id(trim($val));
             }
     
         }
@@ -550,15 +560,14 @@ class PaghiperTransaction {
     
                     if (isset($razaosocial) && !empty($razaosocial) && isset($cnpj) && !empty($cnpj)) {
                         
-                        $sql = "SELECT value FROM tblcustomfieldsvalues WHERE relid = '$client_id' and fieldid = '$razaosocial'";
-                        $query = Capsule::connection()
-                            ->getPdo()
-                            ->prepare($sql);
-                        $query->execute();
-                        $result = $query->fetch(\PDO::FETCH_BOTH);
-
-                        if(is_array($result) && !empty($result)) {
-                            $razaosocial_val = trim(array_shift($result));
+                        $client_model = \WHMCS\User\Client::find($client_id);
+                        if ($client_model) {
+                            foreach ($client_model->customFieldValues as $cf) {
+                                if ($cf->fieldid == trim($razaosocial)) {
+                                    $razaosocial_val = trim($cf->value);
+                                    break;
+                                }
+                            }
                         }
                         
                     }
