@@ -153,6 +153,10 @@ function paghiper_convert_to_numeric($str) {
     return preg_replace('/\D/', '', $str);
 }
 
+function paghiper_clean_tax_id($str) {
+    return preg_replace('/[^0-9a-zA-Z]/', '', $str);
+}
+
 function paghiper_apply_custom_taxes($amount, $GATEWAY, $params = NULL){    if($params && array_key_exists('amount', $params)) {
         $amount     = (float) $params['amount'];
         $porcento   = (float) $params['porcento'];
@@ -192,9 +196,9 @@ function paghiper_is_tax_id_valid($cpf_cnpj) {
  * @return bool
  */
 function paghiper_is_valid_cpf( $cpf ) {
-    $cpf = preg_replace( '/[^0-9]/', '', $cpf );
+    $cpf = sprintf( '%011s', paghiper_clean_tax_id( $cpf ) );
 
-    if ( 11 !== strlen( $cpf ) || preg_match( '/^([0-9])\1+$/', $cpf ) ) {
+    if ( 11 !== strlen( $cpf ) || preg_match( '/^([0-9])\1+$/', $cpf ) || preg_match( '/[^0-9]/', $cpf ) ) {
         return false;
     }
 
@@ -222,15 +226,17 @@ function paghiper_is_valid_cpf( $cpf ) {
  * @return bool
  */
 function paghiper_is_valid_cnpj( $cnpj ) {
-    $cnpj = sprintf( '%014s', preg_replace( '{\D}', '', $cnpj ) );
+    $cnpj = strtoupper(paghiper_clean_tax_id($cnpj));
+    $cnpj = sprintf( '%014s', $cnpj );
 
-    if ( 14 !== strlen( $cnpj ) || 0 === intval( substr( $cnpj, -4 ) ) ) {
+    if ( 14 !== strlen( $cnpj ) || preg_match( '/^([0-9a-zA-Z])\1+$/', $cnpj ) ) {
         return false;
     }
 
     for ( $t = 11; $t < 13; ) {
         for ( $d = 0, $p = 2, $c = $t; $c >= 0; $c--, ( $p < 9 ) ? $p++ : $p = 2 ) {
-            $d += $cnpj[ $c ] * $p;
+            $charValue = ord($cnpj[$c]) - 48; // ASCII math for the new format
+            $d += $charValue * $p;
         }
 
         if ( intval( $cnpj[ ++$t ] ) !== ( $d = ( ( 10 * $d ) % 11 ) % 10 ) ) {
@@ -616,7 +622,7 @@ function generate_paghiper_billet($invoice, $params) {
                     }
                 }
 
-                ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($val)) : $cnpj = paghiper_convert_to_numeric(trim($val));
+                ($i == 0) ? $cpf = paghiper_clean_tax_id(trim($val)) : $cnpj = paghiper_clean_tax_id(trim($val));
                 if($i == 1) { break; }
                 $i++;
             }
@@ -636,7 +642,7 @@ function generate_paghiper_billet($invoice, $params) {
             }
 
             if(!empty($val)) {
-                $cpf_cnpj     = paghiper_convert_to_numeric(trim($val));
+                $cpf_cnpj     = paghiper_clean_tax_id(trim($val));
             }
         
         }

@@ -462,7 +462,7 @@ class PaghiperTransaction {
                             }
                         }
                     }
-                    ($i == 0) ? $cpf = paghiper_convert_to_numeric(trim($val)) : $cnpj = paghiper_convert_to_numeric(trim($val));
+                    ($i == 0) ? $cpf = paghiper_clean_tax_id(trim($val)) : $cnpj = paghiper_clean_tax_id(trim($val));
                     if($i == 1) { break; }
                     $i++;
                 }
@@ -482,7 +482,7 @@ class PaghiperTransaction {
                         }
                     }
                 }
-                $cpf_cnpj = paghiper_convert_to_numeric(trim($val));
+                $cpf_cnpj = paghiper_clean_tax_id(trim($val));
             }
     
         }
