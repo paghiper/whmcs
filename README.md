@@ -8,7 +8,7 @@ Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos au
 
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 3.0.1
+* **Versão mais Recente:** 3.1.0
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.6.0, cURL e JSON ativado.
 * **Compatibilidade:** WHMCS 8.X, PHP 7.x. Mod_rewrite opcional
