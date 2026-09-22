@@ -19,7 +19,7 @@ if (!defined("WHMCS")) {
     header("access-control-allow-origin: *");
 
     // Inicializar WHMCS, carregar o gateway e a fatura.
-    require_once ("../../init.php");
+    require_once __DIR__ . "/../../../../init.php";
     $whmcs->load_function("gateway");
     $whmcs->load_function("invoice");
 

@@ -356,5 +356,5 @@ function paghiper_pix_link($params) {
 
 $is_pix = TRUE;
 
-require_once('paghiper/inc/helpers/gateway_functions.php');
-require_once('paghiper/inc/helpers/process_payment.php');
+require_once __DIR__ . '/paghiper/inc/helpers/gateway_functions.php';
+require_once __DIR__ . '/paghiper/inc/helpers/process_payment.php';
