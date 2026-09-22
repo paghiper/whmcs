@@ -785,7 +785,25 @@ class PaghiperTransaction {
         return $this->isPIX;
     }
 
-    public function process() {
+        public function process() {
+        try {
+            return $this->_process();
+        } catch (\Throwable $e) {
+            logTransaction(
+                $this->gatewayConf["name"],
+                [
+                    'error'   => $e->getMessage(),
+                    'file'    => $e->getFile(),
+                    'line'    => $e->getLine(),
+                    'invoice' => $this->invoiceID
+                ],
+                "Erro Crítico: Falha Excepcional no Processamento"
+            );
+            return false;
+        }
+    }
+
+    private function _process() {
 
         if(!$this->isGatewayAvailable) {
             return false;
