@@ -47,8 +47,7 @@ function paghiper_display_digitable_line($vars) {
             require_once($basedir . '/modules/gateways/paghiper/classes/PaghiperTransaction.php');
             $paghiperTransaction    = new PaghiperTransaction(['invoiceID' => $invoice_id, 'format' => 'array', 'forceGateway' => 'paghiper']);
             $invoiceTransaction     = $paghiperTransaction->process();
-
-        if($invoiceTransaction) {
+            if ($invoiceTransaction) {
 
             $digitable_line             = $invoiceTransaction['digitable_line'];
             $bar_code_number_to_image   = $invoiceTransaction['bar_code_number_to_image'];
@@ -60,10 +59,9 @@ function paghiper_display_digitable_line($vars) {
                 $merge_fields['linha_digitavel'] .= '</strong></span></span></div>';
             }
         }
-        
         } // End of Boleto check
-
     }
+
     return $merge_fields;
 }
 
