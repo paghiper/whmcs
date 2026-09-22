@@ -17,12 +17,7 @@ use WHMCS\Database\Capsule;
 
 function paghiper_display_digitable_line($vars) {
 	
-	// PHP 5.x compatibility
-	if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
-		$basedir = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
-	} else {
-		$basedir = (function_exists('dirname') && function_exists('dirname_with_levels')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
-	}
+	$basedir = dirname(dirname(__DIR__));
 
     $merge_fields = [];
     $email_template = $vars['messagename'];
