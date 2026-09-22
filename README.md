@@ -58,7 +58,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 # Changelog
 
-## 3.1.0 - 2026/09/14
+## 3.1.1 - 2026/09/14
 
 * **Suporte ao Novo CNPJ Alfanumérico (2026):** Módulo atualizado e testado para suportar o novo padrão de CNPJs implementado pela Receita Federal, com validação matemática estrita.
 * **Padronização de Código:** Refatoração de variáveis obsoletas (remoção do padrão snake_case solto) para seguir os guias de desenvolvimento mais recentes.
