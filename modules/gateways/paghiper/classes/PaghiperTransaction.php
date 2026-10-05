@@ -3,7 +3,7 @@
  * Classe responsável pela criação e resgate de transações
  * 
  * @package    PagHiper para WHMCS
- * @version    3.1.0
+ * @version    3.1.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -785,7 +785,25 @@ class PaghiperTransaction {
         return $this->isPIX;
     }
 
-    public function process() {
+        public function process() {
+        try {
+            return $this->_process();
+        } catch (\Throwable $e) {
+            logTransaction(
+                $this->gatewayConf["name"],
+                [
+                    'error'   => $e->getMessage(),
+                    'file'    => $e->getFile(),
+                    'line'    => $e->getLine(),
+                    'invoice' => $this->invoiceID
+                ],
+                "Erro Crítico: Falha Excepcional no Processamento"
+            );
+            return false;
+        }
+    }
+
+    private function _process() {
 
         if(!$this->isGatewayAvailable) {
             return false;

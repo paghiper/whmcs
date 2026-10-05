@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    3.1.0
+ * @version    3.1.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -83,6 +83,7 @@ function paghiper_config($params = NULL) {
     $custom_fields_conf = paghiper_get_customfield_id();
 
     $config = [
+        'version' => '3.1.1',
         'FriendlyName' => [
             "Type" => "System",
             "Value" => "PagHiper Boleto"
@@ -94,7 +95,7 @@ function paghiper_config($params = NULL) {
                 <tbody>
                     <tr>
                         <td width='60%'><img src='https://s3.amazonaws.com/logopaghiper/whmcs/badge.oficial.png' style='max-width: 100%;'></td>
-                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>3.1.0</h2></td>
+                        <td>Versão <h2 style='font-weight: bold; margin-top: 0px; font-size: 300%;'>3.1.1</h2></td>
                     </tr>
                 </tbody>
             </table>
@@ -396,5 +397,5 @@ function paghiper_link($params) {
 
 $is_pix = FALSE;
 
-require_once('paghiper/inc/helpers/gateway_functions.php');
-require_once('paghiper/inc/helpers/process_payment.php');
+require_once __DIR__ . '/paghiper/inc/helpers/gateway_functions.php';
+require_once __DIR__ . '/paghiper/inc/helpers/process_payment.php';

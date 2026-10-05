@@ -3,7 +3,7 @@
  * PagHiper - Módulo oficial para integração com WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    3.1.0
+ * @version    3.1.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Desenvolvido e mantido Henrique Cruz - https://henriquecruz.com.br/
  * @license    BSD License (3-clause)
@@ -256,7 +256,7 @@ function paghiper_check_if_subaccount($user_id, $email, $invoice_userid) {
     $query->execute();
     $user = $query->fetch(\PDO::FETCH_BOTH);
 
-    $allow_invoices = ((strpos($user['permissions'], 'invoices') || $user['invoiceemails'] == 1) && $invoice_userid == $user['userid'] ? TRUE : FALSE);
+    $allow_invoices = ((strpos($user['permissions'], 'invoices') !== false || $user['invoiceemails'] == 1) && $invoice_userid == $user['userid'] ? TRUE : FALSE);
     if($allow_invoices) {
         return $user['userid'];
     }

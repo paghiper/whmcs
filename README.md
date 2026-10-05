@@ -8,10 +8,10 @@ Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos au
 
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 3.1.0
+* **Versão mais Recente:** 3.1.1
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.6.0, cURL e JSON ativado.
-* **Compatibilidade:** WHMCS 8.X, PHP 7.x. Mod_rewrite opcional
+* **Compatibilidade:** WHMCS 8.X, PHP <= 8.5. Mod_rewrite opcional
 
 
 # Como Instalar
@@ -57,6 +57,13 @@ Para questões relacionadas a integração e plugin, acesse o [forum de suporte 
 Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/).
 
 # Changelog
+
+## 3.1.1 - 2026/10/05
+
+* **Hotfix de Suporte a WHMCS 9.0.8:** Correção do Erro Fatal de carregamento do módulo ("função de configuração não encontrada") causado por novas políticas restritivas de segurança de diretórios no painel.
+* **Tolerância a Falhas em Hooks e UI:** Adição de blocos de proteção (`try/catch`) no coração do processador de pagamentos e nas telas de erro. Falhas de banco de dados ou de API agora falham graciosamente gerando logs administrativos, sem travar o WHMCS do cliente (White Screen of Death).
+* **Proteção de Variáveis de Email:** O hook de merge fields da PagHiper foi refatorado para usar matrizes multidimensionais, prevenindo que variáveis nativas do WHMCS fossem sobrescritas ou apagadas no editor de templates.
+* **Otimização de Compatibilidade (PHP 5.6 ao 8.3):** Substituição de funções de caminhos legadas por recursos nativos universais, além da correção de vulnerabilidade na validação estrita de permissões de sub-contas (`strpos`).
 
 ## 3.1.0 - 2026/09/14
 

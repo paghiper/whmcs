@@ -3,7 +3,7 @@
  * Adiciona boleto bancário e link direto para boleto no WHMCS
  * 
  * @package    PagHiper para WHMCS
- * @version    3.1.0
+ * @version    3.1.1
  * @author     Equipe PagHiper https://github.com/paghiper/whmcs
  * @author     Henrique Cruz
  * @license    BSD License (3-clause)
@@ -17,12 +17,7 @@ use WHMCS\Database\Capsule;
 
 function paghiper_display_digitable_line($vars) {
 	
-	// PHP 5.x compatibility
-	if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
-		$basedir = (function_exists('dirname')) ? dirname(__DIR__, 2) : realpath(__DIR__ . '/../..');
-	} else {
-		$basedir = (function_exists('dirname') && function_exists('dirname_with_levels')) ? dirname_with_levels(__DIR__, 2) : realpath(__DIR__ . '/../..');
-	}
+	$basedir = dirname(dirname(__DIR__));
 
     $merge_fields = [];
     $email_template = $vars['messagename'];
@@ -47,8 +42,7 @@ function paghiper_display_digitable_line($vars) {
             require_once($basedir . '/modules/gateways/paghiper/classes/PaghiperTransaction.php');
             $paghiperTransaction    = new PaghiperTransaction(['invoiceID' => $invoice_id, 'format' => 'array', 'forceGateway' => 'paghiper']);
             $invoiceTransaction     = $paghiperTransaction->process();
-
-        if($invoiceTransaction) {
+            if ($invoiceTransaction) {
 
             $digitable_line             = $invoiceTransaction['digitable_line'];
             $bar_code_number_to_image   = $invoiceTransaction['bar_code_number_to_image'];
@@ -60,10 +54,9 @@ function paghiper_display_digitable_line($vars) {
                 $merge_fields['linha_digitavel'] .= '</strong></span></span></div>';
             }
         }
-        
         } // End of Boleto check
-
     }
+
     return $merge_fields;
 }
 
