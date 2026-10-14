@@ -244,9 +244,10 @@ class PaghiperPdfInvoiceIntegrator {
         $namesJson = htmlspecialchars(json_encode($names), ENT_QUOTES, 'UTF-8');
         
         $paghiper_config = getGatewayVariables('paghiper');
-    $issue_all_billet = isset($paghiper_config['issue_all']) ? $paghiper_config['issue_all'] : '';
+        $issue_all_billet = isset($paghiper_config['issue_all']) ? $paghiper_config['issue_all'] : '';
+        
         $paghiper_pix_config = getGatewayVariables('paghiper_pix');
-    $issue_all_pix = isset($paghiper_pix_config['issue_all']) ? $paghiper_pix_config['issue_all'] : '';
+        $issue_all_pix = isset($paghiper_pix_config['issue_all']) ? $paghiper_pix_config['issue_all'] : '';
         
         $issueAllConfig = [
             'paghiper' => ($issue_all_billet == '1' || $issue_all_billet == 'on'),
