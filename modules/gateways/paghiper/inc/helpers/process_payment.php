@@ -19,13 +19,21 @@ if (!defined("WHMCS")) {
     header("access-control-allow-origin: *");
 
     // Inicializar WHMCS, carregar o gateway e a fatura.
-    require_once __DIR__ . "/../../../../init.php";
+    require_once dirname(__DIR__, 5) . '/init.php';
     $whmcs->load_function("gateway");
     $whmcs->load_function("invoice");
 
     // Initialize module settings
 	$gateway_code = ($is_pix) ? "paghiper_pix" : "paghiper"; 
-    $GATEWAY = getGatewayVariables($gateway_code);
+    try {
+        $GATEWAY = getGatewayVariables($gateway_code);
+    } catch (\Throwable $e) {
+        $ico = ($is_pix) ? 'pix-cancelled.png' : 'billet-cancelled.png';
+        $title = (($is_pix) ? 'PIX' : 'Boleto bancário') . ' indisponível!';
+        $message = 'Este método de pagamento não está ativo no momento. Por favor, contate o suporte.';
+        echo paghiper_print_screen($ico, $title, $message);
+        exit();
+    }
 
     // Define variáveis para configurações do gateway
     $gateway_name = $GATEWAY["name"];
