@@ -322,23 +322,26 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        var forceBtn = document.getElementById('paghiper-force-integration');
+        var forceBtn = form.querySelector('.paghiper-force-integration, #paghiper-force-integration');
         if (forceBtn && !forceBtn.dataset.bound) {
             forceBtn.dataset.bound = "1";
             forceBtn.addEventListener('click', function (e) {
                 e.preventDefault();
-                var tpl = document.getElementById('paghiper-template-selector').value;
+                var tplEl = form.querySelector('.paghiper-template-selector, #paghiper-template-selector');
+                var tpl = tplEl ? tplEl.value : '';
                 submitAjaxAction('force_integration', { template: tpl });
             });
         }
 
-        var restoreBtn = document.getElementById('paghiper-restore-backup');
+        var restoreBtn = form.querySelector('.paghiper-restore-backup, #paghiper-restore-backup');
         if (restoreBtn && !restoreBtn.dataset.bound) {
             restoreBtn.dataset.bound = "1";
             restoreBtn.addEventListener('click', function (e) {
                 e.preventDefault();
-                var tpl = document.getElementById('paghiper-template-selector').value;
-                var backup = document.getElementById('paghiper-backup-selector').value;
+                var tplEl = form.querySelector('.paghiper-template-selector, #paghiper-template-selector');
+                var backupEl = form.querySelector('.paghiper-backup-selector, #paghiper-backup-selector');
+                var tpl = tplEl ? tplEl.value : '';
+                var backup = backupEl ? backupEl.value : '';
                 if (!backup) {
                     alert("Selecione um backup para restaurar.");
                     return;
@@ -349,30 +352,37 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        var tplSelector = document.getElementById('paghiper-template-selector');
+        var tplSelector = form.querySelector('.paghiper-template-selector, #paghiper-template-selector');
         if (tplSelector && !tplSelector.dataset.bound) {
             tplSelector.dataset.bound = "1";
             tplSelector.addEventListener('change', function () {
                 submitAjaxAction('get_status', { template: this.value }, function (res) {
                     if (res.status) {
-                        document.getElementById('paghiper-int-status').innerHTML = res.integrated ? '<span style="color:green;font-weight:bold;">Integrado</span>' : '<span style="color:red;font-weight:bold;">Não Integrado</span>';
+                        var statusEl = form.querySelector('.paghiper-int-status, #paghiper-int-status');
+                        if (statusEl) {
+                            statusEl.innerHTML = res.integrated ? '<span style="color:green;font-weight:bold;">Integrado</span>' : '<span style="color:red;font-weight:bold;">Não Integrado</span>';
+                        }
 
-                        var backupSel = document.getElementById('paghiper-backup-selector');
-                        backupSel.innerHTML = '';
-                        if (res.backups && res.backups.length > 0) {
-                            res.backups.forEach(function (b) {
+                        var backupSel = form.querySelector('.paghiper-backup-selector, #paghiper-backup-selector');
+                        if (backupSel) {
+                            backupSel.innerHTML = '';
+                            if (res.backups && res.backups.length > 0) {
+                                res.backups.forEach(function (b) {
+                                    var opt = document.createElement('option');
+                                    opt.value = b.filename;
+                                    opt.innerHTML = b.filename + " (" + b.date + ")";
+                                    backupSel.appendChild(opt);
+                                });
+                                var restoreEl = form.querySelector('.paghiper-restore-backup, #paghiper-restore-backup');
+                                if (restoreEl) restoreEl.disabled = false;
+                            } else {
                                 var opt = document.createElement('option');
-                                opt.value = b.filename;
-                                opt.innerHTML = b.filename + " (" + b.date + ")";
+                                opt.value = "";
+                                opt.innerHTML = "Nenhum backup disponível";
                                 backupSel.appendChild(opt);
-                            });
-                            document.getElementById('paghiper-restore-backup').disabled = false;
-                        } else {
-                            var opt = document.createElement('option');
-                            opt.value = "";
-                            opt.innerHTML = "Nenhum backup disponível";
-                            backupSel.appendChild(opt);
-                            document.getElementById('paghiper-restore-backup').disabled = true;
+                                var restoreEl = form.querySelector('.paghiper-restore-backup, #paghiper-restore-backup');
+                                if (restoreEl) restoreEl.disabled = true;
+                            }
                         }
                     }
                 });
