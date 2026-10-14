@@ -223,65 +223,110 @@ class PaghiperPdfInvoiceIntegrator {
         return false;
     }
 
+    /**
+     * Resgata configurações de um gateway com fallback seguro caso inativo
+     *
+     * @param string $gateway_name
+     * @return array
+     */
+    private function get_safe_gateway_vars($gateway_name) {
+        if (!function_exists('getGatewayVariables')) {
+            $gw_path = dirname(__DIR__, 5) . '/includes/gatewayfunctions.php';
+            if (file_exists($gw_path)) {
+                require_once $gw_path;
+            }
+        }
+
+        if (function_exists('getGatewayVariables')) {
+            try {
+                $vars = getGatewayVariables($gateway_name);
+                if (is_array($vars)) {
+                    return $vars;
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        return [];
+    }
+
     public function getFriendlyNames() {
+        $paghiper_vars = $this->get_safe_gateway_vars('paghiper');
+        $pix_vars = $this->get_safe_gateway_vars('paghiper_pix');
+
         return [
-            'paghiper' => (isset(getGatewayVariables('paghiper')['name']) ? getGatewayVariables('paghiper')['name'] : 'PagHiper') ?: 'PagHiper',
-            'paghiper_pix' => (isset(getGatewayVariables('paghiper_pix')['name']) ? getGatewayVariables('paghiper_pix')['name'] : 'PagHiper PIX') ?: 'PagHiper PIX'
+            'paghiper'     => !empty($paghiper_vars['name']) ? $paghiper_vars['name'] : 'PagHiper',
+            'paghiper_pix' => !empty($pix_vars['name']) ? $pix_vars['name'] : 'PagHiper PIX'
         ];
     }
 
-    public function renderIntegrationUI($moduleName) {
-        $systemUrl = rtrim(\App::getSystemUrl(), "/");
-        $jsUrl = $systemUrl . '/modules/gateways/paghiper/assets/js/admin_tabs.js';
+    public function renderIntegrationUI($module_name) {
+        $system_url = '';
+        if (class_exists('\App')) {
+            try {
+                $system_url = rtrim(\App::getSystemUrl(), "/");
+            } catch (\Throwable $e) {}
+        }
+        if (!$system_url && class_exists('\WHMCS\Config\Setting')) {
+            try {
+                $system_url = rtrim(\WHMCS\Config\Setting::getValue('SystemURL') ?? '', "/");
+            } catch (\Throwable $e) {}
+        }
+        $js_url = ($system_url ? $system_url : '') . '/modules/gateways/paghiper/assets/js/admin_tabs.js';
         
-        $activeTemplate = Capsule::table('tblconfiguration')->where('setting', 'Template')->value('value');
+        $active_template = 'six';
+        try {
+            if (class_exists('Illuminate\Database\Capsule\Manager')) {
+                $active_template = Capsule::table('tblconfiguration')->where('setting', 'Template')->value('value') ?: 'six';
+            }
+        } catch (\Throwable $e) {}
+
         $templates = $this->getAvailableTemplates();
-        if (!in_array($activeTemplate, $templates)) $templates[] = $activeTemplate;
+        if (!in_array($active_template, $templates)) $templates[] = $active_template;
         
-        $isIntegrated = $this->isTplIntegrated($this->getPdfInvoiceTplPath($activeTemplate));
+        $is_integrated = $this->isTplIntegrated($this->getPdfInvoiceTplPath($active_template));
         
-        $names = $this->getFriendlyNames();
-        $namesJson = htmlspecialchars(json_encode($names), ENT_QUOTES, 'UTF-8');
+        $friendly_names = $this->getFriendlyNames();
+        $names_json = htmlspecialchars(json_encode($friendly_names), ENT_QUOTES, 'UTF-8');
         
-        $paghiper_config = getGatewayVariables('paghiper');
+        $paghiper_config = $this->get_safe_gateway_vars('paghiper');
         $issue_all_billet = isset($paghiper_config['issue_all']) ? $paghiper_config['issue_all'] : '';
         
-        $paghiper_pix_config = getGatewayVariables('paghiper_pix');
+        $paghiper_pix_config = $this->get_safe_gateway_vars('paghiper_pix');
         $issue_all_pix = isset($paghiper_pix_config['issue_all']) ? $paghiper_pix_config['issue_all'] : '';
         
-        $issueAllConfig = [
-            'paghiper' => ($issue_all_billet == '1' || $issue_all_billet == 'on'),
+        $issue_all_config = [
+            'paghiper'     => ($issue_all_billet == '1' || $issue_all_billet == 'on'),
             'paghiper_pix' => ($issue_all_pix == '1' || $issue_all_pix == 'on')
         ];
-        $issueAllJson = htmlspecialchars(json_encode($issueAllConfig), ENT_QUOTES, 'UTF-8');
+        $issue_all_json = htmlspecialchars(json_encode($issue_all_config), ENT_QUOTES, 'UTF-8');
 
-        $html = "<div style=\"background:#f8f9fa; border:1px solid #ddd; padding:15px; border-radius:4px; max-width: 600px;\" data-module=\"{$moduleName}\" data-friendly-names=\"{$namesJson}\" data-issue-all=\"{$issueAllJson}\" class=\"paghiper-integration-ui-container\">";
+        $html = "<div style=\"background:#f8f9fa; border:1px solid #ddd; padding:15px; border-radius:4px; max-width: 600px;\" data-module=\"{$module_name}\" data-friendly-names=\"{$names_json}\" data-issue-all=\"{$issue_all_json}\" class=\"paghiper-integration-ui-container\">";
         $html .= '<h4>Gerenciamento da Integração de Boleto/PIX no PDF</h4>';
         $html .= '<p>O módulo precisa adicionar uma linha de código ao arquivo <code>invoicepdf.tpl</code> do seu tema para poder anexar boletos e PIX aos e-mails enviados aos clientes.</p>';
         
-        $html .= '<div style="margin-bottom:15px;"><strong>Status: </strong> <span id="paghiper-int-status">';
-        $html .= $isIntegrated ? '<span style="color:green;font-weight:bold;">Integrado</span>' : '<span style="color:red;font-weight:bold;">Não Integrado</span>';
+        $html .= '<div style="margin-bottom:15px;"><strong>Status: </strong> <span id="paghiper-int-status" class="paghiper-int-status">';
+        $html .= $is_integrated ? '<span style="color:green;font-weight:bold;">Integrado</span>' : '<span style="color:red;font-weight:bold;">Não Integrado</span>';
         $html .= '</span></div>';
         
         $html .= '<div class="form-group"><label>Template Alvo:</label><br>';
-        $html .= '<select id="paghiper-template-selector" class="form-control" style="max-width: 300px; display:inline-block;">';
+        $html .= '<select id="paghiper-template-selector" class="form-control paghiper-template-selector" style="max-width: 300px; display:inline-block;">';
         foreach ($templates as $tpl) {
-            $sel = ($tpl == $activeTemplate) ? 'selected' : '';
-            $html .= "<option value=\"{$tpl}\" {$sel}>{$tpl} " . (($tpl == $activeTemplate) ? '(Ativo)' : '') . "</option>";
+            $sel = ($tpl == $active_template) ? 'selected' : '';
+            $html .= "<option value=\"{$tpl}\" {$sel}>{$tpl} " . (($tpl == $active_template) ? '(Ativo)' : '') . "</option>";
         }
         $html .= '</select>';
-        $html .= ' <button id="paghiper-force-integration" class="btn btn-primary btn-sm">Integrar</button></div>';
+        $html .= ' <button type="button" id="paghiper-force-integration" class="btn btn-primary btn-sm paghiper-force-integration">Integrar</button></div>';
         
         $html .= '<div style="margin-top: 10px;">';
         $html .= '<label style="font-weight:normal; font-size:12px; color:#555;">';
-        $html .= '<input type="checkbox" id="paghiper-custom-auto-pdf"> <strong style=" font-size:14px;">Customização Automática do PDF (Auto-Heal)</strong><br> Se marcado, o sistema verificará silenciosamente se o template PDF possui o bloco do PagHiper antes do envio de cada fatura, e caso o tema da sua instalação seja atualizado ou trocado, o sistema atualizará a integração automaticamente.';
+        $html .= '<input type="checkbox" id="paghiper-custom-auto-pdf" class="paghiper-custom-auto-pdf"> <strong style=" font-size:14px;">Customização Automática do PDF (Auto-Heal)</strong><br> Se marcado, o sistema verificará silenciosamente se o template PDF possui o bloco do PagHiper antes do envio de cada fatura, e caso o tema da sua instalação seja atualizado ou trocado, o sistema atualizará a integração automaticamente.';
         $html .= '</label></div>';
         
         $html .= '<hr>';
         
-        $backups = $this->getBackups($activeTemplate);
+        $backups = $this->getBackups($active_template);
         $html .= '<div class="form-group"><label>Restaurar Backup:</label><br>';
-        $html .= '<select id="paghiper-backup-selector" class="form-control" style="max-width: 300px; display:inline-block;">';
+        $html .= '<select id="paghiper-backup-selector" class="form-control paghiper-backup-selector" style="max-width: 300px; display:inline-block;">';
         if (empty($backups)) {
             $html .= '<option value="">Nenhum backup disponível</option>';
         } else {
@@ -291,9 +336,9 @@ class PaghiperPdfInvoiceIntegrator {
         }
         $html .= '</select>';
         $disabled = empty($backups) ? 'disabled' : '';
-        $html .= ' <button id="paghiper-restore-backup" class="btn btn-danger btn-sm" ' . $disabled . '>Restaurar</button></div>';
+        $html .= ' <button type="button" id="paghiper-restore-backup" class="btn btn-danger btn-sm paghiper-restore-backup" ' . $disabled . '>Restaurar</button></div>';
         $html .= '</div>';
-        $html .= "<script src=\"{$jsUrl}?v=" . time() . "\"></script>";
+        $html .= "<script src=\"{$js_url}?v=" . time() . "\"></script>";
         
         return $html;
     }
