@@ -8,10 +8,10 @@ Boletos registrados conforme especificação da FEBRABAN. Baixa de pagamentos au
 
 Seu boleto sai direto no PDF anexo a fatura (funcionalidade exclusiva).
 
-* **Versão mais Recente:** 3.1.1
+* **Versão mais Recente:** 3.1.2
 * **Requer WHMCS** versão mínima 5.0
 * **Requisitos:** PHP >= 5.6.0, cURL e JSON ativado.
-* **Compatibilidade:** WHMCS 8.X, PHP <= 8.5. Mod_rewrite opcional
+* **Compatibilidade:** WHMCS 8.x / 9.x, PHP <= 8.5. Mod_rewrite opcional
 
 
 # Como Instalar
@@ -57,6 +57,14 @@ Para questões relacionadas a integração e plugin, acesse o [forum de suporte 
 Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/).
 
 # Changelog
+
+## 3.1.2 - 2026/10/14
+
+* **Suporte Completo ao Apps & Integrations do WHMCS (whmcs.json):** Adição de descritores de manifesto de módulo com especificação completa de metadados, categoria nativa (*Payments*), URLs de suporte e documentação oficial, além de logos em alta definição (`logo.png`) com transparência para exibição no catálogo de integrações do WHMCS.
+* **Metadados dos Portais de Pagamento (_MetaData):** Implementação das funções `paghiper_MetaData` e `paghiper_pix_MetaData` com nomes de exibição amigáveis e `APIVersion 1.1`, em total conformidade com as diretrizes para desenvolvimento de módulos de pagamento.
+* **Resiliência em Instalações Limpas (WHMCS 9.x):** Correção do erro fatal de ativação inicial (`Gateway Module Not Activated / Função de configuração não encontrada`) quando o módulo é ativado pela primeira vez ou quando um dos métodos (Boleto ou PIX) está desativado.
+* **Correção de Regressão na Integração de Templates (UI):** Ajuste no botão de integração no segundo portal da lista para evitar submissão involuntária do formulário nativo e isolamento dos ouvintes de eventos JavaScript (`admin_tabs.js`) por formulário individual.
+* **Tolerância a Falhas no Processamento Direto:** Ajuste do caminho relativo de inicialização do WHMCS no checkout direto (`process_payment.php`) e captura de exceções caso a URL de checkout seja requisitada com o método inativo, exibindo tela explicativa com a identidade visual do gateway.
 
 ## 3.1.1 - 2026/10/05
 
