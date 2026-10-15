@@ -17,6 +17,12 @@
 !modules/gateways/paghiper.php
 !modules/gateways/paghiper_pix.php
 !modules/gateways/paghiper/
+!modules/gateways/paghiper/whmcs.json
+!modules/gateways/paghiper/logo.png
+!modules/gateways/paghiper_pix/
+!modules/gateways/paghiper_pix/whmcs.json
+!modules/gateways/paghiper_pix/logo.png
+!modules/gateways/paghiper_pix/index.php
 !modules/gateways/paghiper/assets/
 !modules/gateways/paghiper/assets/css/
 !modules/gateways/paghiper/assets/css/*.css
