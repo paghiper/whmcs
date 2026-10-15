@@ -13,6 +13,18 @@
 
 use WHMCS\User\Client;
 
+/**
+ * Metadados do módulo Gateway para o WHMCS
+ *
+ * @return array
+ */
+function paghiper_MetaData() {
+    return array(
+        'DisplayName' => 'PagHiper Boleto',
+        'APIVersion' => '1.1',
+    );
+}
+
 // Opções padrão do Gateway
 function paghiper_config($params = NULL) {
     require_once __DIR__ . '/paghiper/inc/helpers/integrate_pdf_template.php';

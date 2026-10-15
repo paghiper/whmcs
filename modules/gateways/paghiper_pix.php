@@ -13,6 +13,18 @@
 
 use WHMCS\User\Client; 
 
+/**
+ * Metadados do módulo Gateway para o WHMCS
+ *
+ * @return array
+ */
+function paghiper_pix_MetaData() {
+    return array(
+        'DisplayName' => 'PagHiper PIX',
+        'APIVersion' => '1.1',
+    );
+}
+
 // Opções padrão do Gateway
 function paghiper_pix_config($params = NULL) {
 

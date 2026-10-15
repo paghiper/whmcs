@@ -1,0 +1,33 @@
+{
+    "schema": "1.0",
+    "type": "whmcs-gateways",
+    "name": "paghiper",
+    "license": "BSD-3-Clause",
+    "category": "payments",
+    "description": {
+        "name": "PagHiper Boleto",
+        "tagline": "Módulo oficial para emissão de Boletos Bancários com confirmação e conciliação automática.",
+        "long": "O módulo PagHiper Boleto permite a emissão transparente de boletos bancários registrados diretamente no seu WHMCS, com baixa automática via webhook e conciliação em tempo real.",
+        "features": [
+            "Emissão transparente de boletos bancários com código de barras e linha digitável",
+            "Notificação e conciliação automática via webhook com baixa instantânea",
+            "Configuração flexível de juros, multa e desconto por antecipação",
+            "Integração nativa de PDF e templates de e-mail de cobrança"
+        ]
+    },
+    "logo": {
+        "filename": "logo.png"
+    },
+    "support": {
+        "homepage": "https://www.paghiper.com/",
+        "support_url": "https://www.paghiper.com/atendimento/",
+        "docs_url": "https://github.com/paghiper/whmcs",
+        "email": "suporte@paghiper.com"
+    },
+    "authors": [
+        {
+            "name": "Henrique Cruz / PagHiper",
+            "homepage": "https://www.paghiper.com/"
+        }
+    ]
+}

@@ -1,0 +1,33 @@
+{
+    "schema": "1.0",
+    "type": "whmcs-gateways",
+    "name": "paghiper_pix",
+    "license": "BSD-3-Clause",
+    "category": "payments",
+    "description": {
+        "name": "PagHiper PIX",
+        "tagline": "Módulo oficial para recebimento de pagamentos via PIX com confirmação instantânea.",
+        "long": "O módulo PagHiper PIX permite receber pagamentos instantâneos com QR Code dinâmico e código Copia e Cola diretamente no WHMCS, com liquidação e baixa de fatura em tempo real.",
+        "features": [
+            "Geração de QR Code dinâmico e código Copia e Cola (PIX Copia e Cola)",
+            "Confirmação e conciliação instantânea em tempo real",
+            "Verificação automática periódica e retorno via webhook",
+            "Integração nativa de PDF e templates de e-mail com instruções PIX"
+        ]
+    },
+    "logo": {
+        "filename": "logo.png"
+    },
+    "support": {
+        "homepage": "https://www.paghiper.com/",
+        "support_url": "https://www.paghiper.com/atendimento/",
+        "docs_url": "https://github.com/paghiper/whmcs",
+        "email": "suporte@paghiper.com"
+    },
+    "authors": [
+        {
+            "name": "Henrique Cruz / PagHiper",
+            "homepage": "https://www.paghiper.com/"
+        }
+    ]
+}
